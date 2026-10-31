@@ -193,7 +193,7 @@
         </div>
 
         <!-- قيود الحملة -->
-        <div class="service-large-card">
+        <div class="service-large-card" id="expensesCard">
             <div class="large-icon">🧾</div>
             <h2>قيود الحملة</h2>
             <p>تسجيل المصروفات وإرفاق الفواتير وترحيل القيود للنظام.</p>
@@ -340,6 +340,15 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const user = await API.requireLogin();
     if (!user) return;
+
+    // صفحة «قيود الحملة» إدارية (مشرف / مدير الحملة)، وجدول expenses
+    // لا يحتوي أي ربط بالحاج. تُخفى البطاقة عن الحاج حتى لا يُنقل
+    // إلى صفحة يرفضها الخادم، وتبقى ظاهرة لمن يملك صلاحيتها.
+    const expensesCard = document.getElementById('expensesCard');
+    if (expensesCard && user.role === 'pilgrim') {
+        expensesCard.style.display = 'none';
+    }
+
     loadSupervisors();
     loadRatingServices();
 });

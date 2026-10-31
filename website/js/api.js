@@ -47,7 +47,18 @@ const API = {
         const text = await res.text();
         try {
             body = JSON.parse(text);
+            sessionStorage.removeItem('hostCheckReloaded');
         } catch (e) {
+            // استضافة InfinityFree ترد أحياناً بصفحة تحقق أمني (aes.js) بدل نتيجة الطلب.
+            // المتصفح وحده يستطيع إكمال هذا التحقق، و fetch لا يستطيع،
+            // لذلك نعيد تحميل الصفحة مرة واحدة ليكمله المتصفح بشكله الطبيعي.
+            if (/aes\.js|slowAES|toNumbers/.test(text)) {
+                if (!sessionStorage.getItem('hostCheckReloaded')) {
+                    sessionStorage.setItem('hostCheckReloaded', '1');
+                    location.reload();
+                }
+                throw new Error('انتهت جلسة التحقق الأمني للاستضافة. حدّثي الصفحة ثم أعيدي المحاولة.');
+            }
             throw new Error('رد غير متوقع من الخادم:\n' + text.slice(0, 300));
         }
 
