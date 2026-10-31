@@ -1,5 +1,5 @@
-# منع تنفيذ أي ملف PHP داخل مجلد المرفوعات (حماية من رفع ملف خبيث)
-php_flag engine off
+# منع تشغيل أو فتح أي ملف برمجي داخل مجلد المرفوعات
 <FilesMatch "\.(php|phtml|phar|cgi|pl)$">
     Require all denied
 </FilesMatch>
+Options -Indexes
