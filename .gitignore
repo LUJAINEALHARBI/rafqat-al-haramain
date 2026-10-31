@@ -1,0 +1,39 @@
+# ===== الموقع =====
+# ملف الإعدادات المحلي (بيانات الاتصال بقاعدة البيانات) — النموذج فقط يُرفع
+website/api/config.php
+.env
+
+# مرفوعات المستخدمين (فواتير المصروفات) لا تُرفع للمستودع
+website/uploads/*
+!website/uploads/.gitkeep
+!website/uploads/.htaccess
+
+# ===== تطبيق Flutter =====
+mobile_app/build/
+mobile_app/.dart_tool/
+mobile_app/.flutter-plugins
+mobile_app/.flutter-plugins-dependencies
+mobile_app/android/.gradle/
+mobile_app/android/.kotlin/
+mobile_app/android/local.properties
+mobile_app/android/app/debug/
+mobile_app/android/app/profile/
+mobile_app/android/app/release/
+mobile_app/ios/Pods/
+mobile_app/ios/.symlinks/
+mobile_app/ios/Flutter/Flutter.framework
+mobile_app/ios/Flutter/Generated.xcconfig
+
+# مفاتيح التوقيع — لا تُرفع إطلاقاً
+*.jks
+*.keystore
+key.properties
+
+# ===== المحررات وملفات النظام =====
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*~
