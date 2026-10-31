@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الخروج | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+    <div style="text-align: center; margin-top: 120px;">
+        <div class="logo-area" style="justify-content: center; margin-bottom: 20px;">
+            <img src="images/logo.png" style="width: 80px; height: 80px;" alt="شعار رفقة بلاد الحرمين">
+        </div>
+        <h2>جاري إنهاء الجلسة بأمان...</h2>
+        <p style="color: var(--muted); margin-top: 10px;">نرافق خطواتك دائماً. يتم الآن تسجيل الخروج.</p>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // إنهاء الجلسة على الخادم أيضاً وليس في المتصفح فقط
+        (async () => {
+            try { await API.post('auth.php', 'logout'); } catch (e) { /* تجاهل */ }
+            sessionStorage.clear();
+            setTimeout(() => { window.location.href = 'login.html'; }, 800);
+        })();
+    </script>
+</body>
+</html>

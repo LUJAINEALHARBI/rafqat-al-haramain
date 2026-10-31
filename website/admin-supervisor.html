@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المشرف العام | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-box {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            text-align: right;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px; left: 20px;
+            background: #f8f9fa; border: 1px solid #ddd;
+            font-size: 18px; border-radius: 50%;
+            width: 35px; height: 35px; cursor: pointer;
+        }
+        .data-table {
+            width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #eee; padding: 10px 12px; text-align: right;
+        }
+        .data-table th {
+            background: #f8f9fa; color: #0d6efd;
+        }
+        .status-badge {
+            background: #e3f2fd; color: #0d6efd; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
+        }
+        .status-badge-female {
+            background: #fce4ec; color: #d81b60; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
+        }
+        .badge-pending { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .badge-progress { background: #cce5ff; color: #004085; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .badge-done { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+
+        .chat-box-area {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            height: 220px;
+            overflow-y: auto;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 8px;
+            max-width: 80%;
+            font-size: 13px;
+        }
+        .chat-msg.incoming {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            align-self: flex-start;
+        }
+        .chat-msg.outgoing {
+            background: #0b3c29;
+            color: #ffffff;
+            align-self: flex-end;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-supervisor.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span id="sectionSubtitle">لوحة المشرف العام</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-supervisor.html" class="active">لوحة التحكم</a>
+            <a href="supervisor-account.html">ملفي</a>
+            <a href="javascript:void(0);" onclick="openModal('tasksModal')">مهام الاختصاص</a>
+            <a href="map.html">الخريطة والمواقع</a>
+            <a href="javascript:void(0);" onclick="openModal('supervisorChatModal')">غرفة المحادثة</a>
+            <a href="javascript:void(0);" onclick="logoutSupervisor()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span id="genderBadgeContainer" class="status-badge">قسم المتابعة الشاملة</span>
+        <h1 id="supervisorHeaderTitle">لوحة المشرف العام</h1>
+        <p id="supervisorHeaderDesc">مراقبة كافة المشرفين والتخصصات الأربعة، تتبع الخدمات والقيود المالية وإدارة المخيم بشكل شامل.</p>
+    </div>
+
+    <div class="service-large-grid">
+        <div class="service-large-card">
+            <h2>مهام والاختصاص الوظيفي</h2>
+            <p>استعراض كافة المهام والاتفاقيات المعتمدة لجميع المشرفين.</p>
+            <button onclick="openModal('tasksModal')" class="main-button" style="width:100%; margin-top:10px;">عرض كافة المهام</button>
+        </div>
+
+        <div class="service-large-card">
+            <h2>ملخص حالة المخيم</h2>
+            <p>مؤشرات الأداء اليومية وجداول التفويج الشاملة الخاصة بالحجاج.</p>
+            <button onclick="openModal('summaryModal')" class="main-button" style="width:100%; margin-top:10px;">عرض الملخص والجدول</button>
+        </div>
+
+        <div class="service-large-card">
+            <h2>مراقبة الحجاج</h2>
+            <p>إدارة وتوزيع الحجاج ومتابعة حالاتهم ضمن كافة التخصصات.</p>
+            <button onclick="openModal('pilgrimsGroupModal')" class="main-button" style="width:100%; margin-top:10px;">عرض قائمة الحجاج الشاملة</button>
+        </div>
+
+        <div class="service-large-card">
+            <h2>متابعة الخدمات والقيود المالية</h2>
+            <p>متابعة كافة طلبات الخدمات ومراجعة القيود والمصروفات لكل التخصصات.</p>
+            <button onclick="openModal('medicalServicesModal')" class="main-button" style="width:100%; margin-top:10px;">متابعة الخدمات والقيود</button>
+        </div>
+
+        <div class="service-large-card">
+            <h2>مواقع السكن والخريطة</h2>
+            <p>استعراض مواقع الخيام والمخيمات ومتابعة تفويج المشاعر المقدسة.</p>
+            <a href="map.html" class="main-button" style="display:block; text-align:center; text-decoration:none; width:100%; margin-top:10px; box-sizing:border-box;">استعراض الخريطة الشاملة</a>
+        </div>
+
+        <div class="service-large-card">
+            <h2>غرفة المحادثة الخاصة</h2>
+            <p>التواصل المباشر مع الحجاج والمشرفين والتفاعل الذكي مع الرسائل.</p>
+            <button onclick="openModal('supervisorChatModal')" class="main-button" style="width:100%; margin-top:10px;">فتح المحادثة والرد الفوري</button>
+        </div>
+
+        <div class="service-large-card" style="border: 2px dashed #d9534f; background: #fff9f9;">
+            <h2>تنبيه طوارئ عاجل</h2>
+            <p>إرسال بلاغ طوارئ فور لغرفة العمليات وإشعار كافة الحجاج.</p>
+            <button onclick="sendEmergencyAlert()" class="main-button" style="background:#d9534f; border:none; margin-top:10px; width:100%;">إرسال تنبيه طوارئ الآن</button>
+        </div>
+    </div>
+</main>
+
+<div id="tasksModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('tasksModal')">X</button>
+        <h3 id="modalTaskTitle">مهام كافة الاختصاصات المعتمدة</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">استعراض مهام المشرفين الأربعة:</p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>م</th>
+                    <th>بند المهمة الوظيفية</th>
+                    <th>الوصف التفصيلي للإجراء</th>
+                    <th>الحالة</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="specificTasksTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="summaryModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('summaryModal')">X</button>
+        <h3>ملخص حالة مجموعة المخيم اليومية الشاملة</h3>
+        <p style="font-size:13px; color:#666;">إحصائيات المجموعات والمشرفين التابعين للحملة.</p>
+        <ul style="line-height:2;">
+            <li><strong>حالة الأداء الميداني:</strong> مستقرة لجميع الحجاج والتخصصات الأربعة.</li>
+            <li><strong>حالة التفويج الحالية:</strong> متواجدون بمخيم منى ومكة ومزدلفة وعرفات.</li>
+        </ul>
+    </div>
+</div>
+
+<div id="pilgrimsGroupModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('pilgrimsGroupModal')">X</button>
+        <h3 id="pilgrimsModalTitle">قائمة الحجاج الشاملة لكافة التخصصات</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>م</th>
+                    <th>اسم الحاج</th>
+                    <th>رقم الهوية / ID</th>
+                    <th>رقم السرير / المخيم</th>
+                    <th id="dynamicColumnHeader">الحالة الشاملة</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="groupTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="medicalServicesModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('medicalServicesModal')">X</button>
+        <h3>متابعة الخدمات والقيود المالية الشاملة للمخيم</h3>
+        <h4 style="margin-top:20px; color:#0d6efd;" id="subServicesTitle">طلبات الخدمات والمتابعة لجميع المشرفين:</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>نوع الخدمة أو الإجراء</th>
+                    <th>اسم الحاج</th>
+                    <th id="detailHeaderTitle">تفاصيل الطلب</th>
+                    <th>حالة الخدمة</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="allServicesTableBody"></tbody>
+        </table>
+
+        <h4 style="margin-top:25px; color:#0d6efd;" id="expensesHeaderTitle">مراقبة القيود والمصروفات المالية لجميع التخصصات:</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>بيان المصروف أو القيد</th>
+                    <th>المبلغ</th>
+                    <th>التصنيف</th>
+                    <th>التاريخ</th>
+                    <th>الفاتورة</th>
+                    <th>حالة المراقبة</th>
+                </tr>
+            </thead>
+            <tbody id="supervisorExpensesTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="supervisorChatModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('supervisorChatModal')">X</button>
+        <h3>غرفة المحادثة والتفاعل الذكي الشامل</h3>
+        <p style="font-size:13px; color:#666;">اكتب أي رسالة استفسار أو بلاغ للمتابعة المباشرة.</p>
+        
+        <div id="chatMessagesContainer" class="chat-box-area">
+            <div class="chat-msg incoming">
+                <strong>غرفة العمليات المركزية:</strong>
+                <p style="margin:3px 0 0;">مرحباً بك أيها المشرف العام في نظام التنسيق الشامل.</p>
+            </div>
+        </div>
+
+        <form onsubmit="sendSupervisorMsg(event)" style="display: flex; gap: 10px; margin-top: 15px;">
+            <input type="text" id="supervisorChatInput" placeholder="اكتب رسالتك أو استفسارك هنا..." style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 6px;" required>
+            <button type="submit" class="main-button" style="padding: 0 20px;">إرسال</button>
+        </form>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   لوحة المشرف — كل المحتوى صار من قاعدة البيانات:
+     • بيانات المشرف ووظيفته : api/supervisors.php?action=profile
+     • المهام                : api/tasks.php
+     • الحجاج                : api/pilgrims.php?action=list
+     • طلبات الخدمة          : api/services.php?action=requests
+     • القيود المالية         : api/expenses.php
+     • المحادثة              : api/chat.php
+
+   التخصص لم يعد يُستنتج من آخر رقم في رقم العضوية، بل يأتي من
+   جدول jobs المرتبط بالمشرف في قاعدة البيانات.
+   --------------------------------------------------------------- */
+
+let ME         = null;   // بيانات المشرف الحالي
+let MY_PILGRIMS = [];
+let MY_REQUESTS = [];
+let CHAT_ROOM_ID = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin(['supervisor']);
+    if (!user) return;
+
+    try {
+        const res = await API.get('supervisors.php', 'profile');
+        ME = res.data;
+        renderHeader();
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بيانات المشرف.');
+        return;
+    }
+
+    loadTasks();
+    loadGroupData();
+    loadServicesData();
+    loadSupervisorExpenses();
+});
+
+/* ---------- ترويسة الصفحة حسب الوظيفة والقسم ---------- */
+function renderHeader() {
+    const isFemale  = ME.active_section === 'women';
+    const genderText = isFemale ? 'قسم النساء' : 'قسم الرجال';
+    const jobTitle   = ME.job_title || 'مشرف';
+
+    const badge = document.getElementById("genderBadgeContainer");
+    badge.className = isFemale ? "status-badge-female" : "status-badge";
+    badge.innerText = ME.is_general ? `متابعة شاملة — ${genderText}` : genderText;
+
+    document.getElementById("supervisorHeaderTitle").innerText = `${jobTitle} — ${ME.name}`;
+    document.getElementById("sectionSubtitle").innerText       = `${jobTitle} | ${genderText}`;
+    document.getElementById("modalTaskTitle").innerText        = `مهام الاختصاص: ${jobTitle}`;
+
+    const desc = document.getElementById("supervisorHeaderDesc");
+    if (desc && ME.permission_level) {
+        desc.innerText = `الصلاحية: ${ME.permission_level} — عدد الحجاج تحت إشرافك: ${ME.pilgrims_count}`;
+    }
+}
+
+/* ---------- المهام ---------- */
+async function loadTasks() {
+    const tbody = document.getElementById("specificTasksTableBody");
+    API.tableMessage(tbody, 5, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('tasks.php', 'list');
+        if (!res.data.length) {
+            API.tableMessage(tbody, 5, 'لا توجد مهام مسجلة لك.');
+            return;
+        }
+        tbody.innerHTML = res.data.map((t, i) => `
+            <tr>
+                <td><strong>${i + 1}</strong></td>
+                <td><strong>${API.esc(t.title)}</strong></td>
+                <td>${API.esc(t.description)}</td>
+                <td><span class="badge-progress">${API.esc(t.status)}</span></td>
+                <td><button type="button" onclick="updateTaskStatus(${t.task_id}, this)"
+                        class="main-button" style="padding:4px 10px; font-size:12px;">تحديث</button></td>
+            </tr>`).join('');
+    } catch (err) {
+        API.tableMessage(tbody, 5, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+async function updateTaskStatus(taskId, btn) {
+    btn.disabled = true;
+    try {
+        await API.post('tasks.php', 'update_status', { id: taskId, status: 'تم الإنجاز' });
+        await loadTasks();
+        alert("تم تحديث حالة المهمة وحُفظت في قاعدة البيانات.");
+    } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+    }
+}
+
+/* ---------- الحجاج ---------- */
+async function loadGroupData() {
+    const tbody    = document.getElementById("groupTableBody");
+    const isFemale = ME.active_section === 'women';
+
+    document.getElementById("pilgrimsModalTitle").innerText =
+        isFemale ? "قائمة الحجاج — قسم النساء" : "قائمة الحجاج — قسم الرجال";
+
+    const headers = {
+        general:  "الحالة الشاملة (صحي، تفويج، إعاشة، سكن)",
+        medical:  "الحالة الصحية",
+        crowd:    "حالة التفويج والتنقل",
+        catering: "حالة الوجبات الغذائية",
+        housing:  "حالة السكن والخيمة"
+    };
+    document.getElementById("dynamicColumnHeader").innerText =
+        headers[ME.role_key] || "الحالة";
+
+    API.tableMessage(tbody, 6, 'جاري التحميل...');
+
+    try {
+        const [pRes, rRes] = await Promise.all([
+            API.get('pilgrims.php', 'list'),
+            API.get('services.php', 'requests')
+        ]);
+        MY_PILGRIMS = pRes.data;
+        MY_REQUESTS = rRes.data;
+
+        if (!MY_PILGRIMS.length) {
+            API.tableMessage(tbody, 6, 'لا يوجد حجاج في نطاق إشرافك.');
+            return;
+        }
+
+        tbody.innerHTML = MY_PILGRIMS.map((p, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${API.esc(p.name)}</strong></td>
+                <td>${API.esc(p.pilgrim_id)}</td>
+                <td>${API.esc(p.room || p.camp_id || '—')}</td>
+                <td><span class="${isFemale ? 'status-badge-female' : 'status-badge'}">${API.esc(pilgrimStatus(p))}</span></td>
+                <td><button type="button" onclick="openChatWithPilgrim('${API.esc(p.name)}')">محادثة</button></td>
+            </tr>`).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 6, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+/** الحالة المعروضة تختلف حسب تخصص المشرف — كلها من بيانات حقيقية */
+function pilgrimStatus(p) {
+    const chronic = p.chronic_conditions && p.chronic_conditions !== 'لا يوجد'
+        ? p.chronic_conditions : 'لا يوجد';
+
+    const lastOf = (type) => {
+        const r = MY_REQUESTS.filter(x => x.pilgrim_id == p.pilgrim_id && x.service_type === type).pop();
+        return r ? r.status : '—';
+    };
+
+    switch (ME.role_key) {
+        case 'medical':  return chronic;
+        case 'crowd':    return lastOf('crowd');
+        case 'catering': return lastOf('catering');
+        case 'housing':  return p.room ? 'مستلم السرير' : lastOf('housing');
+        default:
+            return `${chronic} | ${lastOf('crowd')} | ${lastOf('catering')} | ${p.room ? 'مسكّن' : 'غير مسكّن'}`;
+    }
+}
+
+/* ---------- طلبات الخدمات ---------- */
+async function loadServicesData() {
+    const tbody = document.getElementById("allServicesTableBody");
+    API.tableMessage(tbody, 6, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('services.php', 'requests');
+        MY_REQUESTS = res.data;
+
+        if (!MY_REQUESTS.length) {
+            API.tableMessage(tbody, 6, 'لا توجد طلبات خدمة ضمن نطاقك.');
+            return;
+        }
+
+        tbody.innerHTML = MY_REQUESTS.map(s => {
+            const done = (s.status === 'مكتمل' || s.status === 'معتمد' || s.status === 'تم الإنجاز');
+            return `
+            <tr>
+                <td><strong>#${API.esc(s.request_number || s.provision_id)}</strong></td>
+                <td>${API.esc(s.service_name)}</td>
+                <td>${API.esc(s.pilgrim_name)}</td>
+                <td>${API.esc(s.details)}</td>
+                <td><span class="${done ? 'badge-done' : 'badge-progress'}">${API.esc(s.status)}</span></td>
+                <td>${done ? '—' :
+                    `<button type="button" onclick="updateStatus(${s.provision_id}, this)">تحديث</button>`}</td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 6, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+async function updateStatus(provisionId, btn) {
+    btn.disabled = true;
+    try {
+        await API.post('services.php', 'update_status', { id: provisionId, status: 'مكتمل' });
+        await loadServicesData();
+        alert('تم تحديث حالة الطلب في قاعدة البيانات.');
+    } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+    }
+}
+
+/* ---------- القيود المالية ---------- */
+async function loadSupervisorExpenses() {
+    const tableBody = document.getElementById("supervisorExpensesTable");
+    API.tableMessage(tableBody, 7, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('expenses.php', 'list');
+        if (!res.data.length) {
+            API.tableMessage(tableBody, 7, 'لا توجد قيود مالية مسجلة حالياً.');
+            return;
+        }
+        tableBody.innerHTML = res.data.map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${API.esc(item.description)}</strong></td>
+                <td>${Number(item.amount).toLocaleString()} ر.س</td>
+                <td>${API.esc(item.category)}</td>
+                <td>${API.esc(item.expense_date)}</td>
+                <td>${item.hasReceipt
+                        ? `<a href="uploads/${API.esc(item.receipt_file)}" target="_blank">مرفقة</a>`
+                        : 'بدون'}</td>
+                <td><span class="${item.status === 'معتمد' ? 'badge-done' : 'badge-progress'}">${API.esc(item.status)}</span></td>
+            </tr>`).join('');
+    } catch (err) {
+        API.tableMessage(tableBody, 7, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+/* ---------- المحادثة ---------- */
+async function loadChat() {
+    const container = document.getElementById("chatMessagesContainer");
+    container.innerHTML = '<p style="color:#777;">جاري تحميل الرسائل...</p>';
+
+    try {
+        const rooms = await API.get('chat.php', 'rooms');
+        if (!rooms.data.length) {
+            container.innerHTML = '<p style="color:#777;">لا توجد غرف محادثة متاحة.</p>';
+            return;
+        }
+        // غرفة المشرفين الخاصة بالقسم إن وُجدت، وإلا الغرفة العامة
+        const room = rooms.data.find(r => r.message_type === 'إشراف') || rooms.data[0];
+        CHAT_ROOM_ID = room.room_id;
+
+        const msgs = await API.get('chat.php', 'messages', { room_id: CHAT_ROOM_ID });
+        renderMessages(msgs.data);
+
+    } catch (err) {
+        container.innerHTML = '<p style="color:#c00;">تعذّر تحميل المحادثة: ' + API.esc(err.message) + '</p>';
+    }
+}
+
+function renderMessages(list) {
+    const container = document.getElementById("chatMessagesContainer");
+    if (!list.length) {
+        container.innerHTML = '<p style="color:#777;">لا توجد رسائل بعد، ابدأ المحادثة.</p>';
+        return;
+    }
+    container.innerHTML = list.map(m => `
+        <div class="chat-msg ${m.mine ? 'outgoing' : 'incoming'}">
+            <strong>${API.esc(m.mine ? 'أنت' : m.sender_name)}:</strong>
+            <p style="margin:3px 0 0;">${API.esc(m.message_text)}</p>
+        </div>`).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendSupervisorMsg(e) {
+    e.preventDefault();
+    const input = document.getElementById("supervisorChatInput");
+    const text  = input.value.trim();
+    if (!text || !CHAT_ROOM_ID) return;
+
+    input.disabled = true;
+    try {
+        await API.post('chat.php', 'send', { room_id: CHAT_ROOM_ID, message: text });
+        input.value = '';
+        const msgs = await API.get('chat.php', 'messages', { room_id: CHAT_ROOM_ID });
+        renderMessages(msgs.data);
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+function openChatWithPilgrim(name) {
+    openModal('supervisorChatModal');
+    const input = document.getElementById("supervisorChatInput");
+    if (input) input.value = `بخصوص الحاج/ة ${name}: `;
+}
+
+/* ---------- النوافذ وبلاغ الطوارئ ---------- */
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+    if (id === 'medicalServicesModal') { loadServicesData(); loadSupervisorExpenses(); }
+    if (id === 'pilgrimsGroupModal')   { loadGroupData(); }
+    if (id === 'tasksModal')           { loadTasks(); }
+    if (id === 'supervisorChatModal')  { loadChat(); }
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+async function sendEmergencyAlert() {
+    if (!confirm("هل أنت متأكد من تفعيل وإرسال بلاغ الطوارئ الشامل لجميع الحجاج والمشرفين؟")) return;
+
+    try {
+        await API.post('notifications.php', 'send', {
+            title: 'بلاغ طوارئ عاجل',
+            content: `تم تفعيل بلاغ طوارئ من ${ME.job_title} (${ME.name}). يرجى التوجه لنقطة التجمع واتباع تعليمات المشرفين.`,
+            target_role: 'all',
+            target_section: 'all',
+            type: 'طوارئ',
+            icon: '🚨'
+        });
+        alert("تم بث بلاغ الطوارئ وحفظه في جدول التنبيهات، وسيظهر لجميع المستخدمين في صفحة التنبيهات.");
+    } catch (err) {
+        alert(err.message);
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+erDiagram
+    campaigns {
+        int campaign_id PK
+        varchar150 campaign_name
+        varchar50 license_number
+        varchar20 phone
+        varchar255 location
+        text extra_info
+        varchar150 company_name
+        varchar100 manager_name
+        varchar150 manager_email
+        varchar20 manager_phone
+        decimal price_per_person
+        varchar80 start_city
+        date start_date
+        varchar255 password_hash
+    }
+    jobs {
+        int job_id PK
+        varchar100 job_title
+        varchar100 permission_level
+        varchar20 role_key
+    }
+    supervisors {
+        int supervisor_id PK
+        int campaign_id FK
+        int job_id FK
+        varchar100 name
+        varchar20 phone
+        varchar150 email
+        enum gender_section
+        varchar255 password_hash
+    }
+    pilgrims {
+        int pilgrim_id PK
+        int campaign_id FK
+        int supervisor_id FK
+        varchar50 booking_number
+        varchar100 name
+        varchar50 id_or_passport
+        varchar20 phone
+        varchar50 nationality
+        tinyint age
+        varchar80 city
+        varchar80 package_type
+        varchar150 gathering_point
+        varchar20 tent_number
+        varchar20 bed_number
+        varchar255 password_hash
+        enum gender
+        varchar150 email
+        varchar50 marital_status
+        text chronic_conditions
+        varchar20 camp_id
+        datetime created_at
+    }
+    services {
+        int service_id PK
+        varchar150 service_name
+        text description
+        varchar80 service_type
+        datetime service_datetime
+        varchar255 service_location
+        enum status
+    }
+    service_provisions {
+        int provision_id PK
+        int pilgrim_id FK
+        int service_id FK
+        int supervisor_id FK
+        varchar30 request_number
+        varchar255 details
+        date provision_date
+        time provision_time
+        varchar50 status
+    }
+    ratings {
+        int rating_id PK
+        int pilgrim_id FK
+        int service_id FK
+        int provision_id FK
+        tinyint stars
+        text comment
+        datetime rating_date
+    }
+    permissions {
+        int permission_id PK
+        int campaign_id FK
+        int pilgrim_id FK
+        varchar100 permission_name
+        text description
+        varchar80 permission_type
+    }
+    expenses {
+        int expense_id PK
+        int campaign_id FK
+        int supervisor_id FK
+        varchar255 description
+        decimal amount
+        varchar80 category
+        date expense_date
+        varchar255 receipt_file
+        enum status
+        datetime created_at
+    }
+    supervisor_tasks {
+        int task_id PK
+        int supervisor_id FK
+        varchar150 title
+        text description
+        varchar50 status
+    }
+    notifications {
+        int notification_id PK
+        int supervisor_id FK
+        int campaign_id FK
+        int pilgrim_id FK
+        enum target_role
+        enum target_section
+        varchar150 title
+        text content
+        varchar50 type
+        varchar10 icon
+        tinyint is_read
+        datetime sent_at
+    }
+    chat_rooms {
+        int room_id PK
+        int campaign_id FK
+        varchar100 room_name
+        enum section
+        tinyint staff_only
+        varchar50 message_type
+    }
+    messages {
+        int message_id PK
+        int room_id FK
+        enum sender_type
+        int sender_id
+        varchar100 sender_name
+        text message_text
+        datetime sent_at
+    }
+    campaigns ||--o{ supervisors : "belongs to"
+    jobs |o--o{ supervisors : "has job"
+    campaigns ||--o{ pilgrims : "registered in"
+    supervisors |o--o{ pilgrims : "supervised by"
+    pilgrims ||--o{ service_provisions : "requested by"
+    services ||--o{ service_provisions : "of type"
+    supervisors |o--o{ service_provisions : "handled by"
+    pilgrims ||--o{ ratings : "rated by"
+    services |o--o{ ratings : "rates"
+    service_provisions |o--o{ ratings : "about"
+    campaigns ||--o{ permissions : "issued by"
+    pilgrims ||--o{ permissions : "belongs to"
+    supervisors |o--o{ notifications : "sent by"
+    campaigns |o--o{ notifications : "within"
+    pilgrims |o--o{ notifications : "targets"
+    campaigns ||--o{ chat_rooms : "within"
+    chat_rooms ||--o{ messages : "posted in"
+    campaigns ||--o{ expenses : "charged to"
+    supervisors |o--o{ expenses : "recorded by"
+    supervisors ||--o{ supervisor_tasks : "assigned to"

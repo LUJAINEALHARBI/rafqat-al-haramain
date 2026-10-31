@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السكن والمخيمات | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار الحملة">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="admin-cultural.html">لوحة التحكم</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <span>إقامتك ومخيماتك</span>
+        <h1>معلومات السكن</h1>
+        <p>جميع تفاصيل إقامتك ومرافق السكن في مكة المكرمة والمشاعر المقدسة في مكان واحد.</p>
+    </div>
+
+    <div class="housing-hero">
+        <div class="housing-main">
+            <span class="status-pill">
+                ● الحجز مؤكد (نظام Segregation مفعل)
+            </span>
+
+            <h2 id="hotelName">
+                فندق رفقة الضيافة (قسم الضيوف)
+            </h2>
+
+            <p id="hotelLocation">
+                مكة المكرمة - برج أ
+            </p>
+
+            <div class="housing-details">
+                <div>
+                    <span>رقم الغرفة / الخيمة</span>
+                    <strong id="roomNumber">214</strong>
+                </div>
+
+                <div>
+                    <span>نوع الإقامة</span>
+                    <strong id="roomType">ثنائية (مفصول)</strong>
+                </div>
+
+                <div>
+                    <span>الدور / النطاق</span>
+                    <strong id="hotelFloor">الثاني</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="housing-icon">
+            🏨
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-icon">🕐</div>
+            <h3>تسجيل الدخول</h3>
+            <p>من الساعة 12:00 ظهرًا</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-icon">🍽️</div>
+            <h3>المطعم</h3>
+            <p>الدور الأرضي (مواعيد محددة)</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-icon">🛗</div>
+            <h3>المصاعد</h3>
+            <p>متاحة على مدار الساعة</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-card-icon">📞</div>
+            <h3>استقبال الفندق</h3>
+            <p>920000000</p>
+        </div>
+    </div>
+
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* بيانات السكن صارت من حقول tent_number و bed_number و camp_id
+   الخاصة بالحاج في جدول pilgrims. */
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['pilgrim']);
+    if (!user) return;
+
+    const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+
+    try {
+        const res = await API.get('pilgrims.php', 'get');
+        const p = res.data;
+        const isFemale = p.section === 'women';
+
+        const bed = [p.tent_number, p.bed_number ? 'سرير ' + p.bed_number : null]
+                      .filter(Boolean).join(' - ');
+
+        set('hotelName',  (p.campaign_name || 'مخيم الحملة') + (isFemale ? ' - قسم النساء' : ' - قسم الرجال'));
+        set('roomNumber', bed || 'لم يتم التسكين بعد');
+        set('roomType',   p.package_type || (isFemale ? 'مجموعة نسائية' : 'مجموعة رجالية'));
+        set('hotelFloor', p.camp_id || (isFemale ? 'القسم النسائي المستقل' : 'القسم الرجالي المستقل'));
+
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بيانات السكن.');
+    }
+});
+</script>
+
+</body>
+
+</html>

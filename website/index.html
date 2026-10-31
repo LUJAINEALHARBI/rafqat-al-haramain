@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رفقة بلاد الحرمين | الرئيسية</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* حل دائرية الشعار */
+        .logo-area img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+
+        .hero-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+
+        .hero-circle {
+            width: 110px;
+            height: 110px;
+            background-color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+        }
+
+        /* تنسيق الشريط العلوي المتحرك */
+        .top-bar {
+            overflow: hidden;
+            white-space: nowrap;
+            background-color: #0b3c29; /* لون خلفية أنيق للشريط */
+            color: #fff;
+            padding: 8px 0;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar div:first-child {
+            padding-right: 20px;
+            font-weight: bold;
+        }
+
+        .marquee-container {
+            overflow: hidden;
+            width: 60%;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 18s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- الشريط العلوي المتحرك -->
+<div class="top-bar">
+    <div>
+        رفقة بلاد الحرمين للحج والعمرة
+    </div>
+
+    <div class="marquee-container">
+        <span class="marquee-text">
+            🌟 رحلة منظمة  •  🔒 آمنة  •  🤝 متكاملة  ✨ نرافق خطواتك لتؤدي مناسكك بطمأنينة  •  خدمات فورية على مدار الساعة
+        </span>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html" class="active">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="login.html" style="color: #0d6efd; font-weight: bold;">تسجيل الدخول</a>
+        </nav>
+
+        <a href="account.html" class="profile-button">
+            ملفي الشخصي
+        </a>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-badge">
+            منصة رقمية متكاملة لخدمة ضيف الرحمن
+        </span>
+        <h1>
+            نرافقك في رحلتك
+            <br>
+            <span>خطوة بخطوة</span>
+        </h1>
+        <p>
+            منصة رفقة بلاد الحرمين تجمع لك خدمات الحاج والرحلة والتواصل والرعاية والأنشطة الثقافية في مكان واحد بطريقة سهلة وتفاعلية.
+        </p>
+
+        <div class="hero-buttons">
+            <a href="services.html" class="main-button">استكشف الخدمات</a>
+            <a href="schedule.html" class="secondary-button">جدول رحلتي</a>
+        </div>
+
+        <div class="statistics">
+            <div class="stat-box">
+                <strong>24/7</strong>
+                <span>دعم ومساعدة</span>
+            </div>
+            <div class="stat-box">
+                <strong>+8</strong>
+                <span>خدمات رقمية</span>
+            </div>
+            <div class="stat-box">
+                <strong>1</strong>
+                <span>منصة متكاملة</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-card">
+        <div class="hero-circle">
+            <img src="images/logo.png" alt="رفقة بلاد الحرمين">
+        </div>
+        <span class="small-badge">
+            رحلتك أسهل
+        </span>
+        <h2>
+            نرافق خطواتك
+        </h2>
+        <p>
+            لتؤدي مناسكك بطمأنينة وتبقى جميع تفاصيل رحلتك أمامك.
+        </p>
+        <a href="services.html" class="green-button">
+            ابدأ الآن
+        </a>
+    </div>
+</section>
+
+<!-- الخدمات -->
+<section class="section">
+    <div class="section-title">
+        <div>
+            <span>خدماتنا</span>
+            <h2>كل ما تحتاجه في مكان واحد</h2>
+            <p>خدمات مصممة لتسهيل تجربة الحاج خلال الرحلة.</p>
+        </div>
+        <a href="services.html" class="light-button">جميع الخدمات</a>
+    </div>
+
+    <div class="services-grid">
+        <div class="service-card">
+            <div class="service-icon">🩺</div>
+            <h3>الرعاية الطبية</h3>
+            <p>التواصل مع طبيب الحملة والممرضين للاستشارات والمساعدة الطبية.</p>
+            <a href="services.html">اكتشف الخدمة ←</a>
+        </div>
+
+        <div class="service-card">
+            <div class="service-icon">🧳</div>
+            <h3>الأمتعة المفقودة</h3>
+            <p>تسجيل الحقيبة المفقودة ووصفها ومتابعة البلاغ.</p>
+            <a href="services.html">اكتشف الخدمة ←</a>
+        </div>
+
+        <div class="service-card">
+            <div class="service-icon">💬</div>
+            <h3>غرفة المحادثة</h3>
+            <p>تحدث مباشرة مع مشرف الحملة والاستفسارات العامة.</p>
+            <a href="chat.html">ابدأ المحادثة ←</a>
+        </div>
+    </div>
+</section>
+
+<!-- الباقات -->
+<section class="section packages-section">
+    <div class="section-title">
+        <div>
+            <span>الباقات</span>
+            <h2>اختر الباقة المناسبة لك</h2>
+            <p>اضغط على الباقة لمعرفة الخدمات الموجودة بداخلها.</p>
+        </div>
+    </div>
+
+    <div class="packages-grid">
+        <!-- باقة 1 -->
+        <div class="package-card">
+            <span class="package-tag">اقتصادية</span>
+            <h3>باقة السكينة</h3>
+            <div class="package-price">1,850 <small>ر.س</small></div>
+            <ul>
+                <li>✓ الإقامة</li>
+                <li>✓ النقل</li>
+                <li>✓ الوجبات</li>
+                <li>✓ التواصل مع المشرف</li>
+                <li>✓ جدول الرحلة</li>
+            </ul>
+            <a href="services.html#packages" class="package-button">عرض التفاصيل</a>
+        </div>
+
+        <!-- باقة 2 -->
+        <div class="package-card featured-package">
+            <span class="featured-label">الأكثر طلبًا</span>
+            <span class="package-tag">متكاملة</span>
+            <h3>باقة الطمأنينة</h3>
+            <div class="package-price">2,650 <small>ر.س</small></div>
+            <ul>
+                <li>✓ جميع خدمات السكينة</li>
+                <li>✓ الرعاية الطبية</li>
+                <li>✓ الأمتعة المفقودة</li>
+                <li>✓ القسم الثقافي</li>
+                <li>✓ غرفة المحادثة</li>
+            </ul>
+            <a href="services.html#packages" class="package-button main-package-button">عرض التفاصيل</a>
+        </div>
+
+        <!-- باقة 3 -->
+        <div class="package-card">
+            <span class="package-tag">مميزة</span>
+            <h3>باقة الرفقة</h3>
+            <div class="package-price">3,450 <small>ر.س</small></div>
+            <ul>
+                <li>✓ جميع خدمات الطمأنينة</li>
+                <li>✓ أولوية التواصل</li>
+                <li>✓ متابعة المشرف</li>
+                <li>✓ مزايا إضافية</li>
+            </ul>
+            <a href="services.html#packages" class="package-button">عرض التفاصيل</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-container">
+        <div>
+            <h3>رفقة بلاد الحرمين</h3>
+            <p>نرافق خطواتك لتؤدي مناسكك بطمأنينة من خلال تجربة رقمية متكاملة.</p>
+        </div>
+        <div>
+            <h3>روابط سريعة</h3>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">جدول الرحلة</a>
+            <a href="account.html">الملف الشخصي</a>
+        </div>
+        <div>
+            <h3>مساعدة</h3>
+            <a href="chat.html">غرفة المحادثة</a>
+            <a href="cultural.html">القسم الثقافي</a>
+        </div>
+    </div>
+    <div class="copyright">
+        ©️ 2026 رفقة بلاد الحرمين
+    </div>
+</footer>
+
+<script src="js/app.js"></script>
+
+<script src="js/api.js"></script>
+</body>
+</html>

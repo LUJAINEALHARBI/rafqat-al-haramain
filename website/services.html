@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الخدمات الرقمية | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* تنسيق النوافذ المنبثقة (Modals) لتكون احترافية وواضحة */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            float: left;
+            font-weight: bold;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #0b3c29;
+            font-size: 22px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .info-card-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .info-card-item h4 {
+            margin: 0 0 5px 0;
+            color: #0b3c29;
+        }
+
+        .info-card-item p {
+            margin: 0;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        /* تنسيق نظام تقييم النجوم */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            font-size: 32px;
+            margin: 15px 0;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.2s ease;
+        }
+
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #ffc107;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html" class="active">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>خدمات الحاج</span>
+        <h1>الخدمات الرقمية</h1>
+        <p>كل خدمة صممت لتسهيل رحلة الحاج وتوفير الوقت والجهد.</p>
+    </div>
+
+    <div class="service-large-grid">
+        <!-- غرفة المحادثة المباشرة -->
+        <div class="service-large-card">
+            <div class="large-icon">💬</div>
+            <h2>غرفة المحادثة</h2>
+            <p>التواصل والتراسل الفوري مع المشرف المباشر والاستفسارات العامة.</p>
+            <a href="chat.html" style="display:inline-block; padding:10px 20px; background:#0b3c29; color:#fff; text-decoration:none; border-radius:6px;">فتح غرفة المحادثة</a>
+        </div>
+
+        <!-- الرعاية الطبية -->
+        <div class="service-large-card">
+            <div class="large-icon">🩺</div>
+            <h2>الرعاية الطبية</h2>
+            <p>مخصصة للتواصل مع طبيب الحملة والممرضين والممرضات للاستشارات أو الحالات الطبية.</p>
+            <button onclick="openModal('medicalModal')">فتح الخدمة</button>
+        </div>
+
+        <!-- الأمتعة المفقودة -->
+        <div class="service-large-card">
+            <div class="large-icon">🧳</div>
+            <h2>الأمتعة المفقودة</h2>
+            <p>تسجيل نوع الحقيبة ووصفها ورقم الغرفة لمتابعة المفقودات.</p>
+            <button onclick="openModal('lostModal')">تسجيل بلاغ</button>
+        </div>
+
+        <!-- الاتصال بالمشرف -->
+        <div class="service-large-card">
+            <div class="large-icon">📞</div>
+            <h2>الاتصال بالمشرف</h2>
+            <p>الوصول السريع إلى بيانات ومشرفي الحملة المباشرين.</p>
+            <button onclick="openModal('supervisorModal')">عرض المشرفين</button>
+        </div>
+
+        <!-- طلب الوجبات -->
+        <div class="service-large-card">
+            <div class="large-icon">🍽️</div>
+            <h2>طلب الوجبات</h2>
+            <p>عرض الإفطار والغداء والعشاء ومواعيد الوجبات والأصناف.</p>
+            <button onclick="openModal('mealsModal')">عرض الوجبات</button>
+        </div>
+
+        <!-- تقييم الخدمات -->
+        <div class="service-large-card">
+            <div class="large-icon">⭐</div>
+            <h2>تقييم الخدمات</h2>
+            <p>شاركنا رأيك وتقييمك لخدمات الحملة لمساعدتنا في تحسين تجربتك.</p>
+            <button onclick="openModal('ratingModal')">إضافة تقييم</button>
+        </div>
+
+        <!-- قيود الحملة -->
+        <div class="service-large-card">
+            <div class="large-icon">🧾</div>
+            <h2>قيود الحملة</h2>
+            <p>تسجيل المصروفات وإرفاق الفواتير وترحيل القيود للنظام.</p>
+            <a href="expenses.html">فتح القيود</a>
+        </div>
+
+        <!-- ثقافي وترفيهي -->
+        <div class="service-large-card">
+            <div class="large-icon">🎭</div>
+            <h2>ثقافي وترفيهي</h2>
+            <p>مسابقات وأنشطة ثقافية مع تصحيح آلي وقرعة وسحب.</p>
+            <a href="cultural.html">ابدأ النشاط</a>
+        </div>
+    </div>
+</main>
+
+<!-- ================= نافذة الرعاية الطبية ================= -->
+<div class="modal" id="medicalModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('medicalModal')">×</button>
+        <h2>فريق الرعاية الطبية</h2>
+        
+        <div class="info-card-item">
+            <h4>د. أحمد الشمري (طبيب الحملة العام)</h4>
+            <p>📞 رقم الجوال: 0551122334 — 📍 خيمة رقم 3</p>
+        </div>
+        <div class="info-card-item">
+            <h4>د. سارة الأحمد (طبيبة الطوارئ)</h4>
+            <p>📞 رقم الجوال: 0552233445 — 📍 المركز الطبي الرئيسي</p>
+        </div>
+        <div class="info-card-item">
+            <h4>الممرض/ محمد علي</h4>
+            <p>📞 رقم الجوال: 0553344556 — متاح 24 ساعة</p>
+        </div>
+        <div class="info-card-item">
+            <h4>الممرضة/ فاطمة الشهري</h4>
+            <p>📞 رقم الجوال: 0554455667 — متاح 24 ساعة</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= نافذة الاتصال بالمشرفين ================= -->
+<div class="modal" id="supervisorModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('supervisorModal')">×</button>
+        <h2>مشرفو الحملة المباشرون</h2>
+        <div id="supervisorsList">
+            <p style="color:#777;">جاري التحميل...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= نافذة طلب الوجبات ================= -->
+<div class="modal" id="mealsModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('mealsModal')">×</button>
+        <h2>جدول وأصناف الوجبات</h2>
+        
+        <div class="info-card-item">
+            <h4>وجبة الإفطار (6:00 ص - 8:00 ص)</h4>
+            <p>🍳 الأصناف: بيض مسلوق، فول، خبز، شاي، وجبن.</p>
+        </div>
+        <div class="info-card-item">
+            <h4>وجبة الغداء (1:00 م - 3:00 م)</h4>
+            <p>🍗 الأصناف: أرز بخاري ودجاج، سلطة، ومياه معدنية.</p>
+        </div>
+        <div class="info-card-item">
+            <h4>وجبة العشاء (7:00 م - 9:00 م)</h4>
+            <p>🥩 الأصناف: كبسة لحم أو دجاج، خبز، مع لبن وفواكه.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= نافذة الأمتعة المفقودة ================= -->
+<div class="modal" id="lostModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('lostModal')">×</button>
+        <h2>تسجيل أمتعة مفقودة</h2>
+        
+        <label>نوع الحقيبة</label>
+        <select id="lostBagType" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc;">
+            <option>حقيبة سفر كبيرة</option>
+            <option>حقيبة يد</option>
+            <option>حقيبة ظهر</option>
+        </select>
+
+        <label>رقم الغرفة / الخيمة</label>
+        <input type="text" id="lostRoom" placeholder="مثال: 214" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+
+        <label>وصف الحقيبة</label>
+        <textarea id="lostDesc" rows="3" placeholder="اللون والعلامة وأي تفاصيل مميزة" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;"></textarea>
+
+        <button type="button" class="main-button" onclick="submitLostReport(this)" style="width:100%; padding:12px; background:#0b3c29; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+            إرسال البلاغ
+        </button>
+    </div>
+</div>
+
+<!-- ================= نافذة تقييم الخدمات ================= -->
+<div class="modal" id="ratingModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('ratingModal')">×</button>
+        <h2>تقييم خدمات الحملة</h2>
+        
+        <label>الخدمة المراد تقييمها</label>
+        <select id="ratingServiceSelect" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc;">
+            <option>الخدمات العامة بالحملة</option>
+            <option>وجبات الطعام والمشروبات</option>
+            <option>الرعاية الطبية والترفيق</option>
+            <option>النظافة والتجهيزات بالمخيم</option>
+            <option>تعامل المشرفين والمرشدين</option>
+        </select>
+
+        <label style="display:block; text-align:center;">مستوى التقييم</label>
+        <div class="star-rating">
+            <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
+            <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+            <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+            <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+            <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+        </div>
+
+        <label>ملاحظاتك وآراؤك</label>
+        <textarea id="ratingComment" rows="3" placeholder="اكتب اقتراحاتك أو ملاحظاتك لتحسين الخدمة..." style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;"></textarea>
+
+        <button type="button" class="main-button" onclick="submitRating(this)" style="width:100%; padding:12px; background:#0b3c29; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+            إرسال التقييم
+        </button>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   صفحة الخدمات:
+     • قائمة المشرفين  : api/supervisors.php?action=list
+     • بلاغ المفقودات  : api/services.php?action=request → service_provisions
+     • تقييم الخدمات   : api/ratings.php?action=add      → ratings
+       (قائمة الخدمات في نافذة التقييم تُبنى من جدول services)
+   جدول الوجبات وفريق الرعاية الطبية نصوص ثابتة — لا جدول لهما.
+   --------------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin();
+    if (!user) return;
+    loadSupervisors();
+    loadRatingServices();
+});
+
+async function loadSupervisors() {
+    const box = document.getElementById('supervisorsList');
+    if (!box) return;
+    try {
+        const res = await API.get('supervisors.php', 'list');
+        if (!res.data.length) {
+            box.innerHTML = '<p style="color:#777;">لا يوجد مشرفون مسجلون.</p>';
+            return;
+        }
+        box.innerHTML = res.data.map(s => {
+            const sec = s.gender_section === 'all' ? 'إدارة الحملة'
+                      : (s.gender_section === 'women' ? 'قسم النساء' : 'قسم الرجال');
+            return `
+                <div class="info-card-item">
+                    <h4>${API.esc(s.name)} (${API.esc(s.job_title || 'مشرف')})</h4>
+                    <p>📞 ${API.esc(s.phone || '—')} — ⛺ ${API.esc(sec)}</p>
+                </div>`;
+        }).join('');
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;">تعذّر التحميل: ' + API.esc(err.message) + '</p>';
+    }
+}
+
+/* قائمة الخدمات في نافذة التقييم من جدول services */
+async function loadRatingServices() {
+    const sel = document.getElementById('ratingServiceSelect');
+    if (!sel) return;
+    try {
+        const res = await API.get('services.php', 'list');
+        sel.innerHTML = res.data.map(s =>
+            `<option value="${s.service_id}">${API.esc(s.service_name)}</option>`).join('');
+    } catch (err) {
+        sel.innerHTML = '<option value="">تعذّر تحميل الخدمات</option>';
+    }
+}
+
+async function submitRating(btn) {
+    const serviceId = document.getElementById('ratingServiceSelect').value;
+    const starInput = document.querySelector('input[name="rating"]:checked');
+    const comment   = document.getElementById('ratingComment').value.trim();
+
+    if (!serviceId) { alert('فضلاً اختر الخدمة.'); return; }
+    if (!starInput) { alert('فضلاً اختر عدد النجوم.'); return; }
+
+    btn.disabled = true;
+    try {
+        await API.post('ratings.php', 'add', {
+            service_id: serviceId,
+            stars: starInput.value,
+            comment: comment
+        });
+        closeModal('ratingModal');
+        starInput.checked = false;
+        document.getElementById('ratingComment').value = '';
+        alert('شكراً لك! تم حفظ تقييمك في قاعدة البيانات وسيظهر لإدارة الحملة.');
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function submitLostReport(btn) {
+    const type = document.getElementById('lostBagType').value;
+    const room = document.getElementById('lostRoom').value.trim();
+    const desc = document.getElementById('lostDesc').value.trim();
+    if (!desc) { alert('فضلاً اكتب وصف الحقيبة.'); return; }
+
+    btn.disabled = true;
+    try {
+        // رقم 5 = خدمة "الأمتعة المفقودة" في جدول services
+        await API.post('services.php', 'request', {
+            service_id: 5,
+            details: `${type} — خيمة/غرفة ${room || 'غير محددة'} — ${desc}`
+        });
+        closeModal('lostModal');
+        alert('تم تسجيل بلاغ المفقودات في قاعدة البيانات وتحويله للمشرف المختص.');
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function openModal(modalId)  { document.getElementById(modalId).classList.add('active'); }
+function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+</script>
+
+</body>
+</html>

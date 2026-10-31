@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غرفة المحادثة المركزية | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+        .chat-tab-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            transition: 0.3s;
+        }
+        .chat-tab-btn.active, .chat-tab-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .chat-room-content {
+            display: none;
+        }
+        .chat-room-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>غرفة المحادثة والتواصل</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html" class="active">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>تواصل مباشر ومقسّم حسب الصلاحيات (رجال ونساء ومشرفين)</span>
+        <h1>غرفة المحادثة المركزية</h1>
+        <p>التنقل التفاعلي المباشر بين غرف المحادثة المخصصة حسب القسم وصلاحية المستخدم.</p>
+    </div>
+
+    <!-- أزرار التبديل التفاعلية -->
+    <!-- أزرار الغرف تُبنى من جدول chat_rooms في قاعدة البيانات -->
+    <div class="chat-tabs" id="chatTabs"></div>
+
+    <!-- صندوق المحادثة الديناميكي -->
+    <div class="service-large-card" style="min-height: 420px; display: flex; flex-direction: column; justify-content: space-between;">
+        
+        <div>
+            <!-- الرسائل تُحمَّل من جدول messages -->
+            <div id="activeChatRoom" class="chat-room-content active"></div>
+        </div>
+
+        <!-- حقل إرسال الرسائل المعدل -->
+        <form id="chatForm" onsubmit="sendUserMessage(event)" style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+            <input type="text" id="chatMessageInput" placeholder="اكتب رسالتك في الغرفة النشطة..." style="flex: 3; min-width: 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px;" required>
+            <button type="submit" class="main-button" style="flex: 1; padding: 0 12px;">إرسال</button>
+        </form>
+
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   صفحة المحادثة — الغرف والرسائل من قاعدة البيانات:
+     • الغرف   : api/chat.php?action=rooms      (جدول chat_rooms)
+     • الرسائل : api/chat.php?action=messages   (جدول messages)
+     • الإرسال : api/chat.php?action=send
+   الغرف المعروضة تعتمد على قسم المستخدم ودوره، والخادم هو من يفلتر.
+   --------------------------------------------------------------- */
+
+let ACTIVE_ROOM = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin();
+    if (!user) return;
+
+    const tabs = document.getElementById('chatTabs');
+
+    try {
+        const res = await API.get('chat.php', 'rooms');
+        if (!res.data.length) {
+            tabs.innerHTML = '<p style="color:#777;">لا توجد غرف محادثة متاحة لك.</p>';
+            return;
+        }
+
+        tabs.innerHTML = res.data.map((r, i) =>
+            `<button type="button" class="chat-tab-btn${i === 0 ? ' active' : ''}"
+                     onclick="switchChatRoom(${r.room_id}, this)">${API.esc(r.room_name)}</button>`
+        ).join('');
+
+        await openRoom(res.data[0].room_id);
+
+    } catch (err) {
+        tabs.innerHTML = '<p style="color:#c00;">تعذّر تحميل الغرف: ' + API.esc(err.message) + '</p>';
+    }
+});
+
+function switchChatRoom(roomId, btnElement) {
+    document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+    openRoom(roomId);
+}
+
+async function openRoom(roomId) {
+    ACTIVE_ROOM = roomId;
+    const box = document.getElementById('activeChatRoom');
+    box.innerHTML = '<p style="color:#777;">جاري تحميل الرسائل...</p>';
+
+    try {
+        const res = await API.get('chat.php', 'messages', { room_id: roomId });
+        renderMessages(res.data);
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;">' + API.esc(err.message) + '</p>';
+    }
+}
+
+function renderMessages(list) {
+    const box = document.getElementById('activeChatRoom');
+
+    if (!list.length) {
+        box.innerHTML = '<p style="color:#777;">لا توجد رسائل في هذه الغرفة بعد.</p>';
+        return;
+    }
+
+    box.innerHTML = list.map(m => {
+        const bg = m.mine ? '#e8f5e9'
+                 : (m.sender_type === 'supervisor' ? '#e3f2fd'
+                 : (m.sender_type === 'campaign'  ? '#fff3e0' : '#f1f3f4'));
+        return `
+            <div class="message" style="margin-bottom:12px; padding:12px; border-radius:8px; background:${bg};">
+                <strong>${API.esc(m.mine ? 'أنت' : m.sender_name)}:</strong>
+                <p style="margin:5px 0 0;">${API.esc(m.message_text)}</p>
+                <span style="font-size:10px; color:#888;">${API.esc(m.sent_at)}</span>
+            </div>`;
+    }).join('');
+
+    box.scrollTop = box.scrollHeight;
+}
+
+async function sendUserMessage(event) {
+    event.preventDefault();
+
+    const input = document.getElementById('chatMessageInput');
+    const text  = input.value.trim();
+    if (!text || !ACTIVE_ROOM) return;
+
+    input.disabled = true;
+    try {
+        await API.post('chat.php', 'send', { room_id: ACTIVE_ROOM, message: text });
+        input.value = '';
+        await openRoom(ACTIVE_ROOM);
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+</script>
+<script src="js/app.js"></script>
+</body>
+</html>

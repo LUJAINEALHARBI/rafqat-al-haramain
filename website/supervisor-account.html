@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ملف المشرف | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            max-width: 600px;
+            margin: 40px auto;
+            text-align: right;
+            border-top: 5px solid #0b3c29;
+        }
+        .profile-info-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+        .profile-info-group label {
+            font-size: 13px;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .profile-info-group span {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .badge-role {
+            background: #e3f2fd;
+            color: #0d6efd;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-role-female {
+            background: #fce4ec;
+            color: #d81b60;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-supervisor.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span id="navSubtitle">ملف المشرف</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-supervisor.html">لوحة التحكم</a>
+            <a href="supervisor-account.html" class="active">ملفي</a>
+            <a href="javascript:void(0);" onclick="logoutSupervisor()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>بيانات الحساب الوظيفي</span>
+        <h1 id="pageMainTitle">الملف الشخصي للمشرف</h1>
+        <p>استعراض بيانات الاعتماد الإشرافي ونطاق المسؤولية الميدانية.</p>
+    </div>
+
+    <div class="profile-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="supName">مشرف الحملة</h2>
+            <span class="badge-role" id="supRoleBadge">مشرف قطاع</span>
+        </div>
+
+        <div class="profile-info-group">
+            <label>رقم الهوية / المعرف الوظيفي</label>
+            <span id="supId">500101</span>
+        </div>
+
+        <div class="profile-info-group">
+            <label>القسم الميداني المسؤول عنه</label>
+            <span id="supSection">قسم الرجال</span>
+        </div>
+
+        <div class="profile-info-group">
+            <label>النطاق الإشرافي ومخيمات المتابعة</label>
+            <span id="supScope">مخيم مِنا (قطاع الرجال) - فندق مكة</span>
+        </div>
+
+        <div class="profile-info-group" style="border: none;">
+            <label>حالة الحساب</label>
+            <span style="color: #2e7d32;">● نشط ومعتمد من الإدارة المركزية</span>
+        </div>
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script>
+/* الملف الشخصي للمشرف — من جدول supervisors وجدول jobs المرتبط به */
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['supervisor']);
+    if (!user) return;
+
+    const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+
+    try {
+        const res = await API.get('supervisors.php', 'profile');
+        const s = res.data;
+        const isFemale = s.active_section === 'women';
+
+        set('supId', s.supervisor_id);
+        set('supName', s.name);
+        set('pageMainTitle', isFemale ? 'الملف الشخصي للمشرفة' : 'الملف الشخصي للمشرف');
+        set('navSubtitle',   isFemale ? 'ملف المشرفة' : 'ملف المشرف');
+
+        const badge = document.getElementById('supRoleBadge');
+        if (badge) {
+            badge.innerText = s.job_title || (isFemale ? 'مشرفة قطاع' : 'مشرف قطاع');
+            badge.className = isFemale ? 'badge-role-female' : 'badge-role';
+        }
+
+        set('supSection', isFemale
+            ? 'قسم النساء (مخيمات قطاع النساء)'
+            : (s.is_general ? 'متابعة شاملة للقسمين' : 'قسم الرجال (مخيمات قطاع الرجال)'));
+
+        set('supScope', [s.campaign_name, s.location].filter(Boolean).join(' - ')
+                        || 'غير محدد');
+
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بيانات المشرف.');
+    }
+});
+</script>
+
+</body>
+</html>

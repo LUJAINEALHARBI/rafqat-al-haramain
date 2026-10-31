@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قيود الحملة المالية | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* تنسيقات إضافية للنافذة والجدول لضمان التفاعل السلس */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px; left: 20px;
+            background: none; border: none;
+            font-size: 24px; cursor: pointer; color: #888;
+        }
+        .financial-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .financial-cards > div {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 4px solid #0d6efd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .financial-cards span { display: block; font-size: 13px; color: #666; }
+        .financial-cards strong { font-size: 20px; color: #0b3c49; }
+        .table-container { margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: right; font-size: 14px; }
+        th { background: #f8f9fa; color: #0d6efd; }
+        .receipt-box {
+            background: #f8f9fa;
+            border: 1px dashed #ccc;
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+            margin: 10px 0 15px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار الحملة">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <span>الإدارة المالية</span>
+        <h1>قيود الحملة</h1>
+        <p>تسجيل المصروفات وإرفاق الفواتير وترحيل القيود للنظام إلكترونياً.</p>
+    </div>
+
+    <div class="financial-cards">
+        <div>
+            <span>إجمالي القيود</span>
+            <strong id="expenseCount">0</strong>
+        </div>
+
+        <div>
+            <span>إجمالي المصروفات</span>
+            <strong id="expenseTotal">0 ر.س</strong>
+        </div>
+
+        <div>
+            <span>حالة الفواتير</span>
+            <strong id="receiptCount">📎 0 موثقة</strong>
+        </div>
+    </div>
+
+    <button class="main-button" onclick="openExpenseModal()" style="margin-bottom: 15px;">
+        + إضافة قيد جديد
+    </button>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>البيان</th>
+                    <th>المبلغ</th>
+                    <th>التصنيف</th>
+                    <th>التاريخ</th>
+                    <th>الفاتورة</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="expensesTable">
+                <!-- يتم تعبئة القيود هنا تفاعلياً -->
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- MODAL إضافة قيد -->
+<div class="modal" id="expenseModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeExpenseModal()">×</button>
+        <h2 style="margin-bottom: 15px;">إضافة قيد جديد</h2>
+
+        <form id="expenseForm">
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">بيان المصروف</label>
+                <input type="text" id="expenseDescription" placeholder="مثال: شراء مستلزمات طبية" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;" required>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">المبلغ (ر.س)</label>
+                <input type="number" id="expenseAmount" placeholder="0" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;" required>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">التصنيف</label>
+                <select id="expenseCategory" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                    <option>مستلزمات</option>
+                    <option>نقل</option>
+                    <option>وجبات</option>
+                    <option>تشغيل</option>
+                    <option>أخرى</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">تصوير / رفع الفاتورة</label>
+                <input type="file" id="receipt" accept="image/*,.pdf" capture="environment" style="width:100%;">
+            </div>
+
+            <div class="receipt-box">
+                📷 يمكنك تصوير الفاتورة مباشرة من الجوال أو رفع ملف PDF
+            </div>
+
+            <button class="main-button" type="submit" style="width: 100%;">
+                حفظ القيد وترحيله
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   صفحة القيود المالية — صارت تحفظ وتقرأ من جدول expenses
+   في قاعدة البيانات عبر api/expenses.php بدل localStorage.
+   الفاتورة تُرفع فعلياً إلى مجلد uploads/ على الخادم.
+   --------------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['supervisor', 'campaign']);
+    if (!user) return;
+
+    loadExpenses();
+
+    const expenseForm = document.getElementById("expenseForm");
+    if (!expenseForm) return;
+
+    expenseForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const btn = expenseForm.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.innerText : '';
+        if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+        try {
+            // FormData حتى يُرسَل ملف الفاتورة مع البيانات
+            const fd = new FormData();
+            fd.append('description', document.getElementById("expenseDescription").value.trim());
+            fd.append('amount',      document.getElementById("expenseAmount").value);
+            fd.append('category',    document.getElementById("expenseCategory").value);
+
+            const fileInput = document.getElementById("receipt");
+            if (fileInput && fileInput.files.length > 0) {
+                fd.append('receipt', fileInput.files[0]);
+            }
+
+            await API.postForm('expenses.php', 'add', fd);
+
+            alert("تم حفظ القيد المالي وترحيله بنجاح ✓");
+            closeExpenseModal();
+            expenseForm.reset();
+            loadExpenses();
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerText = originalText; }
+        }
+    });
+});
+
+function openExpenseModal()  { document.getElementById("expenseModal").style.display = "flex"; }
+function closeExpenseModal() { document.getElementById("expenseModal").style.display = "none"; }
+
+async function loadExpenses() {
+    const tableBody       = document.getElementById("expensesTable");
+    const countElem       = document.getElementById("expenseCount");
+    const totalElem       = document.getElementById("expenseTotal");
+    const receiptCountElem = document.getElementById("receiptCount");
+
+    API.tableMessage(tableBody, 7, 'جاري تحميل القيود من قاعدة البيانات...');
+
+    try {
+        const res   = await API.get('expenses.php', 'list');
+        const items = res.data;
+        const sum   = res.summary;
+
+        if (!items.length) {
+            API.tableMessage(tableBody, 7, 'لا توجد قيود مالية مسجلة حالياً.');
+        } else {
+            tableBody.innerHTML = items.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${API.esc(item.description)}</strong></td>
+                    <td>${Number(item.amount).toLocaleString()} ر.س</td>
+                    <td><span style="background:#e3f2fd; color:#0d6efd; padding:2px 8px; border-radius:4px; font-size:12px;">${API.esc(item.category)}</span></td>
+                    <td>${API.esc(item.expense_date)}</td>
+                    <td>${item.hasReceipt
+                            ? `<a href="uploads/${API.esc(item.receipt_file)}" target="_blank" style="color:#198754;">📎 مرفقة</a>`
+                            : '<span style="color:#888;">بدون</span>'}</td>
+                    <td><span style="color:#198754; font-weight:bold;">${API.esc(item.status)}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        if (countElem)        countElem.innerText = sum.count;
+        if (totalElem)        totalElem.innerText = `${Number(sum.total).toLocaleString()} ر.س`;
+        if (receiptCountElem) receiptCountElem.innerText = `📎 ${sum.withReceipt} موثقة`;
+
+    } catch (err) {
+        API.tableMessage(tableBody, 7, 'تعذّر تحميل القيود: ' + err.message);
+    }
+}
+</script>
+
+</body>
+</html>

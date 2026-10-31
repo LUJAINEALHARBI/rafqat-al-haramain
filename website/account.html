@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار الحملة">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html" class="active">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="login.html" style="color: #dc3545;" onclick="logoutUser(event)">تسجيل خروج</a>
+        </nav>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>بيانات الحاج</span>
+        <h1>الملف الشخصي</h1>
+        <p>يمكنك تعديل بياناتك الشخصية وحفظها أو تسجيل الخروج من الحساب.</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">ح</div>
+            <div>
+                <h2>بيانات الحاج</h2>
+                <p>معلوماتك محفوظة بشكل آمن ومتوافقة مع جداول الـ ERD.</p>
+            </div>
+        </div>
+
+        <form id="profileForm">
+            <div class="form-grid">
+                <div>
+                    <label>الاسم الكامل</label>
+                    <input type="text" name="name" placeholder="الاسم الكامل" required>
+                </div>
+
+                <div>
+                    <label>العمر</label>
+                    <input type="number" name="age" placeholder="العمر">
+                </div>
+
+                <div>
+                    <label>الجنس</label>
+                    <select name="gender">
+                        <option value="male">ذكر (قسم الرجال)</option>
+                        <option value="female">أنثى (قسم النساء)</option>
+                    </select>
+                </div>
+
+                <!-- حقل الجنسية يدعم العربية والإنجليزية (بحث ثنائي اللغة) -->
+                <div>
+                    <label>الجنسية / Nationality</label>
+                    <input type="text" name="nationality" list="nationalitiesListAcc" placeholder="اكتب بالعربية أو الإنجليزية...">
+                    <datalist id="nationalitiesListAcc">
+                        <!-- الدول العربية (عربي وإنجليزي) -->
+                        <option value="المملكة العربية السعودية (Saudi Arabia)">
+                        <option value="الإمارات العربية المتحدة (United Arab Emirates)">
+                        <option value="الكويت (Kuwait)">
+                        <option value="مملكة البحرين (Bahrain)">
+                        <option value="دولة قطر (Qatar)">
+                        <option value="سلطنة عمان (Oman)">
+                        <option value="المملكة الأردنية الهاشمية (Jordan)">
+                        <option value="جمهورية مصر العربية (Egypt)">
+                        <option value="جمهورية العراق (Iraq)">
+                        <option value="الجمهورية العربية السورية (Syria)">
+                        <option value="الجمهورية اللبنانية (Lebanon)">
+                        <option value="دولة فلسطين (Palestine)">
+                        <option value="جمهورية السودان (Sudan)">
+                        <option value="الجمهورية اليمنية (Yemen)">
+                        <option value="المملكة المغربية (Morocco)">
+                        <option value="الجمهورية الجزائرية (Algeria)">
+                        <option value="الجمهورية التونسية (Tunisia)">
+                        <option value="دولة ليبيا (Libya)">
+                        <option value="جمهورية الصومال (Somalia)">
+                        <option value="جمهورية جيبوتي (Djibouti)">
+                        <option value="جمهورية جزر القمر (Comoros)">
+                        <option value="الجمهورية الإسلامية الموريتانية (Mauritania)">
+                        
+                        <!-- أبرز الدول الآسيوية والأوروبية والأمريكية -->
+                        <option value="جمهورية إندونيسيا (Indonesia)">
+                        <option value="جمهورية باكستان الإسلامية (Pakistan)">
+                        <option value="جمهورية الهند (India)">
+                        <option value="جمهورية بنغلاديش الشعبية (Bangladesh)">
+                        <option value="ماليزيا (Malaysia)">
+                        <option value="جمهورية تركيا (Turkey)">
+                        <option value="جمهورية إيران الإسلامية (Iran)">
+                        <option value="جمهورية الصين الشعبية (China)">
+                        <option value="اليابان (Japan)">
+                        <option value="جمهورية كوريا الجنوبية (South Korea)">
+                        <option value="مملكة تايلاند (Thailand)">
+                        <option value="جمهورية الفلبين (Philippines)">
+                        <option value="المملكة المتحدة - بريطانيا (United Kingdom)">
+                        <option value="جمهورية فرنسا (France)">
+                        <option value="جمهورية ألمانيا الاتحادية (Germany)">
+                        <option value="إيطاليا (Italy)">
+                        <option value="إسبانيا (Spain)">
+                        <option value="الاتحاد السويسري (Switzerland)">
+                        <option value="الولايات المتحدة الأمريكية (United States)">
+                        <option value="كندا (Canada)">
+                        <option value="جمهورية البرازيل الاتحادية (Brazil)">
+                        <option value="كومنولث أستراليا (Australia)">
+                        <option value="جمهورية جنوب إفريقيا (South Africa)">
+                    </datalist>
+                </div>
+
+                <!-- حقل المدينة يدعم العربية والإنجليزية (بحث ثنائي اللغة) -->
+                <div>
+                    <label>المدينة / City</label>
+                    <input type="text" name="city" list="citiesListAcc" placeholder="اكتب بالعربية أو الإنجليزية...">
+                    <datalist id="citiesListAcc">
+                        <!-- المدن السعودية (عربي وإنجليزي) -->
+                        <option value="جدة (Jeddah)">
+                        <option value="مكة المكرمة (Makkah)">
+                        <option value="المدينة المنورة (Madinah)">
+                        <option value="الرياض (Riyadh)">
+                        <option value="الدمام (Dammam)">
+                        <option value="الخبر (Khobar)">
+                        <option value="الطائف (Taif)">
+                        <option value="أبها (Abha)">
+                        <option value="تبوك (Tabuk)">
+                        <option value="بريدة (Buraydah)">
+                        <option value="حائل (Hail)">
+                        <option value="جازان (Jazan)">
+                        <option value="الجبيل (Jubail)">
+                        <option value="ينبع (Yanbu)">
+                        
+                        <!-- أبرز العواصم والمدن العالمية -->
+                        <option value="دبي (Dubai)">
+                        <option value="أبوظبي (Abu Dhabi)">
+                        <option value="الدوحة (Doha)">
+                        <option value="الكويت العاصمة (Kuwait City)">
+                        <option value="المنامة (Manama)">
+                        <option value="مسقط (Muscat)">
+                        <option value="عمان (Amman)">
+                        <option value="القاهرة (Cairo)">
+                        <option value="الإسكندرية (Alexandria)">
+                        <option value="بغداد (Baghdad)">
+                        <option value="بيروت (Beirut)">
+                        <option value="إسطنبول (Istanbul)">
+                        <option value="أنقرة (Ankara)">
+                        <option value="جاكرتا (Jakarta)">
+                        <option value="كوالالمبور (Kuala Lumpur)">
+                        <option value="إسلام آباد (Islamabad)">
+                        <option value="نيودلهي (New Delhi)">
+                        <option value="طوكيو (Tokyo)">
+                        <option value="بكين (Beijing)">
+                        <option value="لندن (London)">
+                        <option value="باريس (Paris)">
+                        <option value="برلين (Berlin)">
+                        <option value="روما (Rome)">
+                        <option value="مدريد (Madrid)">
+                        <option value="جنيف (Geneva)">
+                        <option value="واشنطن (Washington D.C.)">
+                        <option value="نيويورك (New York)">
+                        <option value="تورونتو (Toronto)">
+                    </datalist>
+                </div>
+
+                <div>
+                    <label>الحالة الاجتماعية</label>
+                    <select name="marital">
+                        <option>أعزب / عزباء</option>
+                        <option>متزوج / متزوجة</option>
+                        <option>مطلق / مطلقة</option>
+                        <option>أرمل / أرملة</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>رقم الهوية</label>
+                    <input type="text" name="nationalId" placeholder="رقم الهوية">
+                </div>
+
+                <div>
+                    <label>رقم الجوال</label>
+                    <input type="tel" name="phone" placeholder="05xxxxxxxx">
+                </div>
+
+                <div>
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email" placeholder="name@example.com">
+                </div>
+
+                <div>
+                    <label>رقم المشرف</label>
+                    <input type="text" name="supervisorId" value="50001">
+                </div>
+
+                <div class="full-field">
+                    <label>هل توجد أمراض مزمنة؟</label>
+                    <textarea name="chronic" rows="3" placeholder="اكتب إن وجد أو اكتب لا يوجد"></textarea>
+                </div>
+            </div>
+
+            <!-- أزرار الحفظ وتسجيل الخروج في الأسفل -->
+            <div style="display: flex; gap: 15px; margin-top: 25px;">
+                <button class="main-button" type="submit" style="flex: 2;">
+                    حفظ التعديلات
+                </button>
+                <button type="button" onclick="logoutUser()" style="flex: 1; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; padding: 12px;">
+                    تسجيل خروج
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script>
+/* الملف الشخصي صار يُقرأ ويُحدَّث من جدول pilgrims في قاعدة البيانات
+   عبر api/pilgrims.php (get / update) بدل localStorage. */
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['pilgrim']);
+    if (!user) return;
+
+    const setField = (name, value) => {
+        const input = document.querySelector(`[name="${name}"]`);
+        if (input && value !== null && value !== undefined) input.value = value;
+    };
+
+    try {
+        const res = await API.get('pilgrims.php', 'get');
+        const p = res.data;
+
+        setField('name', p.name);
+        setField('age', p.age);
+        setField('gender', p.gender);
+        setField('nationality', p.nationality);
+        setField('city', p.city);
+        setField('marital', p.marital_status);
+        setField('nationalId', p.id_or_passport);
+        setField('phone', p.phone);
+        setField('email', p.email);
+        setField('chronic', p.chronic_conditions);
+        setField('supervisorId', p.supervisor_id);
+
+        // رقم العضوية واسم المشرف إن وُجدت أماكن لعرضهما
+        const idBox = document.getElementById('membershipId');
+        if (idBox) idBox.innerText = p.pilgrim_id;
+
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بيانات الملف الشخصي.');
+    }
+
+    const profileForm = document.getElementById('profileForm');
+    if (!profileForm) return;
+
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = profileForm.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.innerText : '';
+        if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+        try {
+            const data = Object.fromEntries(new FormData(profileForm).entries());
+            await API.post('pilgrims.php', 'update', data);
+            alert('تم تحديث وحفظ بيانات الملف بنجاح ✓');
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerText = originalText; }
+        }
+    });
+});
+</script>
+</body>
+</html>

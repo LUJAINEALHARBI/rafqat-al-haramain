@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ملف الحملة | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .campaign-section {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .campaign-section h3 {
+            margin-bottom: 20px;
+            color: var(--primary, #0d6efd);
+            border-bottom: 2px solid #f1f3f4;
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #444;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #ffffff;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-right: 4px solid var(--primary, #0d6efd);
+            text-align: right;
+        }
+        .stat-card h4 { margin: 0 0 5px; color: #666; font-size: 13px; }
+        .stat-card p { margin: 0; font-size: 22px; font-weight: bold; color: #222; }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-campaign.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>إدارة ملف الحملة العليا</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-campaign.html">لوحة الحملة</a>
+            <a href="campaign-profile.html" class="active">ملف الحملة</a>
+            <a href="javascript:void(0);" onclick="logoutCampaign()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>إدارة مواصفات وترخيص حملة الحج (صلاحيات 300xxx)</span>
+        <h1>ملف الحملة - رفقة بلاد الحرمين</h1>
+        <p>إدارة البيانات الأساسية، التراخيص، الباقات، مواصفات السكن والنقل، وإحصائيات المقاعد المتاحة للحملة.</p>
+    </div>
+
+    <!-- الإحصائيات والمقاعد -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>العدد الإجمالي للحجاج</h4>
+            <p id="totalPilgrims">500</p>
+        </div>
+        <div class="stat-card">
+            <h4>الحجوزات المؤكدة</h4>
+            <p id="confirmedBookings" style="color:#28a745;">420</p>
+        </div>
+        <div class="stat-card">
+            <h4>المقاعد المتاحة</h4>
+            <p id="availableSeats" style="color:#ff9800;">80</p>
+        </div>
+        <div class="stat-card">
+            <h4>حالة التوثيق والترخيص</h4>
+            <p style="color:#0d6efd; font-size:16px;">مُعتمد ومتحقق ✓</p>
+        </div>
+    </div>
+
+    <form id="campaignProfileForm" onsubmit="saveCampaignData(event)">
+        <!-- 1. البيانات الأساسية والترخيص -->
+        <div class="campaign-section">
+            <h3>1. البيانات الأساسية والترخيص</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>اسم الحملة</label>
+                    <input type="text" id="campaignName" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الحملة (تلقائي)</label>
+                    <input type="text" id="campaignId" readonly style="background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>اسم الشركة أو المؤسسة</label>
+                    <input type="text" id="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الترخيص الرسمي</label>
+                    <input type="text" id="licenseNumber" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>وصف الحملة والخدمات المقدمة</label>
+                <textarea id="campaignDescription" rows="3"></textarea>
+            </div>
+        </div>
+
+        <!-- 2. المواعيد والموسم -->
+        <div class="campaign-section">
+            <h3>2. الموسم والمواعيد</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>موسم الحج والسنة</label>
+                    <input type="text" id="hajjSeason" value="حج 1447 هـ - 2026 م" required>
+                </div>
+                <div class="form-group">
+                    <label>مدينة الانطلاق والتجمع</label>
+                    <input type="text" id="startCity" required>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ بداية الرحلة</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label>تاريخ نهاية الرحلة</label>
+                    <input type="date" id="endDate" value="2026-06-15">
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. الباقات والسكن والنقل -->
+        <div class="campaign-section">
+            <h3>3. الباقات، السكن والإعاشة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>اسم ونوع الباقة</label>
+                    <select id="packageType">
+                        <option value="VIP">باقة الضيافة المتميزة (VIP)</option>
+                        <option value="Standard">الباقة الاقتصادية الميسرة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>سعر الفرد (ريال سعودي)</label>
+                    <input type="number" id="pricePerPerson" required>
+                </div>
+                <div class="form-group">
+                    <label>موقع ونوع السكن</label>
+                    <input type="text" id="housingDetails" value="فندق أبراج الحرم + مخيمات منى المطورة (أ)" required>
+                </div>
+                <div class="form-group">
+                    <label>وسائل النقل والمواصلات</label>
+                    <input type="text" id="transportDetails" value="حافلات مكيفة حديثة + قطار المشاعر المقدسة" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. مسؤول التواصل والأزرار -->
+        <div class="campaign-section">
+            <h3>4. بيانات التواصل والإدارة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>اسم المسؤول عن الحملة</label>
+                    <input type="text" id="managerName" required>
+                </div>
+                <div class="form-group">
+                    <label>رقم الجوال للتواصل</label>
+                    <input type="text" id="managerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني الرسمي</label>
+                    <input type="email" id="managerEmail" required>
+                </div>
+            </div>
+
+            <!-- الأزرار المطلوبة: حفظ الحملة، معاينة الحملة، وتعديل الحملة -->
+            <div class="btn-group">
+                <button type="submit" class="main-button" style="padding: 12px 25px;">حفظ الحملة</button>
+                <button type="button" class="main-button" style="background:#6c757d; padding: 12px 25px;" onclick="previewCampaign()">معاينة الحملة</button>
+                <button type="button" class="main-button" style="background:#17a2b8; padding: 12px 25px;" onclick="enableEditing()">تعديل الحملة</button>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   ملف الحملة — يُقرأ ويُحدَّث في جدول campaigns عبر api/campaign.php
+   --------------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin(['campaign']);
+    if (!user) return;
+    loadCampaign();
+});
+
+const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = (v === null || v === undefined) ? '' : v;
+};
+
+async function loadCampaign() {
+    try {
+        const res = await API.get('campaign.php', 'get');
+        const c = res.data;
+
+        setVal('campaignName',   c.campaign_name);
+        setVal('campaignId',     c.campaign_id);
+        setVal('companyName',    c.company_name);
+        setVal('licenseNumber',  c.license_number);
+        setVal('campaignDescription', c.extra_info);
+        setVal('startCity',      c.start_city);
+        setVal('startDate',      c.start_date);
+        setVal('pricePerPerson', c.price_per_person);
+        setVal('managerName',    c.manager_name);
+        setVal('managerPhone',   c.manager_phone);
+        setVal('managerEmail',   c.manager_email);
+
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بيانات الحملة.');
+    }
+}
+
+async function saveCampaignData(event) {
+    event.preventDefault();
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    const original = btn ? btn.innerText : '';
+    if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+    const val = id => (document.getElementById(id) || {}).value;
+
+    try {
+        await API.post('campaign.php', 'update', {
+            campaign_name:    val('campaignName'),
+            company_name:     val('companyName'),
+            license_number:   val('licenseNumber'),
+            extra_info:       val('campaignDescription'),
+            start_city:       val('startCity'),
+            start_date:       val('startDate'),
+            price_per_person: val('pricePerPerson'),
+            manager_name:     val('managerName'),
+            manager_phone:    val('managerPhone'),
+            manager_email:    val('managerEmail')
+        });
+        alert('تم حفظ وتحديث بيانات الحملة في قاعدة البيانات بنجاح ✓');
+        loadCampaign();
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerText = original; }
+    }
+}
+
+function previewCampaign() {
+    const val = id => (document.getElementById(id) || {}).value;
+    alert('معاينة بيانات الحملة الحالية:\n\n'
+        + '• اسم الحملة: '   + val('campaignName')   + '\n'
+        + '• رقم الترخيص: '  + val('licenseNumber')  + '\n'
+        + '• سعر الفرد: '    + val('pricePerPerson') + ' ريال\n'
+        + '• نقطة الانطلاق: '+ val('startCity'));
+}
+
+function enableEditing() {
+    alert('الحقول جاهزة للتعديل، وبعد التعديل اضغطي "حفظ الحملة".');
+    document.getElementById('campaignName').focus();
+}
+</script>
+</body>
+</html>

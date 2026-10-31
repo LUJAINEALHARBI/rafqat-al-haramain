@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب جديد | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار الحملة">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="login.html">تسجيل الدخول</a>
+        </nav>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>تسجيل حاج جديد في النظام</span>
+        <h1>إنشاء حساب جديد</h1>
+        <p>يرجى إدخال البيانات بدقة لتتطابق مع جداول قاعدة البيانات والـ ERD.</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">جديد</div>
+            <div>
+                <h2>بيانات التسجيل</h2>
+                <p>جميع الحقول مرتبطة بقاعدة البيانات ونظام الصلاحيات.</p>
+            </div>
+        </div>
+
+        <form id="registerForm">
+            <div class="form-grid">
+                <div>
+                    <label>الاسم الكامل</label>
+                    <input type="text" name="name" placeholder="الاسم الكامل" required>
+                </div>
+
+                <div>
+                    <label>العمر</label>
+                    <input type="number" name="age" placeholder="العمر" required>
+                </div>
+
+                <div>
+                    <label>الجنس</label>
+                    <select name="gender" required>
+                        <option value="" disabled selected>اختر الجنس</option>
+                        <option value="male">ذكر (قسم الرجال)</option>
+                        <option value="female">أنثى (قسم النساء)</option>
+                    </select>
+                </div>
+
+                <!-- حقل الجنسية مع البحث الفوري -->
+                <div>
+                    <label>الجنسية (Nationality)</label>
+                    <input type="text" name="nationality" list="nationalitiesList" placeholder="اكتب أول حرف أو اختر الدولة..." required>
+                    <datalist id="nationalitiesList">
+                        <option value="Saudi Arabia">
+                        <option value="United Arab Emirates">
+                        <option value="Kuwait">
+                        <option value="Bahrain">
+                        <option value="Qatar">
+                        <option value="Oman">
+                        <option value="Egypt">
+                        <option value="Jordan">
+                        <option value="United States">
+                        <option value="United Kingdom">
+                        <option value="Canada">
+                        <option value="France">
+                        <option value="Germany">
+                        <option value="India">
+                        <option value="Pakistan">
+                        <option value="Indonesia">
+                        <option value="Malaysia">
+                        <option value="Other">
+                    </datalist>
+                </div>
+
+                <!-- حقل المدينة مع البحث الفوري -->
+                <div>
+                    <label>المدينة (City)</label>
+                    <input type="text" name="city" list="citiesList" placeholder="اكتب أول حرف أو اختر المدينة..." required>
+                    <datalist id="citiesList">
+                        <option value="Jeddah">
+                        <option value="Makkah">
+                        <option value="Madinah">
+                        <option value="Riyadh">
+                        <option value="Dammam">
+                        <option value="Cairo">
+                        <option value="Dubai">
+                        <option value="Doha">
+                        <option value="London">
+                        <option value="New York">
+                        <option value="Paris">
+                        <option value="Kuala Lumpur">
+                        <option value="Jakarta">
+                        <option value="Other">
+                    </datalist>
+                </div>
+
+                <div>
+                    <label>الحالة الاجتماعية</label>
+                    <select name="marital">
+                        <option>أعزب / عزباء</option>
+                        <option>متزوج / متزوجة</option>
+                        <option>مطلق / مطلقة</option>
+                        <option>أرمل / أرملة</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>رقم الهوية / الإقامة / الجواز</label>
+                    <input type="text" name="nationalId" placeholder="رقم الهوية" required>
+                </div>
+
+                <div>
+                    <label>رقم الجوال</label>
+                    <input type="tel" name="phone" placeholder="05xxxxxxxx" required>
+                </div>
+
+                <div>
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email" placeholder="name@example.com" required>
+                </div>
+
+                <div>
+                    <label>كلمة المرور (6 خانات فأكثر)</label>
+                    <input type="password" name="password" placeholder="أدخل كلمة المرور" minlength="6" required>
+                </div>
+
+                <div>
+                    <label>رقم الحملة</label>
+                    <input type="text" name="campaignId" placeholder="مثال: 30089" required>
+                </div>
+
+                <div>
+                    <label>رقم المشرف</label>
+                    <input type="text" name="supervisorId" placeholder="مثال: 50001" required>
+                </div>
+
+                <div class="full-field">
+                    <label>هل توجد أمراض مزمنة؟</label>
+                    <textarea name="chronic" rows="3" placeholder="اكتب إن وجد أو اكتب لا يوجد"></textarea>
+                </div>
+            </div>
+
+            <button class="main-button" type="submit" style="margin-top: 20px; width: 100%;">
+                إنشاء الحساب وحفظ البيانات
+            </button>
+        </form>
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script>
+/* صار التسجيل يحفظ الحاج فعلياً في جدول pilgrims بقاعدة البيانات
+   عبر api/pilgrims.php?action=register ، بدل حفظه في المتصفح. */
+document.addEventListener("DOMContentLoaded", () => {
+    const registerForm = document.getElementById('registerForm');
+    if (!registerForm) return;
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = registerForm.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'جاري الحفظ...';
+
+        try {
+            const data = Object.fromEntries(new FormData(registerForm).entries());
+            const res = await API.post('pilgrims.php', 'register', data);
+
+            alert('تم إنشاء الحساب بنجاح ✓\n\n'
+                + 'رقم عضويتك هو: ' + res.data.pilgrim_id + '\n'
+                + 'احفظه فهو رقم الدخول للنظام.');
+
+            window.location.href = 'login.html';
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    });
+});
+</script>
+</body>
+</html>

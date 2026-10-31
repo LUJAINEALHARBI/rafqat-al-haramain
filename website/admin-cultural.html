@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الثقافية والمسابقات | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-section, .lottery-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-right: 5px solid #0d6efd;
+        }
+        .lottery-card {
+            border-right-color: #c5a059;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #0b3c49;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .gold-button {
+            background: #c5a059;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .gold-button:hover {
+            background: #b08d46;
+        }
+        .lottery-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0b3c49;
+            margin: 15px 0;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .winner-message {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f6ed;
+            border-radius: 8px;
+            border: 1px dashed #c5a059;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- شريط التنقل العلوي الموحد لمدير الحملة -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-campaign.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>إدارة المسابقات والتصحيح</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-campaign.html">لوحة الحملة</a>
+            <a href="campaign-profile.html">ملف الحملة</a>
+            <a href="admin-cultural.html" class="active">التصحيح والقرعة</a>
+            <a href="javascript:void(0);" onclick="logoutAdmin()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>لوحة الكنترول الإدارية</span>
+        <h1>إدارة المسابقات والتصحيح والقرعة</h1>
+        <p>نشر الأسئلة الثقافية، التصحيح الآلي للإجابات، وإجراء السحب اليومي للحجاج.</p>
+    </div>
+
+    <!-- 1. إضافة سؤال ثقافي للتصحيح الآلي -->
+    <section class="admin-section">
+        <h2>📝 إضافة سؤال ثقافي جديد (للتصحيح الآلي)</h2>
+        <form id="questionForm">
+            <div class="form-group">
+                <label>تحديد القسم الموجه له السؤال</label>
+                <select id="targetGenderSection" required>
+                    <option value="all">جميع الحجاج (قسم الرجال والنساء)</option>
+                    <option value="men">قسم الرجال فقط</option>
+                    <option value="women">قسم النساء فقط</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>نص السؤال الثقافي</label>
+                <input type="text" id="questionText" placeholder="مثال: ما هو يوم الحج الأكبر؟" required>
+            </div>
+            <div class="form-group">
+                <label>الخيارات (مفصولة بفاصلة)</label>
+                <input type="text" id="questionOptions" placeholder="يوم التروية, يوم عرفة, يوم النحر" required>
+            </div>
+            <div class="form-group">
+                <label>الإجابة الصحيحة (للتصحيح الآلي)</label>
+                <input type="text" id="correctAnswer" placeholder="يوم النحر" required>
+            </div>
+            <button class="main-button" type="submit" style="width: 100%;">حفظ ونشر السؤال بالنظام الآلي</button>
+        </form>
+    </section>
+
+    <!-- 2. إدارة القرعة والسحب اليومي -->
+    <section class="lottery-card">
+        <h2>🎁 إدارة القرعة والسحب اليومي</h2>
+        <p>اختر القسم المطلوب ثم اضغط إجراء القرعة لاختيار فائز عشوائي من قاعدة بيانات الحجاج المشاركين.</p>
+        
+        <div class="form-group" style="max-width: 300px; margin: 15px 0;">
+            <label>نطاق السحب اليومي</label>
+            <select id="lotteryTargetSection">
+                <option value="all">كافة الحجاج المسجلين</option>
+                <option value="men">حجاج قسم الرجال</option>
+                <option value="women">حاجات قسم النساء</option>
+            </select>
+        </div>
+
+        <div class="lottery-number" id="drawNumber"># ---</div>
+
+        <button id="drawBtn" class="gold-button" style="width: 100%;">إجراء القرعة والسحب الآلي الآن</button>
+
+        <div id="winnerMessage" class="winner-message">
+            <h2>🎉 مبروك للفائز السعيد!</h2>
+            <p id="winnerName"></p>
+            <span style="font-size: 12px; color: #666;">تم توثيق النتيجة وإرسال إشعار تهنئة للحساب بنجاح ✓</span>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   لوحة التصحيح والسحب — قائمة الحجاج للقرعة صارت تُقرأ فعلياً من
+   جدول pilgrims عبر api/pilgrims.php?action=list بدل قائمة ثابتة.
+   حفظ السؤال الثقافي لم يُربط لأنه لا يوجد جدول للأسئلة
+   (انظري تقرير التعديلات).
+   --------------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", async function() {
+
+    const user = await API.requireLogin(['campaign']);
+    if (!user) return;
+
+    const drawBtn       = document.getElementById("drawBtn");
+    const drawNumber    = document.getElementById("drawNumber");
+    const winnerMessage = document.getElementById("winnerMessage");
+    const winnerName    = document.getElementById("winnerName");
+    const questionForm  = document.getElementById("questionForm");
+
+    if (questionForm) {
+        questionForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            alert("تنبيه: لا يوجد جدول للأسئلة الثقافية في قاعدة البيانات حالياً، "
+                + "فالسؤال لن يُحفظ. راجع تقرير التعديلات.");
+        });
+    }
+
+    if (drawBtn) {
+        drawBtn.addEventListener("click", async function() {
+            const targetSection = document.getElementById("lotteryTargetSection").value;
+
+            drawBtn.disabled = true;
+            drawBtn.innerText = "جاري السحب والفرز...";
+
+            try {
+                const params = (targetSection === 'all') ? {} : { section: targetSection };
+                const res = await API.get('pilgrims.php', 'list', params);
+                const list = res.data;
+
+                if (!list.length) {
+                    alert("لا يوجد حجاج مسجلون في هذا القسم حتى الآن.");
+                    return;
+                }
+
+                const winner = list[Math.floor(Math.random() * list.length)];
+
+                drawNumber.innerText = `# ${winner.pilgrim_id}`;
+                winnerName.innerHTML = `الفائز/ة بالسحب هو: <strong>${API.esc(winner.name)}</strong> `
+                                     + `(رقم العضوية: ${API.esc(winner.pilgrim_id)})`;
+                winnerMessage.style.display = "block";
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                drawBtn.disabled = false;
+                drawBtn.innerText = "تم إجراء السحب ✓";
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>

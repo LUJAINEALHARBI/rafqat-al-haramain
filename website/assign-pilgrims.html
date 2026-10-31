@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توزيع الحجاج على المشرفين | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- مكتبة تصدير الإكسل SheetJS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .section-box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .section-box h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            border-bottom: 2px solid #f1f3f4;
+            padding-bottom: 10px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            color: #333;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-men { background: #e3f2fd; color: #0d47a1; }
+        .badge-women { background: #fce4ec; color: #880e4f; }
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-campaign.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>إدارة الحملة العليا - توزيع المشرفين</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-campaign.html">لوحة التحكم</a>
+            <a href="assign-pilgrims.html" class="active">توزيع الحجاج</a>
+            <a href="javascript:void(0);" onclick="logoutAdmin()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>إدارة وتنظيم مجموعات الحملة (متوافق مع ERD)</span>
+        <h1>توزيع الحجاج على المشرفين ورقم المخيم</h1>
+        <p>لكل مخيم مشرف متخصص، وتنتقل أسماء الحجاج تلقائياً إلى شاشة مراقبة المشرف حسب الـ ID.</p>
+    </div>
+
+    <!-- أزرار الإجراءات السريعة وتصدير الإكسل -->
+    <div class="action-bar">
+        <button type="button" class="main-button" onclick="autoDistributeAll()" style="background: #28a745;">ربط تلقائي لجميع الحجاج حسب المخيم والمشرف</button>
+        <button type="button" class="main-button" onclick="exportAssignmentsToExcel()" style="background: #1d6f42;">تصدير كافة التوزيعات إلى Excel</button>
+    </div>
+
+    <!-- نموذج التوزيع -->
+    <div class="section-box">
+        <h3>إسناد الحجاج للمخيم والمشرف المسؤول</h3>
+        <form onsubmit="assignPilgrimsBatch(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>القسم</label>
+                    <select id="sectionType" required>
+                        <option value="men">قسم الرجال</option>
+                        <option value="women">قسم النساء</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>رقم المخيم (Camp ID)</label>
+                    <select id="campIdSelect" required>
+                        <option value="">-- اختر رقم المخيم --</option>
+                        <option value="CAMP-101">مخيم 101 - منى (رجال)</option>
+                        <option value="CAMP-102">مخيم 102 - عرفات (رجال)</option>
+                        <option value="CAMP-201">مخيم 201 - منى (نساء)</option>
+                        <option value="CAMP-202">مخيم 202 - عرفات (نساء)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المشرف المتخصص</label>
+                    <select id="supervisorSelect" required>
+                        <option value="">-- اختر المشرف المتخصص --</option>
+                        <option value="الموظف الصحي">الموظف الصحي (ينتهي بـ 1)</option>
+                        <option value="موظف الحشود والتنقل">موظف الحشود والتنقل (ينتهي بـ 2)</option>
+                        <option value="موظف الإعاشة والأطعمة">موظف الإعاشة والأطعمة (ينتهي بـ 3)</option>
+                        <option value="موظف السكن وخدمة الحجاج">موظف السكن وخدمة الحجاج (ينتهي بـ 4)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- جدول عرض الحجاج المتاحين في قاعدة البيانات للاختيار -->
+            <h4 style="margin-top:20px; color:#333;">قائمة الحجاج في قاعدة البيانات (اختر للإسناد):</h4>
+            <div style="max-height: 220px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                <table style="margin-top:0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+                            <th>رقم الحاج</th>
+                            <th>اسم الحاج</th>
+                            <th>القسم</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allPilgrimsBody">
+                        <!-- تُعبأ ديناميكياً -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" class="main-button" style="padding: 12px 25px;">حفظ وتحديث شاشة مراقبة المشرف</button>
+        </form>
+    </div>
+
+    <!-- تصدير تقرير إكسل مخصص لكل مشرف -->
+    <div class="section-box" style="background: #fdfdfd; border: 1px solid #e9ecef;">
+        <h3 style="color: #212529;">تصدير تقرير إكسل مخصص لكل مشرف</h3>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <select id="exportSupervisorSelect" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                    <option value="">-- اختر تخصص المشرف لتصدير حجاجه --</option>
+                    <option value="الموظف الصحي">الموظف الصحي</option>
+                    <option value="موظف الحشود والتنقل">موظف الحشود والتنقل</option>
+                    <option value="موظف الإعاشة والأطعمة">موظف الإعاشة والأطعمة</option>
+                    <option value="موظف السكن وخدمة الحجاج">موظف السكن وخدمة الحجاج</option>
+                </select>
+            </div>
+            <button type="button" onclick="exportBySupervisorExcel()" class="main-button" style="background: #0d6efd; padding: 10px 20px;">تحميل إكسل المشرف المحدد</button>
+        </div>
+    </div>
+
+    <!-- سجل التوزيعات الحالية -->
+    <div class="section-box">
+        <h3>سجل التوزيعات الحالية (مرتبط بشاشة المشرفين)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الحاج</th>
+                    <th>اسم الحاج</th>
+                    <th>القسم</th>
+                    <th>رقم المخيم</th>
+                    <th>المشرف المسؤول</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="assignmentTableBody">
+                <!-- تُعبأ ديناميكياً -->
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   صفحة توزيع الحجاج — صارت تقرأ وتكتب في قاعدة البيانات مباشرة:
+     • قائمة الحجاج        : api/pilgrims.php?action=list
+     • قائمة المشرفين       : api/supervisors.php?action=list
+     • حفظ/إلغاء الإسناد    : api/assignments.php
+   الإسناد يُحفظ في حقلي supervisor_id و camp_id داخل جدول pilgrims.
+   --------------------------------------------------------------- */
+
+let currentPilgrims   = [];
+let currentAssignments = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin(['campaign']);
+    if (!user) return;
+
+    document.getElementById('sectionType').addEventListener('change', () => {
+        loadAllPilgrimsTable();
+        loadSupervisorOptions();
+    });
+
+    await Promise.all([
+        loadSupervisorOptions(),
+        loadAllPilgrimsTable(),
+        loadAssignments()
+    ]);
+});
+
+function selectedSection() {
+    return document.getElementById('sectionType').value || 'men';
+}
+
+/* ---------- المشرفون في القائمتين المنسدلتين ---------- */
+async function loadSupervisorOptions() {
+    const assignSelect = document.getElementById('supervisorSelect');
+    const exportSelect = document.getElementById('exportSupervisorSelect');
+
+    try {
+        const res = await API.get('supervisors.php', 'list', { section: selectedSection() });
+        // المشرف العام لا يُسند له حجاج — الإسناد للمتخصصين
+        const list = res.data.filter(s => s.gender_section !== 'all');
+
+        const options = list.map(s =>
+            `<option value="${s.supervisor_id}">${API.esc(s.job_title || 'مشرف')} — ${API.esc(s.name)}</option>`
+        ).join('');
+
+        assignSelect.innerHTML = '<option value="">-- اختر المشرف المتخصص --</option>' + options;
+        exportSelect.innerHTML = '<option value="">-- اختر المشرف لتصدير حجاجه --</option>' + options;
+
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل قائمة المشرفين.');
+    }
+}
+
+/* ---------- جدول الحجاج المتاحين ---------- */
+async function loadAllPilgrimsTable() {
+    const tbody = document.getElementById('allPilgrimsBody');
+    API.tableMessage(tbody, 4, 'جاري تحميل الحجاج من قاعدة البيانات...');
+
+    try {
+        const res = await API.get('pilgrims.php', 'list', { section: selectedSection() });
+        currentPilgrims = res.data;
+
+        if (!currentPilgrims.length) {
+            API.tableMessage(tbody, 4, 'لا يوجد حجاج مسجلون في هذا القسم.');
+            return;
+        }
+
+        tbody.innerHTML = currentPilgrims.map(p => {
+            const badgeClass = p.section === 'men' ? 'badge-men' : 'badge-women';
+            const sectionText = p.section === 'men' ? 'رجال' : 'نساء';
+            return `
+                <tr>
+                    <td><input type="checkbox" name="pilgrimCheckbox" value="${p.pilgrim_id}"></td>
+                    <td>${API.esc(p.pilgrim_id)}</td>
+                    <td>${API.esc(p.name)}</td>
+                    <td><span class="badge ${badgeClass}">${sectionText}</span></td>
+                </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 4, 'تعذّر تحميل الحجاج: ' + err.message);
+    }
+}
+
+function toggleSelectAll(source) {
+    document.querySelectorAll('input[name="pilgrimCheckbox"]')
+            .forEach(cb => cb.checked = source.checked);
+}
+
+/* ---------- حفظ الإسناد ---------- */
+async function assignPilgrimsBatch(event) {
+    event.preventDefault();
+
+    const campId       = document.getElementById('campIdSelect').value;
+    const supervisorId = document.getElementById('supervisorSelect').value;
+    const selected     = [...document.querySelectorAll('input[name="pilgrimCheckbox"]:checked')]
+                           .map(cb => cb.value);
+
+    if (!selected.length) { alert("الرجاء تحديد حاج واحد على الأقل من القائمة!"); return; }
+    if (!campId || !supervisorId) { alert("الرجاء اختيار رقم المخيم والمشرف المسؤول!"); return; }
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+
+    try {
+        const res = await API.post('assignments.php', 'assign', {
+            pilgrim_ids: selected,
+            camp_id: campId,
+            supervisor_id: supervisorId
+        });
+        await loadAssignments();
+        document.getElementById('selectAll').checked = false;
+        document.querySelectorAll('input[name="pilgrimCheckbox"]').forEach(cb => cb.checked = false);
+        alert(`تم ربط ${res.data.assigned} حاج بالمخيم والمشرف المتخصص بنجاح.`);
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+/* ---------- التوزيع التلقائي ---------- */
+async function autoDistributeAll() {
+    if (!confirm('سيتم إعادة توزيع جميع الحجاج على المشرفين المتخصصين. هل تريدين المتابعة؟')) return;
+
+    try {
+        const res = await API.post('assignments.php', 'auto');
+        await loadAssignments();
+        alert(`تم ربط ${res.data.assigned} حاج تلقائياً بالمشرفين المتخصصين بنجاح.`);
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ---------- سجل التوزيعات ---------- */
+async function loadAssignments() {
+    const tbody = document.getElementById('assignmentTableBody');
+    API.tableMessage(tbody, 6, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('assignments.php', 'list');
+        currentAssignments = res.data;
+
+        if (!currentAssignments.length) {
+            API.tableMessage(tbody, 6, 'لا توجد توزيعات مسجلة حالياً.');
+            return;
+        }
+
+        tbody.innerHTML = currentAssignments.map(item => {
+            const badgeClass  = item.section === 'men' ? 'badge-men' : 'badge-women';
+            const sectionText = item.section === 'men' ? 'رجال' : 'نساء';
+            return `
+                <tr>
+                    <td>${API.esc(item.pilgrim_id)}</td>
+                    <td>${API.esc(item.pilgrim_name)}</td>
+                    <td><span class="badge ${badgeClass}">${sectionText}</span></td>
+                    <td><strong>${API.esc(item.camp_id)}</strong></td>
+                    <td>${API.esc(item.supervisor)}</td>
+                    <td><button type="button" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"
+                            onclick="removeAssignment(${item.pilgrim_id})">إلغاء الإسناد</button></td>
+                </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 6, 'تعذّر تحميل التوزيعات: ' + err.message);
+    }
+}
+
+async function removeAssignment(pilgrimId) {
+    if (!confirm('إلغاء إسناد هذا الحاج؟')) return;
+    try {
+        await API.post('assignments.php', 'remove', { pilgrim_id: pilgrimId });
+        await loadAssignments();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ---------- تصدير إكسل (من بيانات قاعدة البيانات) ---------- */
+function rowsToExcel(rows, sheetName, fileName) {
+    const excelData = rows.map(a => ({
+        "رقم الحاج": a.pilgrim_id,
+        "اسم الحاج": a.pilgrim_name,
+        "القسم": a.section === 'men' ? 'رجال' : 'نساء',
+        "رقم المخيم": a.camp_id,
+        "المشرف المسؤول": a.supervisor
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook  = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    XLSX.writeFile(workbook, fileName);
+}
+
+function exportAssignmentsToExcel() {
+    if (!currentAssignments.length) { alert("لا توجد بيانات توزيع لتصديرها!"); return; }
+    rowsToExcel(currentAssignments, "توزيع الحجاج", "تقرير_توزيع_الحجاج_الشامل.xlsx");
+}
+
+function exportBySupervisorExcel() {
+    const select = document.getElementById('exportSupervisorSelect');
+    const supervisorId = select.value;
+    if (!supervisorId) { alert("يرجى اختيار المشرف أولاً لتصدير حجاجه!"); return; }
+
+    const label    = select.options[select.selectedIndex].text;
+    const filtered = currentAssignments.filter(a => String(a.supervisor_id) === String(supervisorId));
+
+    if (!filtered.length) { alert(`لا يوجد حجاج مسجلين حالياً تحت إشراف: ${label}`); return; }
+
+    rowsToExcel(filtered, "حجاج المشرف", `قائمة_حجاج_${label.replace(/[\\/:*?"<>|]/g, '_')}.xlsx`);
+}
+</script>
+</body>
+</html>

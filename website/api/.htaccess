@@ -1,0 +1,4 @@
+# ملفات الإعدادات والاتصال لا تُستدعى مباشرة من المتصفح
+<FilesMatch "^(config|config\.example|db|helpers)\.php$">
+    Require all denied
+</FilesMatch>

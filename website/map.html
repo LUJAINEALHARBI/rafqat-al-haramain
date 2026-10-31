@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خريطة متابعة المشرف والمخيمات | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { 
+            width: 100%; 
+            height: 420px; 
+            border-radius: 20px; 
+            box-shadow: var(--shadow); 
+            margin: 20px 0; 
+            border: 2px solid var(--border); 
+            z-index: 1; 
+        }
+        .map-controls { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        .map-btn { 
+            background: white; 
+            border: 2px solid var(--border); 
+            padding: 15px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            text-align: right; 
+            transition: 0.3s; 
+        }
+        .map-btn:hover, .map-btn.active { 
+            border-color: var(--green); 
+            background: #eef7f4; 
+        }
+        .map-btn h4 { 
+            color: var(--green); 
+            margin-bottom: 5px; 
+            font-size: 15px; 
+        }
+        .map-btn p { 
+            color: var(--muted); 
+            font-size: 12px; 
+            margin: 0; 
+        }
+        .map-actions { 
+            margin-top: 15px; 
+            text-align: center; 
+        }
+        .map-link-btn { 
+            display: inline-block; 
+            background: var(--blue); 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 10px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            text-decoration: none; 
+            transition: 0.3s; 
+        }
+        .map-link-btn:hover { 
+            background: var(--blue-dark); 
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-supervisor.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>متابعة المشرف والمخيمات</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-supervisor.html">لوحة التحكم</a>
+            <a href="admin-supervisor.html">متابعة الخدمات</a>
+            <a href="map.html" class="active">الخريطة والمواقع</a>
+            <a href="admin-supervisor.html">غرفة المحادثة</a>
+            <a href="javascript:void(0);" onclick="logoutSupervisor()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>النطاق الميداني للمشرف</span>
+        <h1>الخريطة التفاعلية لمواقع المخيمات والمشاعر</h1>
+        <p>استعراض الفنادق، مخيمات منى، مزدلفة، عرفات، ونقاط التجمع الخاصة بقطاع الإشراف والمجموعات.</p>
+    </div>
+
+    <div class="map-controls">
+        <div class="map-btn active" onclick="updateLocation(21.4225, 39.8262, 'فندق مكة (رفقة الضيافة)', 'الفترة: من 4 إلى 7 ذو الحجة - نطاق إشراف القطاع', 'https://maps.google.com/?q=21.4225,39.8262', this)">
+            <h4>فندق مكة</h4>
+            <p>الفترة: 4 - 7 ذو الحجة</p>
+        </div>
+        <div class="map-btn" onclick="updateLocation(21.4135, 39.8925, 'مخيم مِنا (قطاع المشرف المباشر)', 'الفترة: من 8 إلى 10 ذو الحجة - خيام المجموعة', 'https://maps.google.com/?q=21.4135,39.8925', this)">
+            <h4>مخيم مِنا</h4>
+            <p>الفترة: 8 - 10 ذو الحجة</p>
+        </div>
+        <div class="map-btn" onclick="updateLocation(21.4012, 39.9015, 'مخيم ومبيت مزدلفة', 'الفترة: ليلة عيد الأضحى (المبيت والنفرة)', 'https://maps.google.com/?q=21.4012,39.9015', this)">
+            <h4>مزدلفة</h4>
+            <p>الفترة: ليلة 10 ذو الحجة</p>
+        </div>
+        <div class="map-btn" onclick="updateLocation(21.3548, 39.9840, 'مخيم عرفات', 'الفترة: يوم عرفة (9 ذو الحجة)', 'https://maps.google.com/?q=21.3548,39.9840', this)">
+            <h4>مخيم عرفات</h4>
+            <p>الفترة: يوم عرفة</p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="map-actions">
+        <a id="googleMapsLink" href="https://maps.google.com/?q=21.4225,39.8262" target="_blank" class="map-link-btn">
+            فتح الموقع الحقيقي في خرائط Google
+        </a>
+    </div>
+
+    <div class="housing-hero" style="margin-top: 25px;">
+        <div class="housing-main">
+            <span class="status-pill" id="sectionPill">حالة القطاع: مؤشر التواجد الميداني آمن ومستقر</span>
+            <h2 id="locationTitle">فندق مكة (رفقة الضيافة)</h2>
+            <p id="locationDesc">الفترة: من 4 إلى 7 ذو الحجة - نطاق إشراف القطاع</p>
+        </div>
+        <div class="housing-icon">توجيه</div>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
+<script>
+    const map = L.map('map').setView([21.4225, 39.8262], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: 'رفقة بلاد الحرمين'
+    }).addTo(map);
+
+    let marker = L.marker([21.4225, 39.8262]).addTo(map)
+        .bindPopup('<b>فندق مكة</b><br>نطاق إشراف القطاع')
+        .openPopup();
+
+    function updateLocation(lat, lng, title, desc, mapsUrl, element) {
+        map.setView([lat, lng], 16);
+        marker.setLatLng([lat, lng])
+            .bindPopup(`<b>${title}</b><br>${desc}`)
+            .openPopup();
+
+        document.getElementById('locationTitle').textContent = title;
+        document.getElementById('locationDesc').textContent = desc;
+        document.getElementById('googleMapsLink').href = mapsUrl;
+
+        document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+        if (element) {
+            element.classList.add('active');
+        }
+    }
+
+    function logoutSupervisor() {
+        if (confirm("تسجيل الخروج من لوحة التحكم؟")) {
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        }
+    }
+</script>
+<script src="js/api.js"></script>
+</body>
+</html>

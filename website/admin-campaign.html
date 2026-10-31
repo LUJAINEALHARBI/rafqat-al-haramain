@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحملة | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .admin-modal-box {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            text-align: right;
+            position: relative;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            color: #333;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #eee;
+            padding: 10px 12px;
+            text-align: right;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            color: var(--primary, #0d6efd);
+        }
+        .gender-badge-m {
+            background: #e3f2fd;
+            color: #0d6efd;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .gender-badge-f {
+            background: #fce4ec;
+            color: #d81b60;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .star-rating {
+            color: #ffc107;
+            font-size: 15px;
+        }
+        .rating-summary-box {
+            display: flex;
+            gap: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            border: 1px solid #e9ecef;
+        }
+        .rating-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0b3c29;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>إدارة الحملة العليا</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="admin-campaign.html" class="active">لوحة الحملة</a>
+            <a href="campaign-profile.html">ملف الحملة</a>
+            <a href="javascript:void(0);" onclick="logoutCampaign()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-heading">
+        <span>لوحة الإدارة العليا (صلاحيات 300xxx)</span>
+        <h1>شاشة إدارة الحملة والاعتمادات المالية</h1>
+        <p>إدارة الخدمات، المشرفين، الحجاج، التقييمات، الصلاحيات، ومراقبة القيود المالية.</p>
+    </div>
+
+    <div class="service-large-grid">
+        
+        <!-- بطاقة الخدمات والقيود المالية -->
+        <div class="service-large-card">
+            <div class="large-icon">🛠️</div>
+            <h2>الخدمات والقيود</h2>
+            <p>إدارة وتحديث خدمات الحملة، طلبات الحجاج، واعتماد القيود المالية والمصروفات.</p>
+            <button type="button" class="main-button" onclick="openAdminModal('servicesModal')">إدارة الخدمات والقيود</button>
+        </div>
+
+        <!-- بطاقة المشرفين وتوزيع الحجاج -->
+        <div class="service-large-card">
+            <div class="large-icon">👥</div>
+            <h2>المشرفين والتوزيع</h2>
+            <p>متابعة بيانات المشرفين والمشرفات وتوزيع الحجاج والمخيمات عليهم.</p>
+            <a href="assign-pilgrims.html" class="main-button" style="display:block; text-align:center; text-decoration:none; line-height: normal;">توزيع الحجاج على المشرفين</a>
+        </div>
+
+        <!-- بطاقة الحجاج -->
+        <div class="service-large-card">
+            <div class="large-icon">🕋</div>
+            <h2>الحجاج</h2>
+            <p>عرض قاعدة بيانات الحجاج المسجلين وأرقام التصاريح والأصناف.</p>
+            <button type="button" class="main-button" onclick="openAdminModal('pilgrimsModal')">عرض الحجاج</button>
+        </div>
+
+        <!-- بطاقة التقييمات والآراء -->
+        <div class="service-large-card">
+            <div class="large-icon">⭐</div>
+            <h2>تقييمات الحملة</h2>
+            <p>استعراض تقييمات وآراء الحجاج حول الخدمات والمشرفين والإعاشة.</p>
+            <button type="button" class="main-button" onclick="openAdminModal('ratingsModal')">استعراض التقييمات</button>
+        </div>
+
+        <!-- بطاقة الصلاحيات -->
+        <div class="service-large-card">
+            <div class="large-icon">🔐</div>
+            <h2>الصلاحيات</h2>
+            <p>إدارة صلاحيات الوصول ونطاق التحكم لمختلف المستخدمين (حاج/مشرف).</p>
+            <button type="button" class="main-button" onclick="openAdminModal('rolesModal')">إدارة الصلاحيات</button>
+        </div>
+
+        <!-- بطاقة التصحيح والكنترول -->
+        <div class="service-large-card">
+            <div class="large-icon">⚙️</div>
+            <h2>التصحيح (الكنترول)</h2>
+            <p>التحكم بالمسابقات الثقافية والتصحيح الآلي والسحب اليومي.</p>
+            <a href="admin-cultural.html" class="main-button" style="display:block; text-align:center; text-decoration:none; line-height: normal;">لوحة التصحيح</a>
+        </div>
+
+    </div>
+</main>
+
+<!-- النوافذ التفاعلية -->
+
+<!-- نافذة 1: إدارة الخدمات والقيود المالية -->
+<div id="servicesModal" class="admin-modal-overlay">
+    <div class="admin-modal-box">
+        <button class="close-modal-btn" onclick="closeAdminModal('servicesModal')">✕</button>
+        <h3>إدارة خدمات الحملة والاعتمادات المالية</h3>
+        <p style="font-size:13px; color:#666;">متابعة طلبات الخدمات ومراجعة واعتماد القيود والمصروفات المالية المسجلة.</p>
+        
+        <h4 style="margin-top:20px; color:#0d6efd;">الطلبات والخدمات الميدانية:</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>نوع الخدمة</th>
+                    <th>القسم</th>
+                    <th>الحالة</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody id="adminServicesTable">
+                <!-- تُعبأ من جدول service_provisions في قاعدة البيانات -->
+            </tbody>
+        </table>
+
+        <h4 style="margin-top:25px; color:#0d6efd;">مراقبة واعتماد قيود ومصروفات الحملة:</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>بيان المصروف</th>
+                    <th>المبلغ</th>
+                    <th>التصنيف</th>
+                    <th>التاريخ</th>
+                    <th>الفاتورة</th>
+                    <th>حالة الاعتماد</th>
+                </tr>
+            </thead>
+            <tbody id="adminExpensesTable">
+                <!-- تُعبأ ديناميكياً من بيانات الحجاج والمشرفين -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- نافذة 2: قاعدة بيانات الحجاج -->
+<div id="pilgrimsModal" class="admin-modal-overlay">
+    <div class="admin-modal-box">
+        <button class="close-modal-btn" onclick="closeAdminModal('pilgrimsModal')">✕</button>
+        <h3>قاعدة بيانات الحجاج المسجلين</h3>
+        <p style="font-size:13px; color:#666;">عرض بيانات الحجاج المسجلين بالكامل من صفحة التسجيل والأنظمة المعتمدة.</p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>رقم العضوية</th>
+                    <th>اسم الحاج</th>
+                    <th>الجنسية</th>
+                    <th>المدينة</th>
+                    <th>القسم</th>
+                    <th>رقم التصريح</th>
+                </tr>
+            </thead>
+            <tbody id="pilgrimsTableBody">
+                <!-- تُعبأ من جدول pilgrims في قاعدة البيانات -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- نافذة 3: التقييمات والآراء -->
+<div id="ratingsModal" class="admin-modal-overlay">
+    <div class="admin-modal-box">
+        <button class="close-modal-btn" onclick="closeAdminModal('ratingsModal')">✕</button>
+        <h3>تقييمات وملاحظات ضيوف الرحمن</h3>
+        <p style="font-size:13px; color:#666;">نتائج استبيانات رضا الحجاج عن خدمات الإعاشة، السكن، والتفويج الميداني.</p>
+
+        <div class="rating-summary-box">
+            <div>
+                <div class="rating-score" id="ratingAverage">—</div>
+                <div class="star-rating" id="ratingStars"></div>
+            </div>
+            <div style="font-size:13px; color:#555;" id="ratingBreakdown">
+                <strong>المؤشر العام لرضا الحجاج:</strong><br>
+                جاري الحساب من قاعدة البيانات...
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>اسم الحاج</th>
+                    <th>القسم</th>
+                    <th>التقييم</th>
+                    <th>موضوع التقييم</th>
+                    <th>ملاحظات الحاج</th>
+                </tr>
+            </thead>
+            <tbody id="adminRatingsTable">
+                <!-- تُعبأ من جدول ratings في قاعدة البيانات -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- نافذة 4: إدارة الصلاحيات (RBAC) -->
+<div id="rolesModal" class="admin-modal-overlay">
+    <div class="admin-modal-box">
+        <button class="close-modal-btn" onclick="closeAdminModal('rolesModal')">✕</button>
+        <h3>نطاق الصلاحيات والبادئات</h3>
+        <p style="font-size:13px; color:#666;">قواعد الوصول والتحكم المعتمدة في النظام.</p>
+        <ul style="line-height:2; font-size:14px;">
+            <li><strong>البادئة 100xxx:</strong> صلاحيات حاج (الوصول لجدول الرحلة، ملفي، والمحادثة العامة).</li>
+            <li><strong>البادئة 500xxx:</strong> صلاحيات مشرف / مشرفة متخصص (إدارة المخيم، متابعة حجاج القسم، وإدخال القيود).</li>
+            <li><strong>البادئة 300xxx:</strong> صلاحيات مدير الحملة (الإدارة العليا، تفعيل الحسابات، واعتماد جميع القيود والخدمات).</li>
+        </ul>
+
+        <h4 style="margin-top:25px; color:#0d6efd;">الوظائف والصلاحيات المسجلة في قاعدة البيانات (جدول jobs):</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>وظيفة Id</th>
+                    <th>المسمى الوظيفي</th>
+                    <th>الصلاحية</th>
+                    <th>عدد المشرفين</th>
+                </tr>
+            </thead>
+            <tbody id="jobsTableBody">
+                <!-- تُعبأ من جدول jobs -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   لوحة إدارة الحملة — كل الجداول صارت تُقرأ من قاعدة البيانات:
+     • الحجاج        : api/pilgrims.php?action=list
+     • طلبات الخدمات  : api/services.php?action=requests
+     • القيود المالية : api/expenses.php
+     • التقييمات      : api/ratings.php
+     • الوظائف        : api/supervisors.php?action=jobs
+   --------------------------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const user = await API.requireLogin(['campaign']);
+    if (!user) return;
+
+    loadAdminExpenses();
+    loadPilgrimsTable();
+});
+
+/* ---------- الحجاج ---------- */
+async function loadPilgrimsTable() {
+    const tbody = document.getElementById('pilgrimsTableBody');
+    API.tableMessage(tbody, 6, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('pilgrims.php', 'list');
+        if (!res.data.length) {
+            API.tableMessage(tbody, 6, 'لا يوجد حجاج مسجلون.');
+            return;
+        }
+        tbody.innerHTML = res.data.map(p => {
+            const isFemale = p.section === 'women';
+            return `
+                <tr>
+                    <td>${API.esc(p.pilgrim_id)}</td>
+                    <td>${API.esc(p.name)}</td>
+                    <td>${API.esc(p.nationality)}</td>
+                    <td>${API.esc(p.city)}</td>
+                    <td><span class="${isFemale ? 'gender-badge-f' : 'gender-badge-m'}">${isFemale ? 'قسم النساء' : 'قسم الرجال'}</span></td>
+                    <td>${API.esc(p.permit_number || '—')}</td>
+                </tr>`;
+        }).join('');
+    } catch (err) {
+        API.tableMessage(tbody, 6, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+/* ---------- طلبات الخدمات ---------- */
+async function loadAdminServices() {
+    const tbody = document.getElementById('adminServicesTable');
+    API.tableMessage(tbody, 5, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('services.php', 'requests');
+        if (!res.data.length) {
+            API.tableMessage(tbody, 5, 'لا توجد طلبات خدمة مسجلة.');
+            return;
+        }
+        tbody.innerHTML = res.data.map(r => {
+            const isFemale = r.section === 'women';
+            const done = (r.status === 'مكتمل' || r.status === 'معتمد');
+            return `
+                <tr>
+                    <td>#${API.esc(r.request_number || r.provision_id)}</td>
+                    <td>${API.esc(r.service_name)} — ${API.esc(r.details)}</td>
+                    <td><span class="${isFemale ? 'gender-badge-f' : 'gender-badge-m'}">${isFemale ? 'قسم النساء' : 'قسم الرجال'}</span></td>
+                    <td><span style="color:${done ? '#198754' : '#ff9800'}; font-weight:bold;">${API.esc(r.status)}</span></td>
+                    <td>${done ? '—' :
+                        `<button type="button" onclick="approveService(${r.provision_id}, this)">اعتماد</button>`}</td>
+                </tr>`;
+        }).join('');
+    } catch (err) {
+        API.tableMessage(tbody, 5, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+async function approveService(provisionId, btn) {
+    btn.disabled = true;
+    try {
+        await API.post('services.php', 'update_status', { id: provisionId, status: 'معتمد' });
+        await loadAdminServices();
+        alert('تم اعتماد الطلب وتحديث حالته في قاعدة البيانات.');
+    } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+    }
+}
+
+/* ---------- القيود المالية ---------- */
+async function loadAdminExpenses() {
+    const tableBody = document.getElementById("adminExpensesTable");
+    if (!tableBody) return;
+    API.tableMessage(tableBody, 7, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('expenses.php', 'list');
+        if (!res.data.length) {
+            API.tableMessage(tableBody, 7, 'لا توجد قيود مالية مسجلة حالياً.');
+            return;
+        }
+        tableBody.innerHTML = res.data.map((item, index) => {
+            const approved = item.status === 'معتمد';
+            return `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${API.esc(item.description)}</strong></td>
+                <td>${Number(item.amount).toLocaleString()} ر.س</td>
+                <td><span style="background:#e3f2fd; color:#0d6efd; padding:2px 8px; border-radius:4px; font-size:12px;">${API.esc(item.category)}</span></td>
+                <td>${API.esc(item.expense_date)}</td>
+                <td>${item.hasReceipt
+                        ? `<a href="uploads/${API.esc(item.receipt_file)}" target="_blank" style="color:#198754;">مرفقة</a>`
+                        : '<span style="color:#888;">بدون</span>'}</td>
+                <td>${approved
+                        ? '<span style="color:#198754; font-weight:bold;">معتمد من الإدارة</span>'
+                        : `<button type="button" style="background:#198754; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"
+                               onclick="approveExpense(${item.expense_id}, this)">اعتماد نهائي</button>`}</td>
+            </tr>`;
+        }).join('');
+    } catch (err) {
+        API.tableMessage(tableBody, 7, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+async function approveExpense(expenseId, btn) {
+    btn.disabled = true;
+    try {
+        await API.post('expenses.php', 'approve', { id: expenseId });
+        await loadAdminExpenses();
+        alert("تم اعتماد القيد المالي نهائياً وحُفظ الاعتماد في قاعدة البيانات.");
+    } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+    }
+}
+
+/* ---------- التقييمات ---------- */
+async function loadRatings() {
+    const tbody = document.getElementById('adminRatingsTable');
+    API.tableMessage(tbody, 5, 'جاري التحميل...');
+
+    try {
+        const res  = await API.get('ratings.php', 'list');
+        const rows = res.data;
+        const avg  = res.summary.average;
+
+        document.getElementById('ratingAverage').innerText = avg || '—';
+        const full = Math.round(avg);
+        document.getElementById('ratingStars').innerText =
+            '★'.repeat(full) + '☆'.repeat(Math.max(0, 5 - full));
+
+        // متوسط لكل خدمة — محسوب من نفس البيانات
+        const byTopic = {};
+        rows.forEach(r => {
+            (byTopic[r.topic] = byTopic[r.topic] || []).push(r.stars);
+        });
+        const lines = Object.entries(byTopic).map(([topic, list]) => {
+            const m = (list.reduce((a, b) => a + b, 0) / list.length);
+            return `• ${API.esc(topic)}: ${m.toFixed(1)} من 5`;
+        });
+
+        document.getElementById('ratingBreakdown').innerHTML =
+            `<strong>المؤشر العام لرضا الحجاج (${rows.length} تقييماً):</strong><br>`
+            + (lines.length ? lines.join('<br>') : 'لا توجد تقييمات بعد.');
+
+        if (!rows.length) {
+            API.tableMessage(tbody, 5, 'لا توجد تقييمات مسجلة.');
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+            const isFemale = r.section === 'women';
+            return `
+                <tr>
+                    <td>${API.esc(r.pilgrim_name)}</td>
+                    <td><span class="${isFemale ? 'gender-badge-f' : 'gender-badge-m'}">${isFemale ? 'قسم النساء' : 'قسم الرجال'}</span></td>
+                    <td><span class="star-rating">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</span> (${r.stars}/5)</td>
+                    <td>${API.esc(r.topic)}</td>
+                    <td>${API.esc(r.comment)}</td>
+                </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 5, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+/* ---------- الوظائف والصلاحيات (جدول jobs) ---------- */
+async function loadJobs() {
+    const tbody = document.getElementById('jobsTableBody');
+    API.tableMessage(tbody, 4, 'جاري التحميل...');
+
+    try {
+        const [jobsRes, supsRes] = await Promise.all([
+            API.get('supervisors.php', 'jobs'),
+            API.get('supervisors.php', 'list')
+        ]);
+
+        const counts = {};
+        supsRes.data.forEach(s => {
+            counts[s.job_id] = (counts[s.job_id] || 0) + 1;
+        });
+
+        tbody.innerHTML = jobsRes.data.map(j => `
+            <tr>
+                <td>${API.esc(j.job_id)}</td>
+                <td><strong>${API.esc(j.job_title)}</strong></td>
+                <td>${API.esc(j.permission_level)}</td>
+                <td>${counts[j.job_id] || 0}</td>
+            </tr>`).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 4, 'تعذّر التحميل: ' + err.message);
+    }
+}
+
+/* ---------- النوافذ ---------- */
+function openAdminModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    if (modalId === 'servicesModal') { loadAdminServices(); loadAdminExpenses(); }
+    if (modalId === 'pilgrimsModal') { loadPilgrimsTable(); }
+    if (modalId === 'ratingsModal')  { loadRatings(); }
+    if (modalId === 'rolesModal')    { loadJobs(); }
+}
+
+function closeAdminModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
+}
+</script>
+</body>
+</html>

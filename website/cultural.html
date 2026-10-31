@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الثقافي والترفيهي | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .quiz-result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+        .quiz-result.success {
+            background: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        .quiz-result.error {
+            background: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+        .question-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-right: 4px solid #0d6efd;
+        }
+        .question-box label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo-area">
+            <img src="images/logo.png" alt="شعار الحملة">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="services.html">الخدمات</a>
+            <a href="schedule.html">الجدول</a>
+            <a href="cultural.html" class="active">الثقافي والترفيهي</a>
+            <a href="chat.html">المحادثة</a>
+            <a href="account.html">ملفي</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <span>شارك واستمتع</span>
+        <h1>القسم الثقافي والترفيهي</h1>
+        <p>اختبر معلوماتك وشارك في الأنشطة وادخل السحب على الجوائز اليومية.</p>
+    </div>
+
+    <div class="cultural-layout">
+
+        <!-- المسابقة الثقافية -->
+        <section class="quiz-card">
+            <div class="quiz-title">
+                <span>مسابقة ثقافية</span>
+                <h2>اختبر معلوماتك</h2>
+            </div>
+
+            <form id="quizForm" data-correct="b,a,b">
+
+                <div class="question-box">
+                    <span>السؤال 1</span>
+                    <h3>ما الركن الذي يتم فيه الوقوف بعرفة؟</h3>
+                    <label>
+                        <input type="radio" name="q1" value="a"> الطواف
+                    </label>
+                    <label>
+                        <input type="radio" name="q1" value="b"> الوقوف بعرفة
+                    </label>
+                    <label>
+                        <input type="radio" name="q1" value="c"> السعي
+                    </label>
+                </div>
+
+                <div class="question-box">
+                    <span>السؤال 2</span>
+                    <h3>أين يقع المسجد الحرام؟</h3>
+                    <label>
+                        <input type="radio" name="q2" value="a"> مكة المكرمة
+                    </label>
+                    <label>
+                        <input type="radio" name="q2" value="b"> المدينة المنورة
+                    </label>
+                    <label>
+                        <input type="radio" name="q2" value="c"> جدة
+                    </label>
+                </div>
+
+                <div class="question-box">
+                    <span>السؤال 3</span>
+                    <h3>أين يوجد المسجد النبوي؟</h3>
+                    <label>
+                        <input type="radio" name="q3" value="a"> مكة المكرمة
+                    </label>
+                    <label>
+                        <input type="radio" name="q3" value="b"> المدينة المنورة
+                    </label>
+                    <label>
+                        <input type="radio" name="q3" value="c"> الطائف
+                    </label>
+                </div>
+
+                <button class="main-button" type="submit" style="width: 100%;">
+                    تصحيح الإجابات إلكترونياً
+                </button>
+
+                <div id="quizResult" class="quiz-result"></div>
+
+            </form>
+        </section>
+
+        <!-- القرعة والسحب اليومي -->
+        <section class="lottery-card">
+            <span>🎁 سحب وقرعة اليوم</span>
+            <h2>هل أنت الفائز؟</h2>
+            <p>بعد المشاركة في المسابقة وإدخال الإجابات، يمكنك التأكد من دخول اسمك في السحب اليومي.</p>
+
+            <div class="lottery-number" id="drawNumber">---</div>
+
+            <button id="drawBtn" class="gold-button" style="width: 100%;">
+                عرض نتيجة السحب اليومي
+            </button>
+
+            <div id="winnerMessage" class="winner-message" style="display: none; margin-top: 15px; padding: 15px; background: #f9f6ed; border-radius: 8px; border: 1px dashed #c5a059; text-align: center;">
+                <h2>🎉 مبروك!</h2>
+                <p id="winnerName"></p>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   الصفحة الثقافية:
+     • السحب اليومي يعرض بيانات الحاج الحقيقية من جدول pilgrims.
+     • أسئلة المسابقة والتصحيح ما زالت داخل الصفحة لأنه لا يوجد
+       جدول للأسئلة في قاعدة البيانات (انظري تقرير التعديلات).
+   --------------------------------------------------------------- */
+
+let ME = null;
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const user = await API.requireLogin(['pilgrim']);
+    if (!user) return;
+
+    try {
+        const res = await API.get('pilgrims.php', 'get');
+        ME = res.data;
+    } catch (err) {
+        API.showError(err, 'تعذّر تحميل بياناتك.');
+    }
+
+    const quizForm   = document.getElementById("quizForm");
+    const quizResult = document.getElementById("quizResult");
+    const drawBtn    = document.getElementById("drawBtn");
+    const drawNumber = document.getElementById("drawNumber");
+    const winnerMessage = document.getElementById("winnerMessage");
+    const winnerName    = document.getElementById("winnerName");
+
+    if (quizForm) {
+        quizForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const correctAnswers = quizForm.getAttribute("data-correct").split(",");
+            const q1 = quizForm.elements["q1"]?.value;
+            const q2 = quizForm.elements["q2"]?.value;
+            const q3 = quizForm.elements["q3"]?.value;
+
+            if (!q1 || !q2 || !q3) {
+                quizResult.className = "quiz-result error";
+                quizResult.innerText = "فضلاً أجب عن جميع الأسئلة أولاً.";
+                quizResult.style.display = "block";
+                return;
+            }
+
+            let score = 0;
+            if (q1 === correctAnswers[0]) score++;
+            if (q2 === correctAnswers[1]) score++;
+            if (q3 === correctAnswers[2]) score++;
+
+            quizResult.style.display = "block";
+            if (score === 3) {
+                quizResult.className = "quiz-result success";
+                quizResult.innerHTML = `نتيجة ممتازة: 3/3 ✓<br>تم توثيق إجاباتك ودخولك في السحب اليومي بنجاح!`;
+            } else {
+                quizResult.className = "quiz-result error";
+                quizResult.innerHTML = `حصلت على: ${score}/3<br>حاول مرة أخرى للحصول على الدرجة الكاملة والدخول في السحب.`;
+            }
+        });
+    }
+
+    if (drawBtn) {
+        drawBtn.addEventListener("click", function () {
+            if (!ME) { alert('تعذّر قراءة بياناتك من قاعدة البيانات.'); return; }
+
+            drawNumber.innerText = `# ${ME.pilgrim_id}`;
+            winnerName.innerHTML = `تم تأكيد مشاركة: <strong>${API.esc(ME.name)}</strong> في سحب اليوم ✓`;
+            winnerMessage.style.display = "block";
+            drawBtn.innerText = "تمت المراجعة ✓";
+        });
+    }
+});
+</script>
+
+</body>
+
+</html>
