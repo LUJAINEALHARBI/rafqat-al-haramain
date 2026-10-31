@@ -3,6 +3,7 @@ import 'chat_page.dart';
 import 'pilgrims_management_page.dart';
 import 'manager_supervisors_page.dart';
 import 'manager_services_page.dart';
+import '../services/api_service.dart';
 
 class ManagerDashboard extends StatelessWidget {
   final String managerId;
@@ -184,6 +185,45 @@ class ManagerDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // بيانات الحملة تُقرأ من جدول campaigns عبر api/campaign.php?action=get
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.campaign(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: background,
+            appBar: AppBar(
+              title: const Text('لوحة مدير الحملة'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر تحميل بيانات الحملة من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red, fontSize: 15),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const {});
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, Map<String, dynamic> camp) {
+    final managerName  = (camp['manager_name'] ?? '').toString();
+    final campaignName = (camp['campaign_name'] ?? 'رفقة بلاد الحرمين').toString();
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -239,18 +279,21 @@ class ManagerDashboard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'مرحباً بك مدير الحملة',
-                    style: TextStyle(
+                  Text(
+                    managerName.isEmpty
+                        ? 'مرحباً بك مدير الحملة'
+                        : 'مرحباً، $managerName',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'من هنا تقدر تتابع أعمال الحملة وخدمات الحجاج والمشرفين',
-                    style: TextStyle(
+                  Text(
+                    '$campaignName — من هنا تقدر تتابع أعمال الحملة '
+                    'وخدمات الحجاج والمشرفين',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       height: 1.6,

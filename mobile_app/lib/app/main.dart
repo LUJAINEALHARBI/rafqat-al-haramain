@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'pilgrim_dashboard.dart';
 import 'supervisor_dashboard.dart';
 import 'manager_dashboard.dart';
+import '../services/api_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _selectedSection;
   bool _hidePassword = true;
+  bool _loading = false;
 
   static const Color teal = Color(0xFF277D78);
   static const Color darkTeal = Color(0xFF245B58);
@@ -35,7 +37,9 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() {
+  /// تسجيل الدخول صار من قاعدة البيانات عبر api/auth.php
+  /// الخادم يتحقق من كلمة المرور ويحدد الدور والقسم، لا التطبيق.
+  Future<void> _login() async {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) return;
@@ -47,54 +51,54 @@ class _LoginPageState extends State<LoginPage> {
       _showMessage('اختاري القسم: رجال أو نساء');
       return;
     }
-
-    late String role;
-
-    if (id.startsWith('100')) {
-      role = _selectedSection == 'نساء' ? 'حاجة' : 'حاج';
-    } else if (id.startsWith('500')) {
-      role = _selectedSection == 'نساء' ? 'مشرفة' : 'مشرف';
-    } else if (id.startsWith('300')) {
-      role = 'مدير الحملة';
-    } else {
-      _showMessage(
-        'رقم العضوية يجب أن يبدأ بـ 100 أو 500 أو 300',
-      );
-      return;
-    }
-
     if (password.isEmpty) {
       _showMessage('أدخلي كلمة المرور');
       return;
     }
-if (id.startsWith('100')) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PilgrimDashboard(
-        pilgrimId: id,
-        section: _selectedSection ?? 'رجال',
-      ),
-    ),
-  );
-} else if (id.startsWith('500')) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => SupervisorDashboard(
-        supervisorId: id,
-        section: _selectedSection ?? 'رجال',
-      ),
-    ),
-  );
-} else if (id.startsWith('300')) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ManagerDashboard(managerId: id),
-    ),
-  );
-}
+
+    setState(() => _loading = true);
+
+    try {
+      final user = await ApiService.login(
+        id: id,
+        password: password,
+        section: _selectedSection == null
+            ? null
+            : (_selectedSection == 'نساء' ? 'women' : 'men'),
+      );
+
+      if (!mounted) return;
+
+      final role = (user['role'] ?? '').toString();
+      final section = (user['section'] ?? 'men') == 'women' ? 'نساء' : 'رجال';
+
+      Widget page;
+      if (role == 'pilgrim') {
+        page = PilgrimDashboard(
+          pilgrimId: user['id'].toString(),
+          section: section,
+        );
+      } else if (role == 'supervisor') {
+        page = SupervisorDashboard(
+          supervisorId: user['id'].toString(),
+          section: section,
+        );
+      } else if (role == 'campaign') {
+        page = ManagerDashboard(managerId: user['id'].toString());
+      } else {
+        _showMessage('نوع حساب غير معروف.');
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => page),
+      );
+    } on ApiException catch (e) {
+      if (mounted) _showMessage(e.message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -303,7 +307,7 @@ if (id.startsWith('100')) {
                           SizedBox(
                             height: 54,
                             child: ElevatedButton(
-                              onPressed: _login,
+                              onPressed: _loading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: teal,
                                 foregroundColor: Colors.white,
@@ -311,9 +315,9 @@ if (id.startsWith('100')) {
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child: const Text(
-                                'دخول إلى حسابي',
-                                style: TextStyle(
+                              child: Text(
+                                _loading ? 'جاري التحقق...' : 'دخول إلى حسابي',
+                                style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
                                 ),

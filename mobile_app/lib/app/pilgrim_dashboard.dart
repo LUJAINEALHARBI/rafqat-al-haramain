@@ -6,6 +6,7 @@ import 'transport_page.dart';
 import 'medical_page.dart';
 import 'culture_page.dart';
 import 'chat_page.dart';
+import '../services/api_service.dart';
 
 class PilgrimDashboard extends StatelessWidget {
   final String pilgrimId;
@@ -75,17 +76,61 @@ class PilgrimDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // بيانات الحاج تُقرأ من جدول pilgrims عبر api/pilgrims.php?action=get
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.pilgrimProfile(pilgrimId),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: background,
+            appBar: AppBar(
+              title: const Text('رفقة بلاد الحرمين'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر تحميل بياناتك من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red, fontSize: 15),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const {});
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, Map<String, dynamic> me) {
+    String v(String key, [String fallback = 'غير محدد']) {
+      final x = me[key];
+      if (x == null || x.toString().trim().isEmpty) return fallback;
+      return x.toString();
+    }
+
     final items = [
       {
         'title': 'السكن',
         'icon': Icons.hotel_rounded,
         'details': [
-          'اسم السكن: سكن حملة رفقة بلاد الحرمين',
-          'الموقع: يحدد من إدارة الحملة',
-          'رقم المخيم: 12',
-          'رقم الغرفة: 204',
-          'موعد الوصول: يحدد من إدارة الحملة',
-          'موعد المغادرة: يحدد من إدارة الحملة',
+          'الاسم: ${v('name')}',
+          'رقم الحجز: ${v('booking_number')}',
+          'رقم المخيم: ${v('camp_id')}',
+          'رقم الخيمة: ${v('tent_number')}',
+          'رقم السرير: ${v('bed_number')}',
+          'نوع الباقة: ${v('package_type')}',
+          'نقطة التجمع: ${v('gathering_point')}',
         ],
       },
       {
@@ -248,9 +293,9 @@ class PilgrimDashboard extends StatelessWidget {
                             crossAxisAlignment:
                                 CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'مرحباً بك',
-                                style: TextStyle(
+                              Text(
+                                'مرحباً، ${v('name', 'بك')}',
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'main.dart' show LoginPage;
 import 'chat_page.dart';
+import '../services/api_service.dart';
 class SupervisorDashboard extends StatelessWidget {
   final String supervisorId;
   final String section;
@@ -11,8 +12,9 @@ class SupervisorDashboard extends StatelessWidget {
     this.section = 'رجال',
   });
 
-  // نفس قاعدة الموقع وقاعدة البيانات: 5000 مشرف عام،
-  // وآخر رقم في العضوية يحدد التخصص (1 صحي، 2 حشود، 3 إعاشة، 4 سكن)
+  // التخصص والمسمى الوظيفي يُقرآن من جدول jobs عبر
+  // api/supervisors.php?action=profile ، لا من آخر رقم في العضوية.
+  // الدوال أدناه تبقى كقيمة احتياطية فقط إذا تعذّر الاتصال.
   String get roleKey {
     if (supervisorId.startsWith('5000')) return 'general';
     if (supervisorId.endsWith('2')) return 'crowd';
@@ -36,11 +38,9 @@ class SupervisorDashboard extends StatelessWidget {
     }
   }
 
-  List<Map<String, dynamic>> get visibleDepartments {
-    if (roleKey == 'general') return departments;
-    return departments
-        .where((d) => d['role'] == roleKey)
-        .toList();
+  List<Map<String, dynamic>> departmentsFor(String key) {
+    if (key == 'general') return departments;
+    return departments.where((d) => d['role'] == key).toList();
   }
 
   static const Color green = Color(0xFF277D78);
@@ -238,6 +238,46 @@ class SupervisorDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ملف المشرف يُقرأ من قاعدة البيانات (الاسم، المسمى، القسم، عدد حجاجه)
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.supervisorProfile(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: background,
+            appBar: AppBar(
+              title: const Text('لوحة المشرف'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر تحميل بيانات المشرف من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red, fontSize: 15),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const {});
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, Map<String, dynamic> me) {
+    final dbRoleKey   = (me['role_key']  ?? roleKey).toString();
+    final dbJobTitle  = (me['job_title'] ?? jobTitle).toString();
+    final dbName      = (me['name'] ?? '').toString();
     final sectionText = section == 'نساء' ? 'قسم النساء' : 'قسم الرجال';
 
     return Directionality(
@@ -305,7 +345,8 @@ class SupervisorDashboard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '$jobTitle | $sectionText',
+                    '$dbJobTitle | $sectionText'
+                    '${dbName.isEmpty ? '' : ' — $dbName'}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -338,7 +379,7 @@ class SupervisorDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...visibleDepartments.map((department) {
+            ...departmentsFor(dbRoleKey).map((department) {
               return Card(
                 color: Colors.white,
                 elevation: 2,
