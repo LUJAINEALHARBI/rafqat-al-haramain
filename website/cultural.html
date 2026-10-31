@@ -83,48 +83,10 @@
                 <h2>اختبر معلوماتك</h2>
             </div>
 
-            <form id="quizForm" data-correct="b,a,b">
+            <form id="quizForm">
 
-                <div class="question-box">
-                    <span>السؤال 1</span>
-                    <h3>ما الركن الذي يتم فيه الوقوف بعرفة؟</h3>
-                    <label>
-                        <input type="radio" name="q1" value="a"> الطواف
-                    </label>
-                    <label>
-                        <input type="radio" name="q1" value="b"> الوقوف بعرفة
-                    </label>
-                    <label>
-                        <input type="radio" name="q1" value="c"> السعي
-                    </label>
-                </div>
-
-                <div class="question-box">
-                    <span>السؤال 2</span>
-                    <h3>أين يقع المسجد الحرام؟</h3>
-                    <label>
-                        <input type="radio" name="q2" value="a"> مكة المكرمة
-                    </label>
-                    <label>
-                        <input type="radio" name="q2" value="b"> المدينة المنورة
-                    </label>
-                    <label>
-                        <input type="radio" name="q2" value="c"> جدة
-                    </label>
-                </div>
-
-                <div class="question-box">
-                    <span>السؤال 3</span>
-                    <h3>أين يوجد المسجد النبوي؟</h3>
-                    <label>
-                        <input type="radio" name="q3" value="a"> مكة المكرمة
-                    </label>
-                    <label>
-                        <input type="radio" name="q3" value="b"> المدينة المنورة
-                    </label>
-                    <label>
-                        <input type="radio" name="q3" value="c"> الطائف
-                    </label>
+                <div id="questionsContainer">
+                    <p style="color:#777;">جاري تحميل الأسئلة...</p>
                 </div>
 
                 <button class="main-button" type="submit" style="width: 100%;">
@@ -184,39 +146,91 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const quizForm   = document.getElementById("quizForm");
     const quizResult = document.getElementById("quizResult");
+    const container  = document.getElementById("questionsContainer");
     const drawBtn    = document.getElementById("drawBtn");
     const drawNumber = document.getElementById("drawNumber");
     const winnerMessage = document.getElementById("winnerMessage");
     const winnerName    = document.getElementById("winnerName");
 
+    let QUESTIONS = [];
+
+    /* الأسئلة تُقرأ من جدول cultural_questions، والتصحيح يتم في الخادم */
+    async function loadQuestions() {
+        try {
+            const res = await API.get('cultural.php', 'list');
+            QUESTIONS = res.data || [];
+
+            if (!QUESTIONS.length) {
+                container.innerHTML = '<p style="color:#777;">لا توجد أسئلة منشورة حالياً.</p>';
+                const btn = quizForm.querySelector('button[type="submit"]');
+                if (btn) btn.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = QUESTIONS.map((q, i) => `
+                <div class="question-box">
+                    <span>السؤال ${i + 1}</span>
+                    <h3>${API.esc(q.question_text)}</h3>
+                    ${q.options.map(opt => `
+                    <label>
+                        <input type="radio" name="q${q.question_id}" value="${API.esc(opt)}"
+                               ${q.chosen_answer === opt ? 'checked' : ''}> ${API.esc(opt)}
+                    </label>`).join('')}
+                </div>`).join('');
+
+        } catch (err) {
+            container.innerHTML = '<p style="color:#c00;">تعذّر تحميل الأسئلة: ' + API.esc(err.message) + '</p>';
+        }
+    }
+
+    await loadQuestions();
+
     if (quizForm) {
-        quizForm.addEventListener("submit", function (e) {
+        quizForm.addEventListener("submit", async function (e) {
             e.preventDefault();
+            if (!QUESTIONS.length) return;
 
-            const correctAnswers = quizForm.getAttribute("data-correct").split(",");
-            const q1 = quizForm.elements["q1"]?.value;
-            const q2 = quizForm.elements["q2"]?.value;
-            const q3 = quizForm.elements["q3"]?.value;
+            const picked = QUESTIONS.map(q => {
+                const el = quizForm.querySelector(`input[name="q${q.question_id}"]:checked`);
+                return { id: q.question_id, value: el ? el.value : null };
+            });
 
-            if (!q1 || !q2 || !q3) {
+            if (picked.some(p => !p.value)) {
                 quizResult.className = "quiz-result error";
                 quizResult.innerText = "فضلاً أجب عن جميع الأسئلة أولاً.";
                 quizResult.style.display = "block";
                 return;
             }
 
-            let score = 0;
-            if (q1 === correctAnswers[0]) score++;
-            if (q2 === correctAnswers[1]) score++;
-            if (q3 === correctAnswers[2]) score++;
+            const btn = quizForm.querySelector('button[type="submit"]');
+            const original = btn ? btn.innerText : '';
+            if (btn) { btn.disabled = true; btn.innerText = 'جاري التصحيح...'; }
 
-            quizResult.style.display = "block";
-            if (score === 3) {
-                quizResult.className = "quiz-result success";
-                quizResult.innerHTML = `نتيجة ممتازة: 3/3 ✓<br>تم توثيق إجاباتك ودخولك في السحب اليومي بنجاح!`;
-            } else {
+            try {
+                let score = 0;
+                for (const p of picked) {
+                    const res = await API.post('cultural.php', 'answer', {
+                        question_id: p.id,
+                        answer: p.value
+                    });
+                    if (res.data.is_correct) score++;
+                }
+
+                const total = picked.length;
+                quizResult.style.display = "block";
+                if (score === total) {
+                    quizResult.className = "quiz-result success";
+                    quizResult.innerHTML = `نتيجة ممتازة: ${score}/${total} ✓<br>تم توثيق إجاباتك ودخولك في السحب اليومي بنجاح!`;
+                } else {
+                    quizResult.className = "quiz-result error";
+                    quizResult.innerHTML = `حصلت على: ${score}/${total}<br>حاول مرة أخرى للحصول على الدرجة الكاملة والدخول في السحب.`;
+                }
+            } catch (err) {
                 quizResult.className = "quiz-result error";
-                quizResult.innerHTML = `حصلت على: ${score}/3<br>حاول مرة أخرى للحصول على الدرجة الكاملة والدخول في السحب.`;
+                quizResult.innerText = err.message;
+                quizResult.style.display = "block";
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = original; }
             }
         });
     }

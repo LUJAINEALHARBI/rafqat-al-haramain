@@ -317,42 +317,30 @@
         document.getElementById('forgotPasswordModal').style.display = 'none';
     }
 
+    /* لا توجد خدمة رسائل على الاستضافة، والرمز الثابت 1234 كان يسمح لأي شخص
+       بتغيير كلمة مرور أي حساب برقم العضوية وحده. استعادة كلمة المرور صارت
+       تتم عبر مدير الحملة من لوحته (نافذة الصلاحيات). */
+    function forgotPasswordNotice() {
+        alert('لاستعادة كلمة المرور، تواصل مع مدير الحملة.\n'
+            + 'يقوم بتغييرها لك من: لوحة الحملة ← الصلاحيات ← إعادة تعيين كلمة مرور حساب.');
+        closeForgotPasswordModal();
+    }
+
     function goToStep2() {
         const id = document.getElementById('recoveryId').value.trim();
         if (!id) {
             alert('الرجاء إدخال رقم العضوية أولاً.');
             return;
         }
-        document.getElementById('step1').classList.remove('active');
-        document.getElementById('step2').classList.add('active');
-        alert('تم إرسال رمز التحقق الوهمي (1234) بنجاح.');
+        forgotPasswordNotice();
     }
 
     function goToStep3() {
-        const otp = document.getElementById('otpCode').value.trim();
-        if (otp !== '1234') {
-            alert('رمز التحقق غير صحيح! (الرمز التجريبي هو: 1234)');
-            return;
-        }
-        document.getElementById('step2').classList.remove('active');
-        document.getElementById('step3').classList.add('active');
+        forgotPasswordNotice();
     }
 
     function resetPasswordFinal() {
-        const newPass = document.getElementById('newPassword').value;
-        const minLength = newPass.length >= 8;
-        const hasUpperCase = /[A-Z]/.test(newPass);
-        const hasLowerCase = /[a-z]/.test(newPass);
-        const hasNumbers = /\d/.test(newPass);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPass);
-
-        if (!minLength || !hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
-            alert('كلمة المرور لا تستوفي شروط الأمان المعتمدة!\nيجب أن تكون 8 خانات على الأقل وتحتوي على أحرف كبيرة وصغيرة وأرقام ورموز خاصة.');
-            return;
-        }
-
-        alert('تم تغيير كلمة المرور بنجاح. يرجى تسجيل الدخول باستخدام كلمة المرور الجديدة.');
-        closeForgotPasswordModal();
+        forgotPasswordNotice();
     }
 </script>
 </body>

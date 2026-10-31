@@ -155,8 +155,8 @@
 /* ---------------------------------------------------------------
    لوحة التصحيح والسحب — قائمة الحجاج للقرعة صارت تُقرأ فعلياً من
    جدول pilgrims عبر api/pilgrims.php?action=list بدل قائمة ثابتة.
-   حفظ السؤال الثقافي لم يُربط لأنه لا يوجد جدول للأسئلة
-   (انظري تقرير التعديلات).
+   حفظ السؤال الثقافي صار مربوطاً بجدول cultural_questions عبر
+   api/cultural.php?action=add ، والتصحيح يتم في الخادم.
    --------------------------------------------------------------- */
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -171,10 +171,27 @@ document.addEventListener("DOMContentLoaded", async function() {
     const questionForm  = document.getElementById("questionForm");
 
     if (questionForm) {
-        questionForm.addEventListener("submit", function(e) {
+        questionForm.addEventListener("submit", async function(e) {
             e.preventDefault();
-            alert("تنبيه: لا يوجد جدول للأسئلة الثقافية في قاعدة البيانات حالياً، "
-                + "فالسؤال لن يُحفظ. راجع تقرير التعديلات.");
+
+            const btn = questionForm.querySelector('button[type="submit"]');
+            const original = btn ? btn.innerText : '';
+            if (btn) { btn.disabled = true; btn.innerText = 'جاري الحفظ...'; }
+
+            try {
+                await API.post('cultural.php', 'add', {
+                    question_text:  document.getElementById("questionText").value.trim(),
+                    options:        document.getElementById("questionOptions").value.trim(),
+                    correct_answer: document.getElementById("correctAnswer").value.trim(),
+                    target_section: document.getElementById("targetGenderSection").value
+                });
+                alert("تم حفظ السؤال ونشره للحجاج في صفحة الثقافي والترفيهي.");
+                questionForm.reset();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = original; }
+            }
         });
     }
 

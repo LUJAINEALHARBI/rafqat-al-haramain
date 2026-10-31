@@ -25,8 +25,71 @@ switch ($action) {
     case 'me':
         do_me();
         break;
+    case 'reset_password':
+        do_reset_password();
+        break;
     default:
         fail('عملية غير معروفة.', 404);
+}
+
+// ------------------------------------------------------------------
+/**
+ * إعادة تعيين كلمة مرور حساب — مدير الحملة فقط.
+ * لا توجد خدمة رسائل على الاستضافة، فاستعادة كلمة المرور تتم عبر
+ * مدير الحملة بدل رمز تحقق وهمي يسمح لأي شخص بالاستيلاء على حساب.
+ */
+function do_reset_password(): void
+{
+    require_post();
+    $u = require_user(['campaign']);
+
+    $targetId = require_text('target_id', 20);
+    $newPass  = require_text('new_password', 100);
+
+    if (!preg_match('/^\d{3,12}$/', $targetId)) {
+        fail('رقم العضوية يجب أن يكون أرقاماً فقط.', 422);
+    }
+
+    // نفس شروط كلمة المرور المعروضة في الواجهة
+    if (strlen($newPass) < 8
+        || !preg_match('/[A-Z]/', $newPass)
+        || !preg_match('/[a-z]/', $newPass)
+        || !preg_match('/\d/', $newPass)
+        || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $newPass)) {
+        fail('كلمة المرور يجب أن تكون 8 خانات فأكثر وتحتوي أحرفاً كبيرة وصغيرة وأرقاماً ورمزاً خاصاً.', 422);
+    }
+
+    $hash = password_hash($newPass, PASSWORD_DEFAULT);
+
+    if (str_starts_with($targetId, '100')) {
+        $st = db()->prepare(
+            'UPDATE pilgrims SET password_hash = ? WHERE pilgrim_id = ? AND campaign_id = ?'
+        );
+        $st->execute([$hash, $targetId, $u['campaign_id']]);
+        $label = 'حاج';
+    } elseif (str_starts_with($targetId, '500')) {
+        $st = db()->prepare(
+            'UPDATE supervisors SET password_hash = ? WHERE supervisor_id = ? AND campaign_id = ?'
+        );
+        $st->execute([$hash, $targetId, $u['campaign_id']]);
+        $label = 'مشرف';
+    } elseif (str_starts_with($targetId, '300')) {
+        // المدير يغيّر كلمة مرور حملته هو فقط
+        if ((int) $targetId !== (int) $u['campaign_id']) {
+            fail('لا يمكنك تغيير كلمة مرور حملة أخرى.', 403);
+        }
+        $st = db()->prepare('UPDATE campaigns SET password_hash = ? WHERE campaign_id = ?');
+        $st->execute([$hash, $targetId]);
+        $label = 'مدير الحملة';
+    } else {
+        fail('رقم العضوية غير معروف. يبدأ بـ 100 للحجاج، 500 للمشرفين، 300 لمدير الحملة.', 422);
+    }
+
+    if ($st->rowCount() === 0) {
+        fail('لا يوجد حساب بهذا الرقم ضمن حملتك.', 404);
+    }
+
+    ok(['target_id' => $targetId, 'role' => $label]);
 }
 
 // ------------------------------------------------------------------
