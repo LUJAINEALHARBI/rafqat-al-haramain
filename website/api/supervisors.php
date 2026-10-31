@@ -39,7 +39,18 @@ function list_supervisors(): void
 
     $st = db()->prepare($sql);
     $st->execute($args);
-    ok($st->fetchAll());
+    $rows = $st->fetchAll();
+
+    // الحاج يحتاج اسم المشرف ووظيفته وهاتفه فقط،
+    // أما وصف الصلاحيات الداخلية فلا يخصّه.
+    if (($u['role'] ?? '') === 'pilgrim') {
+        $rows = array_map(function (array $r) {
+            unset($r['permission_level']);
+            return $r;
+        }, $rows);
+    }
+
+    ok($rows);
 }
 
 // ------------------------------------------------------------------
@@ -78,7 +89,17 @@ function supervisor_profile(): void
 // ------------------------------------------------------------------
 function list_jobs(): void
 {
-    require_user();
+    $u  = require_user();
     $st = db()->query('SELECT job_id, job_title, permission_level, role_key FROM jobs ORDER BY job_id');
-    ok($st->fetchAll());
+    $rows = $st->fetchAll();
+
+    // نفس القاعدة: وصف الصلاحيات الداخلية لا يُعرض للحاج.
+    if (($u['role'] ?? '') === 'pilgrim') {
+        $rows = array_map(function (array $r) {
+            unset($r['permission_level']);
+            return $r;
+        }, $rows);
+    }
+
+    ok($rows);
 }
