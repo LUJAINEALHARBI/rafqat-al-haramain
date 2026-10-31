@@ -49,7 +49,7 @@ class PilgrimDashboard extends StatelessWidget {
     Widget? page;
 
     if (title == 'السكن') {
-      page = const HousingPage();
+      page = HousingPage(pilgrimId: pilgrimId);
     } else if (title == 'الوجبات') {
       page = const MealsPage();
     } else if (title == 'النقل') {

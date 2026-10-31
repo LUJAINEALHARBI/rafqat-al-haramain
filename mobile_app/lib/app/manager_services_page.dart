@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 const Color serviceGreen = Color(0xFF277D78);
 const Color serviceDark = Color(0xFF244C4A);
 const Color serviceBackground = Color(0xFFF6FAFA);
@@ -55,6 +56,38 @@ class ManagerServicesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // الخدمات تُقرأ من جدول services عبر api/services.php?action=list
+    return FutureBuilder<List<dynamic>>(
+      future: ApiService.services(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6FAFA),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF6FAFA),
+            appBar: AppBar(title: const Text('إدارة الخدمات'), centerTitle: true),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر التحميل من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const []);
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, List<dynamic> rows) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -107,7 +140,20 @@ class ManagerServicesPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            ...services.map((service) {
+            ...List.generate(rows.length, (i) {
+              final r = rows[i] as Map;
+              final base = services[i % services.length];
+              final service = <String, dynamic>{
+                ...base,
+                'title': (r['service_name'] ?? '').toString(),
+                'description': [
+                  (r['description'] ?? '').toString(),
+                  if ((r['service_location'] ?? '').toString().isNotEmpty)
+                    'الموقع: ${r['service_location']}',
+                  if ((r['status'] ?? '').toString().isNotEmpty)
+                    'الحالة: ${r['status']}',
+                ].where((e) => e.isNotEmpty).join('\n'),
+              };
               return Card(
                 color: Colors.white,
                 elevation: 2,

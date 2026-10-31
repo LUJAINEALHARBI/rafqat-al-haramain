@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class MealsPage extends StatelessWidget {
   const MealsPage({super.key});
@@ -32,6 +33,43 @@ class MealsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // المحتوى يُقرأ من جدول services عبر api/services.php
+    return FutureBuilder<List<dynamic>>(
+      future: ApiService.servicesOfType('catering'),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6FAFA),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF6FAFA),
+            appBar: AppBar(
+              title: const Text('جدول الوجبات'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر التحميل من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const []);
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, List<dynamic> rows) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -78,7 +116,16 @@ class MealsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            ...meals.map((meal) {
+            ...List.generate(rows.length, (i) {
+              final r = rows[i] as Map;
+              final base = meals[i % meals.length];
+              final meal = {
+                'title': (r['service_name'] ?? '').toString(),
+                'time': (r['service_location'] ?? '').toString(),
+                'description': (r['description'] ?? '').toString(),
+                'icon': base['icon'],
+                'color': base['color'],
+              };
               final color = meal['color'] as Color;
 
               return Card(
@@ -120,6 +167,15 @@ class MealsPage extends StatelessWidget {
                 ),
               );
             }),
+            if (rows.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'لا توجد وجبات مسجلة في قاعدة البيانات.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.blueGrey),
+                ),
+              ),
             const SizedBox(height: 8),
             const Text(
               'ملاحظة: المواعيد الفعلية وتفاصيل الوجبات تعتمد على جدول الحملة المعتمد.',

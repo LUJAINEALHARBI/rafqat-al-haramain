@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String userRole;
@@ -18,11 +19,45 @@ class _ChatPageState extends State<ChatPage> {
   static const Color green = Color(0xFF277D78);
   static const Color darkGreen = Color(0xFF244C4A);
 
-  late List<Map<String, dynamic>> conversations;
+  List<Map<String, dynamic>> conversations = [];
+  bool loading = true;
+  String? loadError;
+
+  /// الغرف تُقرأ من جدول chat_rooms عبر api/rooms.php?action=rooms
+  Future<void> _loadRooms() async {
+    try {
+      final rows = await ApiService.get('rooms.php', 'rooms') as List;
+      if (!mounted) return;
+      setState(() {
+        conversations = rows.map<Map<String, dynamic>>((e) {
+          final r = e as Map;
+          final type = (r['message_type'] ?? '').toString();
+          return {
+            'id': r['room_id'],
+            'title': (r['room_name'] ?? 'غرفة').toString(),
+            'subtitle': type.isEmpty ? 'محادثة الحملة' : type,
+            'icon': type == 'إشراف'
+                ? Icons.supervisor_account_rounded
+                : Icons.groups_rounded,
+            'messages': <Map<String, dynamic>>[],
+          };
+        }).toList();
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        loadError = e.toString();
+        loading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+
+    // قيم أولية تُستبدل بغرف قاعدة البيانات فور تحميلها
 
     if (widget.userRole == 'حاج' ||
         widget.userRole == 'حاجة') {
@@ -72,6 +107,8 @@ class _ChatPageState extends State<ChatPage> {
         },
       ];
     }
+
+    _loadRooms();
   }
 
   void openConversation(Map<String, dynamic> conversation) {
@@ -79,6 +116,7 @@ class _ChatPageState extends State<ChatPage> {
       context,
       MaterialPageRoute(
         builder: (_) => ConversationRoomPage(
+          roomId: conversation['id'],
           title: conversation['title'] as String,
           messages:
               conversation['messages'] as List<Map<String, dynamic>>,
@@ -92,6 +130,33 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF6FAFA),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (loadError != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6FAFA),
+        appBar: AppBar(
+          title: const Text('المحادثات'),
+          centerTitle: true,
+          backgroundColor: darkGreen,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'تعذّر تحميل المحادثات من قاعدة البيانات:\n$loadError',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ),
+      );
+    }
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -201,12 +266,15 @@ class _ChatPageState extends State<ChatPage> {
 }
 
 class ConversationRoomPage extends StatefulWidget {
+  /// رقم الغرفة في جدول chat_rooms
+  final dynamic roomId;
   final String title;
   final List<Map<String, dynamic>> messages;
   final String senderName;
 
   const ConversationRoomPage({
     super.key,
+    required this.roomId,
     required this.title,
     required this.messages,
     required this.senderName,
@@ -224,6 +292,14 @@ class _ConversationRoomPageState extends State<ConversationRoomPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  bool sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -231,17 +307,56 @@ class _ConversationRoomPageState extends State<ConversationRoomPage> {
     super.dispose();
   }
 
-  void sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      widget.messages.add({
-        'text': text,
-        'sender': widget.senderName,
-        'time': TimeOfDay.now().format(context),
+  /// الرسائل تُقرأ من جدول messages عبر api/rooms.php?action=messages
+  Future<void> _loadMessages() async {
+    try {
+      final rows = await ApiService.get(
+        'rooms.php',
+        'messages',
+        {'room_id': '${widget.roomId}'},
+      ) as List;
+      if (!mounted) return;
+      setState(() {
+        widget.messages
+          ..clear()
+          ..addAll(rows.map<Map<String, dynamic>>((e) {
+            final r = e as Map;
+            return {
+              'text': (r['message_text'] ?? '').toString(),
+              'sender': (r['sender_name'] ?? '').toString(),
+              'time': (r['sent_at'] ?? '').toString(),
+            };
+          }));
       });
-    });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  Future<void> sendMessage() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || sending) return;
+
+    setState(() => sending = true);
+
+    try {
+      // الرسالة تُحفظ في قاعدة البيانات عبر api/rooms.php?action=send
+      await ApiService.post('rooms.php', 'send', {
+        'room_id': widget.roomId,
+        'message': text,
+      });
+      await _loadMessages();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
 
     _controller.clear();
 

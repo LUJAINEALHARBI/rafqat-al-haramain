@@ -204,4 +204,14 @@ class ApiService {
 
   static Future<List<dynamic>> services() async =>
       List<dynamic>.from(await get('services.php', 'list') as List);
+
+  /// خدمات نوع معيّن من جدول services (medical / catering / crowd / housing)
+  static Future<List<dynamic>> servicesOfType(String type) async {
+    final all = await services();
+    return all.where((e) => (e['service_type'] ?? '') == type).toList();
+  }
+
+  /// طلبات الخدمة الخاصة بالمستخدم الحالي (service_provisions)
+  static Future<List<dynamic>> serviceRequests() async =>
+      List<dynamic>.from(await get('services.php', 'requests') as List);
 }

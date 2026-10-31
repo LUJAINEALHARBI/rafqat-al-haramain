@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 const Color pilgrimsGreen = Color(0xFF277D78);
 const Color pilgrimsDark = Color(0xFF244C4A);
@@ -39,6 +40,38 @@ class PilgrimsManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // قائمة الحجاج تُقرأ من جدول pilgrims عبر api/pilgrims.php?action=list
+    return FutureBuilder<List<dynamic>>(
+      future: ApiService.pilgrims(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6FAFA),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF6FAFA),
+            appBar: AppBar(title: const Text('إدارة الحجاج'), centerTitle: true),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر التحميل من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const []);
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, List<dynamic> rows) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -94,7 +127,15 @@ class PilgrimsManagementPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            ...pilgrims.map((pilgrim) {
+            ...rows.map((row) {
+              final r = row as Map;
+              final pilgrim = <String, String>{
+                'name': (r['name'] ?? '').toString(),
+                'id': (r['pilgrim_id'] ?? '').toString(),
+                'camp': (r['camp_id'] ?? r['city'] ?? '').toString(),
+                'room': (r['tent_number'] ?? '').toString(),
+                'status': (r['package_type'] ?? '').toString(),
+              };
               return Card(
                 color: Colors.white,
                 margin: const EdgeInsets.only(bottom: 10),

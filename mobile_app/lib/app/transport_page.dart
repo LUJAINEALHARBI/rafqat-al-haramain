@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class TransportPage extends StatelessWidget {
   const TransportPage({super.key});
@@ -29,6 +30,43 @@ class TransportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // المحتوى يُقرأ من جدول services عبر api/services.php
+    return FutureBuilder<List<dynamic>>(
+      future: ApiService.servicesOfType('crowd'),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6FAFA),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF6FAFA),
+            appBar: AppBar(
+              title: const Text('النقل والتنقل'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر التحميل من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const []);
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, List<dynamic> rows) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -77,7 +115,21 @@ class TransportPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            ...trips.map((trip) {
+            ...List.generate(rows.length, (i) {
+              final r = rows[i] as Map;
+              final base = trips[i % trips.length];
+              final trip = {
+                'title': (r['service_name'] ?? '').toString(),
+                'description': [
+                  (r['description'] ?? '').toString(),
+                  if ((r['service_location'] ?? '').toString().isNotEmpty)
+                    'الموقع: ${r['service_location']}',
+                  if ((r['service_datetime'] ?? '').toString().isNotEmpty)
+                    'الموعد: ${r['service_datetime']}',
+                ].where((e) => e.isNotEmpty).join('\n'),
+                'icon': base['icon'],
+                'color': base['color'],
+              };
               final color = trip['color'] as Color;
 
               return Card(

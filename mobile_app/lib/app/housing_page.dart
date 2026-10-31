@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class HousingPage extends StatelessWidget {
-  const HousingPage({super.key});
+  /// رقم عضوية الحاج — تُقرأ بياناته من جدول pilgrims
+  final String pilgrimId;
+
+  const HousingPage({super.key, required this.pilgrimId});
 
   static const Color green = Color(0xFF277D78);
   static const Color darkGreen = Color(0xFF244C4A);
@@ -16,16 +20,72 @@ class HousingPage extends StatelessWidget {
   };
 
   final Map<String, IconData> housingIcons = const {
-    'اسم السكن': Icons.hotel_rounded,
-    'الموقع': Icons.location_on_rounded,
+    'اسم الحاج': Icons.person_rounded,
+    'رقم الحجز': Icons.confirmation_number_rounded,
     'رقم المخيم': Icons.location_city_rounded,
-    'رقم الغرفة': Icons.meeting_room_rounded,
-    'موعد الوصول': Icons.login_rounded,
-    'موعد المغادرة': Icons.logout_rounded,
+    'رقم الخيمة': Icons.hotel_rounded,
+    'رقم السرير': Icons.bed_rounded,
+    'نوع الباقة': Icons.card_membership_rounded,
+    'نقطة التجمع': Icons.location_on_rounded,
+    'المشرف المسؤول': Icons.supervisor_account_rounded,
   };
 
   @override
   Widget build(BuildContext context) {
+    // بيانات السكن تُقرأ من جدول pilgrims عبر api/pilgrims.php?action=get
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.pilgrimProfile(pilgrimId),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6FAFA),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF6FAFA),
+            appBar: AppBar(
+              title: const Text('بيانات السكن'),
+              centerTitle: true,
+              backgroundColor: darkGreen,
+              foregroundColor: Colors.white,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'تعذّر التحميل من قاعدة البيانات:\n${snap.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildUi(context, snap.data ?? const {});
+      },
+    );
+  }
+
+  Widget _buildUi(BuildContext context, Map<String, dynamic> me) {
+    String v(String k) {
+      final x = me[k];
+      if (x == null || x.toString().trim().isEmpty) return 'غير محدد';
+      return x.toString();
+    }
+
+    final info = <String, String>{
+      'اسم الحاج': v('name'),
+      'رقم الحجز': v('booking_number'),
+      'رقم المخيم': v('camp_id'),
+      'رقم الخيمة': v('tent_number'),
+      'رقم السرير': v('bed_number'),
+      'نوع الباقة': v('package_type'),
+      'نقطة التجمع': v('gathering_point'),
+      'المشرف المسؤول': v('supervisor_name'),
+    };
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -76,7 +136,7 @@ class HousingPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            ...housingInfo.entries.map((entry) {
+            ...info.entries.map((entry) {
               return Card(
                 color: Colors.white,
                 margin: const EdgeInsets.only(bottom: 12),

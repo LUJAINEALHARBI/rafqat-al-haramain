@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class CulturePage extends StatefulWidget {
   const CulturePage({super.key});
@@ -17,7 +18,47 @@ class _CulturePageState extends State<CulturePage> {
   bool answered = false;
   bool finished = false;
 
-  final List<Map<String, dynamic>> questions = [
+  bool loading = true;
+  String? loadError;
+
+  /// الأسئلة تُقرأ من جدول cultural_questions عبر api/cultural.php
+  /// والتصحيح يتم في الخادم، لا داخل التطبيق.
+  List<Map<String, dynamic>> questions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
+
+  Future<void> _loadQuestions() async {
+    try {
+      final rows = await ApiService.get('cultural.php', 'list') as List;
+      if (!mounted) return;
+      setState(() {
+        questions = rows.map<Map<String, dynamic>>((e) {
+          final r = e as Map;
+          return {
+            'id': r['question_id'],
+            'question': (r['question_text'] ?? '').toString(),
+            'answers': List<String>.from(
+              (r['options'] as List).map((o) => o.toString()),
+            ),
+            'correct': -1, // يُحدَّد من رد الخادم بعد الإجابة
+          };
+        }).toList();
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        loadError = e.toString();
+        loading = false;
+      });
+    }
+  }
+
+  final List<Map<String, dynamic>> _fallbackQuestions = [
     {
       'question': 'ما الركن الأعظم من أركان الحج؟',
       'answers': ['السعي', 'الوقوف بعرفة', 'طواف الوداع'],
@@ -40,17 +81,36 @@ class _CulturePageState extends State<CulturePage> {
     },
   ];
 
-  void selectAnswer(int index) {
-    if (answered) return;
+  Future<void> selectAnswer(int index) async {
+    if (answered || questions.isEmpty) return;
+
+    final q = questions[questionIndex];
+    final answers = q['answers'] as List<String>;
 
     setState(() {
       selectedAnswer = index;
       answered = true;
-
-      if (index == questions[questionIndex]['correct']) {
-        score++;
-      }
     });
+
+    try {
+      // التصحيح يتم في الخادم ويُسجَّل في جدول cultural_answers
+      final res = await ApiService.post('cultural.php', 'answer', {
+        'question_id': q['id'],
+        'answer': answers[index],
+      }) as Map;
+
+      if (!mounted) return;
+      setState(() {
+        q['correct'] = answers.indexOf((res['correct_answer'] ?? '').toString());
+        if (res['is_correct'] == true) score++;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      setState(() => answered = false);
+    }
   }
 
   void nextQuestion() {
@@ -72,11 +132,56 @@ class _CulturePageState extends State<CulturePage> {
       selectedAnswer = null;
       answered = false;
       finished = false;
+      for (final q in questions) {
+        q['correct'] = -1;
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF6FAFA),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (loadError != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6FAFA),
+        appBar: AppBar(
+          title: const Text('المسابقة الثقافية'),
+          centerTitle: true,
+          backgroundColor: darkGreen,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'تعذّر تحميل الأسئلة من قاعدة البيانات:\n$loadError',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ),
+      );
+    }
+    if (questions.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6FAFA),
+        appBar: AppBar(
+          title: const Text('المسابقة الثقافية'),
+          centerTitle: true,
+          backgroundColor: darkGreen,
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(
+          child: Text('لا توجد أسئلة منشورة حالياً.'),
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
