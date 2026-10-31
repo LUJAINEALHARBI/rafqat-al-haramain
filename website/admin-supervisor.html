@@ -277,7 +277,7 @@
      • الحجاج                : api/pilgrims.php?action=list
      • طلبات الخدمة          : api/services.php?action=requests
      • القيود المالية         : api/expenses.php
-     • المحادثة              : api/chat.php
+     • المحادثة              : api/rooms.php
 
    التخصص لم يعد يُستنتج من آخر رقم في رقم العضوية، بل يأتي من
    جدول jobs المرتبط بالمشرف في قاعدة البيانات.
@@ -511,7 +511,7 @@ async function loadChat() {
     container.innerHTML = '<p style="color:#777;">جاري تحميل الرسائل...</p>';
 
     try {
-        const rooms = await API.get('chat.php', 'rooms');
+        const rooms = await API.get('rooms.php', 'rooms');
         if (!rooms.data.length) {
             container.innerHTML = '<p style="color:#777;">لا توجد غرف محادثة متاحة.</p>';
             return;
@@ -520,7 +520,7 @@ async function loadChat() {
         const room = rooms.data.find(r => r.message_type === 'إشراف') || rooms.data[0];
         CHAT_ROOM_ID = room.room_id;
 
-        const msgs = await API.get('chat.php', 'messages', { room_id: CHAT_ROOM_ID });
+        const msgs = await API.get('rooms.php', 'messages', { room_id: CHAT_ROOM_ID });
         renderMessages(msgs.data);
 
     } catch (err) {
@@ -550,9 +550,9 @@ async function sendSupervisorMsg(e) {
 
     input.disabled = true;
     try {
-        await API.post('chat.php', 'send', { room_id: CHAT_ROOM_ID, message: text });
+        await API.post('rooms.php', 'send', { room_id: CHAT_ROOM_ID, message: text });
         input.value = '';
-        const msgs = await API.get('chat.php', 'messages', { room_id: CHAT_ROOM_ID });
+        const msgs = await API.get('rooms.php', 'messages', { room_id: CHAT_ROOM_ID });
         renderMessages(msgs.data);
     } catch (err) {
         alert(err.message);
