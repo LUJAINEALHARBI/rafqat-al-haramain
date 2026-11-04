@@ -53,16 +53,23 @@ function list_requests(): void
     if ($u['role'] === 'pilgrim') {
         $sql .= ' AND sp.pilgrim_id = ?';
         $args[] = $u['id'];
-    } elseif ($u['role'] === 'supervisor' && empty($u['is_general'])) {
-        // المشرف المتخصص يرى طلبات تخصصه في قسمه فقط:
-        // الطلبات الطبية مثلاً لا تظهر لموظف الإعاشة ولا لموظف السكن.
-        $sql .= ' AND s.service_type = (SELECT j.role_key FROM supervisors sv
-                                          JOIN jobs j ON j.job_id = sv.job_id
-                                         WHERE sv.supervisor_id = ?)';
-        $args[] = $u['id'];
+    } elseif ($u['role'] === 'supervisor') {
 
-        $sql .= ' AND p.gender = ?';
-        $args[] = ($u['section'] ?? 'men') === 'women' ? 'female' : 'male';
+        // المشرف المتخصص يرى طلبات تخصصه فقط:
+        // الطلبات الطبية مثلاً لا تظهر لموظف الإعاشة ولا لموظف السكن.
+        if (empty($u['is_general'])) {
+            $sql .= ' AND s.service_type = (SELECT j.role_key FROM supervisors sv
+                                              JOIN jobs j ON j.job_id = sv.job_id
+                                             WHERE sv.supervisor_id = ?)';
+            $args[] = $u['id'];
+        }
+
+        // والجميع — بما فيهم المشرف العام — يرون قسمهم الحالي
+        $gender = section_gender(viewing_section($u));
+        if ($gender !== null) {
+            $sql .= ' AND p.gender = ?';
+            $args[] = $gender;
+        }
     }
 
     $sql .= ' ORDER BY sp.provision_id DESC';

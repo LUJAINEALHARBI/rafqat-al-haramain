@@ -311,10 +311,11 @@ function pilgrim_in_scope(int $pilgrimId, array $u): array
     if ((int) $row['campaign_id'] !== (int) $u['campaign_id']) {
         fail('هذا الحاج ليس من حجاج حملتك.', 403);
     }
-    if ($u['role'] === 'supervisor' && empty($u['is_general'])) {
+    if ($u['role'] === 'supervisor') {
+        $viewing = viewing_section($u);
         $section = $row['gender'] === 'female' ? 'women' : 'men';
-        if ($section !== ($u['section'] ?? '')) {
-            fail('هذا الحاج ليس من قسمك.', 403);
+        if ($viewing !== null && $section !== $viewing) {
+            fail('هذا الحاج ليس من القسم الذي تتابعه حالياً.', 403);
         }
     }
     return $row;
@@ -410,4 +411,32 @@ function service_type_permission(?string $serviceType): string
         case 'housing':  return 'manage_housing';
         default:         return 'manage_services';
     }
+}
+
+/**
+ * القسم الذي يتابعه المستخدم في هذه الجلسة.
+ *   المشرف المتخصص : قسمه المسجّل في جدول المشرفين، ولا يغيّره.
+ *   المشرف العام    : القسم الذي اختاره عند الدخول ويستطيع تبديله من لوحته.
+ *   الحاج           : قسمه حسب جنسه.
+ *   مدير الحملة     : القسمان معاً ما لم يحدّد قسماً في الطلب.
+ *
+ * سبب وجودها: المشرف العام كان يختار "قسم الرجال" ثم تظهر له أسماء
+ * القسمين معاً، فصار ما يظهر على الشاشة لا يطابق ما هو مكتوب فوقها.
+ */
+function viewing_section(array $u): ?string
+{
+    if (($u['role'] ?? '') === 'campaign') {
+        return one_of('section', ['men', 'women'], null);
+    }
+
+    $section = $u['section'] ?? null;
+    return ($section === 'men' || $section === 'women') ? $section : null;
+}
+
+/** يحوّل القسم إلى قيمة عمود gender في جدول الحجاج */
+function section_gender(?string $section): ?string
+{
+    if ($section === 'women') return 'female';
+    if ($section === 'men')   return 'male';
+    return null;
 }

@@ -44,14 +44,12 @@ function list_pilgrims(): void
              WHERE p.campaign_id = ?";
     $args = [$u['campaign_id']];
 
-    // مشرف متخصص يرى حجاج قسمه فقط
-    $section = param('section');
-    if ($u['role'] === 'supervisor' && empty($u['is_general'])) {
-        $section = $u['section'];
-    }
-    if ($section === 'men' || $section === 'women') {
+    // كل مشرف يرى حجاج القسم الذي يتابعه، والمشرف العام يرى القسم
+    // الذي اختاره عند الدخول لا القسمين معاً
+    $gender = section_gender(viewing_section($u));
+    if ($gender !== null) {
         $sql .= ' AND p.gender = ?';
-        $args[] = $section === 'women' ? 'female' : 'male';
+        $args[] = $gender;
     }
 
     if (param('supervisor_id')) {

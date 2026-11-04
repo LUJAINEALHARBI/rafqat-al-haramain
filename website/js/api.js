@@ -35,31 +35,63 @@ const API = {
         });
     },
 
-    async _send(url, options) {
+    /** هل الرد صفحة تحقق أمني من الاستضافة بدل نتيجة الطلب؟ */
+    _isHostCheck(text) {
+        return /aes\.js|slowAES|toNumbers|__test=/.test(text);
+    },
+
+    /**
+     * تجديد تحقق الاستضافة الأمني.
+     * الاستضافة المجانية تطلب أحياناً تحققاً لا يستطيع fetch إكماله،
+     * فنفتح صفحة ping.html في إطار مخفي ليكمله المتصفح كالمعتاد،
+     * ثم نعيد إرسال الطلب الأصلي. الميزة أن المستخدم لا يفقد ما
+     * كتبه في النموذج، على عكس إعادة تحميل الصفحة.
+     */
+    _renewHostCheck() {
+        return new Promise(resolve => {
+            let finished = false;
+            const frame = document.createElement('iframe');
+
+            const done = () => {
+                if (finished) return;
+                finished = true;
+                if (frame.parentNode) frame.parentNode.removeChild(frame);
+                resolve();
+            };
+
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
+            frame.src = 'ping.html?t=' + Date.now();
+            frame.onload  = () => setTimeout(done, 1200);
+            frame.onerror = () => setTimeout(done, 300);
+
+            setTimeout(done, 7000);   // لا ننتظر أكثر من ذلك مهما حصل
+            document.body.appendChild(frame);
+        });
+    },
+
+    async _send(url, options, isRetry) {
         options.credentials = 'same-origin';   // ترسل كوكي الجلسة
         let res, body;
         try {
             res = await fetch(url, options);
         } catch (e) {
-            throw new Error('تعذّر الوصول إلى الخادم. تأكد أن Apache يعمل وأن الموقع مفتوح عبر http://localhost وليس بفتح الملف مباشرة.');
+            throw new Error('تعذّر الوصول إلى الخادم. تأكدي من اتصال الإنترنت ثم أعيدي المحاولة.');
         }
 
         const text = await res.text();
         try {
             body = JSON.parse(text);
-            sessionStorage.removeItem('hostCheckReloaded');
         } catch (e) {
-            // استضافة InfinityFree ترد أحياناً بصفحة تحقق أمني (aes.js) بدل نتيجة الطلب.
-            // المتصفح وحده يستطيع إكمال هذا التحقق، و fetch لا يستطيع،
-            // لذلك نعيد تحميل الصفحة مرة واحدة ليكمله المتصفح بشكله الطبيعي.
-            if (/aes\.js|slowAES|toNumbers/.test(text)) {
-                if (!sessionStorage.getItem('hostCheckReloaded')) {
-                    sessionStorage.setItem('hostCheckReloaded', '1');
-                    location.reload();
+            if (API._isHostCheck(text)) {
+                // المحاولة الأولى: نجدّد التحقق ونعيد الطلب نفسه
+                if (!isRetry) {
+                    await API._renewHostCheck();
+                    return API._send(url, options, true);
                 }
-                throw new Error('انتهت جلسة التحقق الأمني للاستضافة. حدّثي الصفحة ثم أعيدي المحاولة.');
+                throw new Error('الاستضافة طلبت تحققاً أمنياً ولم يكتمل. حدّثي الصفحة ثم أعيدي المحاولة.');
             }
-            throw new Error('رد غير متوقع من الخادم:\n' + text.slice(0, 300));
+            throw new Error('تعذّر قراءة رد الخادم. حدّثي الصفحة ثم أعيدي المحاولة.');
         }
 
         if (!res.ok || body.ok === false) {
@@ -93,6 +125,14 @@ const API = {
      * تتأكد أن المستخدم مسجّل دخول وأن دوره مسموح،
      * وإلا تعيده لصفحة تسجيل الدخول.
      */
+    /** الصفحة الرئيسية لكل نوع مستخدم */
+    homePage(user) {
+        if (!user) return 'login.html';
+        if (user.role === 'campaign')   return 'admin-campaign.html';
+        if (user.role === 'supervisor') return 'admin-supervisor.html';
+        return 'index.html';
+    },
+
     async requireLogin(roles = []) {
         const user = await API.me();
         if (!user) {
@@ -100,11 +140,23 @@ const API = {
             return null;
         }
         if (roles.length && !roles.includes(user.role)) {
-            alert('هذه الصفحة ليست ضمن صلاحياتك.');
-            window.location.href = 'index.html';
+            API.denied(user);
             return null;
         }
         return user;
+    },
+
+    /**
+     * يُستدعى إذا فتح المستخدم صفحة أو ضغط زراً خارج صلاحياته:
+     * رسالة عربية واضحة ثم إعادته إلى صفحته هو.
+     */
+    denied(user, what) {
+        const who = user && user.role === 'pilgrim'
+            ? 'هذه الصفحة من صلاحيات المشرفين وإدارة الحملة'
+            : 'هذه الصفحة ليست ضمن صلاحيات وظيفتك';
+
+        alert((what || who) + '.\nسيتم إرجاعك إلى صفحتك.');
+        window.location.href = API.homePage(user);
     },
 
     async logout() {

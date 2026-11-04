@@ -28,8 +28,36 @@ switch ($action) {
     case 'reset_password':
         do_reset_password();
         break;
+    case 'set_section':
+        do_set_section();
+        break;
     default:
         fail('عملية غير معروفة.', 404);
+}
+
+// ------------------------------------------------------------------
+/**
+ * تبديل القسم الذي يتابعه المشرف العام أثناء الجلسة.
+ * المشرف المتخصص قسمه ثابت من قاعدة البيانات ولا يبدّله.
+ */
+function do_set_section(): void
+{
+    require_post();
+    $u = require_user(['supervisor']);
+
+    if (empty($u['is_general'])) {
+        fail('قسمك محدد في بياناتك ولا يمكن تغييره.', 403);
+    }
+
+    $section = one_of('section', ['men', 'women'], null);
+    if ($section === null) {
+        fail('حدد القسم: men أو women.', 422);
+    }
+
+    start_app_session();
+    $_SESSION['user']['section'] = $section;
+
+    ok(['section' => $section]);
 }
 
 // ------------------------------------------------------------------

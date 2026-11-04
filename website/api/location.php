@@ -55,10 +55,11 @@ function list_sites(): void
                FROM site_locations WHERE campaign_id = ?';
     $args = [$u['campaign_id']];
 
-    // الحاج والمشرف المتخصص يريان مواقع قسمهما والمواقع العامة
-    if ($u['role'] === 'pilgrim' || ($u['role'] === 'supervisor' && empty($u['is_general']))) {
+    // الحاج والمشرف يريان مواقع القسم الذي يتابعانه والمواقع العامة
+    $section = viewing_section($u);
+    if ($section !== null) {
         $sql   .= " AND (section = 'all' OR section = ?)";
-        $args[] = $u['section'] ?? 'all';
+        $args[] = $section;
     }
 
     $sql .= ' ORDER BY site_id';
@@ -183,9 +184,10 @@ function pilgrims_latest(): void
              WHERE p.campaign_id = ?";
     $args = [$u['campaign_id']];
 
-    if ($u['role'] === 'supervisor' && empty($u['is_general'])) {
+    $gender = section_gender(viewing_section($u));
+    if ($gender !== null) {
         $sql   .= ' AND p.gender = ?';
-        $args[] = ($u['section'] ?? 'men') === 'women' ? 'female' : 'male';
+        $args[] = $gender;
     }
 
     $sql .= ' ORDER BY l.recorded_at DESC';
