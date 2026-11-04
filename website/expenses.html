@@ -115,9 +115,14 @@
         </div>
     </div>
 
-    <button class="main-button" onclick="openExpenseModal()" style="margin-bottom: 15px;">
+    <button class="main-button" onclick="openExpenseModal()" data-perm="manage_expenses"
+            style="margin-bottom: 15px;">
         + إضافة قيد جديد
     </button>
+
+    <p id="noExpensePerm" style="color: var(--muted); font-size: 13px; display: none;">
+        تسجيل القيود المالية من مهام المشرف العام وإدارة الحملة، ويظهر لك هنا ما سجّلته أنت فقط.
+    </p>
 
     <div class="table-container">
         <table>
@@ -197,6 +202,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const user = await API.requireLogin(['supervisor', 'campaign']);
     if (!user) return;
+
+    /* زر الإضافة لمن وظيفته تسمح بتسجيل المصروفات فقط */
+    API.applyRoleUI(user);
+    if (!API.can('manage_expenses', user)) {
+        document.getElementById('noExpensePerm').style.display = 'block';
+    }
 
     loadExpenses();
 

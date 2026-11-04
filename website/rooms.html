@@ -51,12 +51,15 @@
             </div>
         </a>
         <nav class="nav-links">
-            <a href="index.html">الرئيسية</a>
-            <a href="services.html">الخدمات</a>
-            <a href="schedule.html">الجدول</a>
-            <a href="cultural.html">الثقافي والترفيهي</a>
+            <a href="index.html" data-roles="pilgrim">الرئيسية</a>
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="services.html" data-roles="pilgrim">الخدمات</a>
+            <a href="schedule.html">رحلتي</a>
+            <a href="map.html">الخريطة</a>
+            <a href="cultural.html" data-roles="pilgrim">الثقافي والترفيهي</a>
             <a href="rooms.html" class="active">المحادثة</a>
-            <a href="account.html">ملفي</a>
+            <a href="account.html" data-roles="pilgrim">ملفي</a>
             <a href="notifications.html">التنبيهات</a>
             <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
@@ -106,6 +109,9 @@ let ACTIVE_ROOM = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
     const user = await API.requireLogin();
+    if (!user) return;
+
+    API.applyRoleUI(user);
     if (!user) return;
 
     const tabs = document.getElementById('chatTabs');
