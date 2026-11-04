@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main.dart' show LoginPage;
 import 'chat_page.dart';
+import 'journey_page.dart';
+import 'locations_page.dart';
 import '../services/api_service.dart';
 class SupervisorDashboard extends StatelessWidget {
   final String supervisorId;
@@ -435,6 +437,29 @@ class SupervisorDashboard extends StatelessWidget {
                 ),
               );
             }),
+            // برنامج المناسك: لمن تسمح وظيفته بإدارته فقط
+            // (المشرف العام وموظف الحشود والتنقل وإدارة الحملة)
+            if (ApiService.can('manage_journey'))
+              _navCard(
+                context,
+                icon: Icons.route_rounded,
+                title: 'برنامج المناسك ورحلة الحجاج',
+                subtitle: 'محطات الرحلة وأوقاتها، وتحديد المنجز منها',
+                page: const JourneyPage(),
+              ),
+
+            // الخريطة: متاحة للجميع، ومتابعة مواقع الحجاج داخلها
+            // تظهر لمن يملك صلاحية view_locations فقط
+            _navCard(
+              context,
+              icon: Icons.map_rounded,
+              title: 'الخريطة والمواقع',
+              subtitle: ApiService.can('view_locations')
+                  ? 'مواقع المخيمات والمشاعر وآخر موقع شاركه الحجاج'
+                  : 'مواقع المخيمات والمشاعر الخاصة بالحملة',
+              page: const LocationsPage(),
+            ),
+
             Card(
   color: Colors.white,
   elevation: 2,
@@ -489,6 +514,56 @@ class SupervisorDashboard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// بطاقة تفتح صفحة — تُستخدم للصفحات المشتركة في لوحة المشرف
+Widget _navCard(
+  BuildContext context, {
+  required IconData icon,
+  required String title,
+  required String subtitle,
+  required Widget page,
+}) {
+  return Card(
+    color: Colors.white,
+    elevation: 2,
+    margin: const EdgeInsets.only(bottom: 14),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: ListTile(
+      contentPadding: const EdgeInsets.all(14),
+      leading: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE3F4F2),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: const Color(0xFF277D78), size: 29),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF244C4A),
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(subtitle),
+      ),
+      trailing: const Icon(
+        Icons.arrow_forward_ios_rounded,
+        color: Color(0xFF277D78),
+        size: 19,
+      ),
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+      },
+    ),
+  );
 }
 
 class SupervisorDepartmentPage extends StatelessWidget {

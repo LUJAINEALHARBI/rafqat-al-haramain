@@ -3,6 +3,8 @@ import 'chat_page.dart';
 import 'pilgrims_management_page.dart';
 import 'manager_supervisors_page.dart';
 import 'manager_services_page.dart';
+import 'journey_page.dart';
+import 'locations_page.dart';
 import '../services/api_service.dart';
 
 class ManagerDashboard extends StatelessWidget {
@@ -18,6 +20,24 @@ class ManagerDashboard extends StatelessWidget {
   static const Color background = Color(0xFFF6FAFA);
 
   static const List<Map<String, dynamic>> items = [
+    {
+      'title': 'برنامج المناسك',
+      'icon': Icons.route_rounded,
+      'details': [
+        'محطات رحلة الحج بترتيبها وأوقاتها',
+        'وسيلة الانتقال بين المشاعر',
+        'تحديد المحطات المنجزة لتظهر للحجاج',
+      ],
+    },
+    {
+      'title': 'تتبع المواقع',
+      'icon': Icons.map_rounded,
+      'details': [
+        'مواقع الفندق والمخيمات والمشاعر',
+        'آخر موقع شاركه كل حاج',
+        'المسافة بين الحاج وأقرب موقع للحملة',
+      ],
+    },
     {
       'title': 'إدارة الحجاج',
       'icon': Icons.groups_rounded,
@@ -156,7 +176,11 @@ class ManagerDashboard extends StatelessWidget {
     }
 
     Widget? page;
-    if (item['title'] == 'إدارة الحجاج') {
+    if (item['title'] == 'برنامج المناسك') {
+      page = const JourneyPage();
+    } else if (item['title'] == 'تتبع المواقع') {
+      page = const LocationsPage();
+    } else if (item['title'] == 'إدارة الحجاج') {
       page = const PilgrimsManagementPage();
     } else if (item['title'] == 'إدارة المشرفين') {
       page = const ManagerSupervisorsPage();

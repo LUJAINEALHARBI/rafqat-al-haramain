@@ -214,4 +214,75 @@ class ApiService {
   /// طلبات الخدمة الخاصة بالمستخدم الحالي (service_provisions)
   static Future<List<dynamic>> serviceRequests() async =>
       List<dynamic>.from(await get('services.php', 'requests') as List);
+
+  // ----------------------------------------------------------------
+  // الصلاحيات
+  // ----------------------------------------------------------------
+
+  /// دور المستخدم: pilgrim / supervisor / campaign
+  static String get role => (currentUser?['role'] ?? '').toString();
+
+  /// وظيفة المشرف من جدول jobs: general / medical / crowd / catering / housing
+  static String get jobRole => (currentUser?['job_role'] ?? '').toString();
+
+  /// القسم الذي يتابعه حالياً: men / women
+  static String get section => (currentUser?['section'] ?? '').toString();
+
+  /// هل هو المشرف العام الذي يتابع القسمين؟
+  static bool get isGeneral => currentUser?['is_general'] == true;
+
+  /// صلاحيات وظيفته كما أرسلها الخادم من جدول job_permissions
+  static List<String> get permissions {
+    final list = currentUser?['permissions'];
+    if (list is List) return list.map((e) => e.toString()).toList();
+    return const [];
+  }
+
+  /// هل يملك المستخدم هذه الصلاحية؟ نفس الفحص الموجود في الموقع.
+  static bool can(String permission) => permissions.contains(permission);
+
+  /// تبديل القسم — للمشرف العام فقط
+  static Future<String> setSection(String newSection) async {
+    final data = await post('auth.php', 'set_section', {'section': newSection});
+    final value = (data as Map)['section'].toString();
+    currentUser?['section'] = value;
+    return value;
+  }
+
+  // ----------------------------------------------------------------
+  // برنامج المناسك (journey_programs / journey_stations)
+  // ----------------------------------------------------------------
+
+  /// برنامج الرحلة ومحطاته ونسبة التقدم
+  static Future<Map<String, dynamic>> journeyProgram() async {
+    final data = await get('journey.php', 'program');
+    return Map<String, dynamic>.from(data as Map);
+  }
+
+  /// تحديث حالة محطة: لم تبدأ / جارية / مكتملة
+  static Future<void> setStationStatus(int stationId, String status) async {
+    await post('journey.php', 'set_status', {
+      'station_id': stationId,
+      'status': status,
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // المواقع (site_locations / pilgrim_locations)
+  // ----------------------------------------------------------------
+
+  /// مواقع المخيمات والمشاعر الخاصة بالحملة
+  static Future<List<dynamic>> sites() async =>
+      List<dynamic>.from(await get('location.php', 'sites') as List);
+
+  /// آخر موقع شاركه كل حاج — لمن يملك صلاحية view_locations
+  static Future<List<dynamic>> pilgrimLocations() async =>
+      List<dynamic>.from(await get('location.php', 'pilgrims') as List);
+
+  /// آخر موقع شاركه الحاج نفسه (قد يكون null)
+  static Future<Map<String, dynamic>?> myLastLocation() async {
+    final data = await get('location.php', 'my_last');
+    if (data == null) return null;
+    return Map<String, dynamic>.from(data as Map);
+  }
 }

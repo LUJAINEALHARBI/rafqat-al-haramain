@@ -6,6 +6,9 @@ import 'transport_page.dart';
 import 'medical_page.dart';
 import 'culture_page.dart';
 import 'chat_page.dart';
+import 'journey_page.dart';
+import 'locations_page.dart';
+import 'identity_page.dart';
 import '../services/api_service.dart';
 
 class PilgrimDashboard extends StatelessWidget {
@@ -56,6 +59,12 @@ class PilgrimDashboard extends StatelessWidget {
       page = const TransportPage();
     } else if (title == 'الخدمات الطبية') {
       page = const MedicalPage();
+    } else if (title == 'بطاقتي وبياناتي') {
+      page = IdentityPage(pilgrimId: pilgrimId);
+    } else if (title == 'رحلتي ومناسكي') {
+      page = const JourneyPage();
+    } else if (title == 'الخريطة والمواقع') {
+      page = const LocationsPage();
     } else if (title == 'الثقافة والفعاليات') {
       page = const CulturePage();
     } else if (title == 'التواصل') {
@@ -120,6 +129,33 @@ class PilgrimDashboard extends StatelessWidget {
     }
 
     final items = [
+      {
+        'title': 'بطاقتي وبياناتي',
+        'icon': Icons.badge_rounded,
+        'details': [
+          'رقم العضوية ورقم الحجز',
+          'رقم النسك ونوع الهوية وصلاحيتها',
+          'المخيم والخيمة والمشرف المسؤول',
+        ],
+      },
+      {
+        'title': 'رحلتي ومناسكي',
+        'icon': Icons.route_rounded,
+        'details': [
+          'محطات رحلة الحج بترتيبها',
+          'ما انتهى منها وما بقي لك',
+          'وقت كل محطة ووسيلة الانتقال إليها',
+        ],
+      },
+      {
+        'title': 'الخريطة والمواقع',
+        'icon': Icons.map_rounded,
+        'details': [
+          'مواقع الفندق والمخيمات والمشاعر',
+          'فتح أي موقع في تطبيق الخرائط',
+          'المواقع مقروءة من قاعدة بيانات الحملة',
+        ],
+      },
       {
         'title': 'السكن',
         'icon': Icons.hotel_rounded,
