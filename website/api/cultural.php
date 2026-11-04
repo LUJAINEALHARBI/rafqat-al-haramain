@@ -112,7 +112,7 @@ function list_questions(): void
 function add_question(): void
 {
     require_post();
-    $u = require_user(['campaign']);
+    $u = require_permission('manage_cultural');
 
     $text    = require_text('question_text', 500);
     $rawOpts = require_text('options', 1000);
@@ -213,7 +213,7 @@ function answer_question(): void
 // ------------------------------------------------------------------
 function question_results(): void
 {
-    $u = require_user(['campaign']);
+    $u = require_permission('manage_cultural');
 
     $st = db()->prepare(
         "SELECT q.question_id, q.question_text, p.pilgrim_id, p.name AS pilgrim_name,

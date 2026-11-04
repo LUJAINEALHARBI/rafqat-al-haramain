@@ -106,6 +106,8 @@
         <nav class="nav-links">
             <a href="admin-campaign.html" class="active">لوحة الحملة</a>
             <a href="campaign-profile.html">ملف الحملة</a>
+            <a href="admin-journey.html">برنامج المناسك</a>
+            <a href="map.html">الخريطة وتتبع المواقع</a>
             <a href="javascript:void(0);" onclick="logoutCampaign()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
         <button class="menu-button">☰</button>
@@ -159,6 +161,22 @@
             <h2>الصلاحيات</h2>
             <p>إدارة صلاحيات الوصول ونطاق التحكم لمختلف المستخدمين (حاج/مشرف).</p>
             <button type="button" class="main-button" onclick="openAdminModal('rolesModal')">إدارة الصلاحيات</button>
+        </div>
+
+        <!-- بطاقة برنامج المناسك -->
+        <div class="service-large-card">
+            <div class="large-icon">🕋</div>
+            <h2>برنامج المناسك</h2>
+            <p>إنشاء رحلة الحج ومحطاتها وأوقاتها ووسائل الانتقال، ومتابعة ما أُنجز منها.</p>
+            <a href="admin-journey.html" class="main-button" style="display:block; text-align:center; text-decoration:none; line-height: normal;">إدارة محطات الرحلة</a>
+        </div>
+
+        <!-- بطاقة تتبع المواقع -->
+        <div class="service-large-card">
+            <div class="large-icon">📍</div>
+            <h2>تتبع المواقع</h2>
+            <p>مواقع المخيمات والمشاعر على الخريطة، وآخر موقع شاركه كل حاج من حجاج الحملة.</p>
+            <a href="map.html" class="main-button" style="display:block; text-align:center; text-decoration:none; line-height: normal;">فتح الخريطة</a>
         </div>
 
         <!-- بطاقة التصحيح والكنترول -->
@@ -302,6 +320,19 @@
                 <!-- تُعبأ من جدول jobs -->
             </tbody>
         </table>
+
+        <h4 style="margin-top:25px; color:#0d6efd;">مصفوفة مراجعة الصلاحيات (جدولا app_permissions و job_permissions):</h4>
+        <p style="font-size:13px; color:#666;">
+            هذه هي الصلاحيات التي يتحقق منها النظام فعلياً قبل تنفيذ أي عملية.
+            علامة ✓ تعني أن الوظيفة تستطيع تنفيذ العملية، والشرطة تعني أن النظام
+            يرفضها ولا يُظهر أزرارها في شاشة المشرف.
+        </p>
+        <div style="overflow-x: auto;">
+            <table class="data-table" id="permMatrixTable">
+                <thead id="permMatrixHead"></thead>
+                <tbody id="permMatrixBody"></tbody>
+            </table>
+        </div>
 
         <h4 style="margin-top:25px; color:#0d6efd;">إعادة تعيين كلمة مرور حساب</h4>
         <p style="font-size:13px; color:#666;">
@@ -571,6 +602,57 @@ async function loadJobs() {
     }
 }
 
+/* ---------- مصفوفة الصلاحيات ---------- */
+/* تُقرأ من جدولي app_permissions و job_permissions لمراجعة ما يُسمح
+   به لكل وظيفة، خصوصاً صلاحيات الموظف الصحي. */
+async function loadPermissionMatrix() {
+
+    const head = document.getElementById('permMatrixHead');
+    const body = document.getElementById('permMatrixBody');
+
+    body.innerHTML = '<tr><td style="text-align:center; color:#777;">جاري التحميل...</td></tr>';
+
+    try {
+        const res   = await API.get('supervisors.php', 'permissions');
+        const perms = res.data.permissions || [];
+        const jobs  = res.data.jobs || [];
+
+        head.innerHTML = '<tr><th>الصلاحية</th>'
+            + jobs.map(j => `<th style="font-size:11px;">${API.esc(j.job_title)}<br>
+                             <span style="color:#777; font-weight:normal;">${j.supervisors_count} مشرف</span></th>`).join('')
+            + '<th style="font-size:11px;">مدير الحملة</th></tr>';
+
+        let lastCategory = null;
+
+        body.innerHTML = perms.map(p => {
+            let rows = '';
+
+            /* صف فاصل باسم المجال */
+            if (p.category !== lastCategory) {
+                lastCategory = p.category;
+                rows += `<tr><td colspan="${jobs.length + 2}"
+                             style="background:#f3f7f5; color:#287b5a; font-weight:bold; font-size:12px;">
+                             ${API.esc(p.category || 'عام')}</td></tr>`;
+            }
+
+            rows += `<tr>
+                <td style="font-size:12px;">${API.esc(p.permission_label)}</td>
+                ${jobs.map(j => {
+                    const has = (j.permissions || []).indexOf(p.permission_key) !== -1;
+                    return `<td style="text-align:center; color:${has ? '#287b5a' : '#bbb'};
+                                font-weight:${has ? 'bold' : 'normal'};">${has ? '✓' : '—'}</td>`;
+                }).join('')}
+                <td style="text-align:center; color:#287b5a; font-weight:bold;">✓</td>
+            </tr>`;
+
+            return rows;
+        }).join('');
+
+    } catch (err) {
+        body.innerHTML = `<tr><td style="text-align:center; color:#777;">${API.esc(err.message)}</td></tr>`;
+    }
+}
+
 /* ---------- النوافذ ---------- */
 function openAdminModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -580,7 +662,7 @@ function openAdminModal(modalId) {
     if (modalId === 'servicesModal') { loadAdminServices(); loadAdminExpenses(); }
     if (modalId === 'pilgrimsModal') { loadPilgrimsTable(); }
     if (modalId === 'ratingsModal')  { loadRatings(); }
-    if (modalId === 'rolesModal')    { loadJobs(); }
+    if (modalId === 'rolesModal')    { loadJobs(); loadPermissionMatrix(); }
 }
 
 function closeAdminModal(modalId) {

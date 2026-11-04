@@ -102,7 +102,8 @@ function mark_all_read(): void
 function send_notification(): void
 {
     require_post();
-    $u = require_user(['supervisor', 'campaign']);
+    require_user(['supervisor', 'campaign']);
+    $u = require_permission('send_notifications');
 
     $title   = require_text('title', 150);
     $content = opt_text('content', 2000, '');

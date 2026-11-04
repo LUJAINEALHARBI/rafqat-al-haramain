@@ -161,7 +161,17 @@
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-    const user = await API.requireLogin(['campaign']);
+    const user = await API.requireLogin(['campaign', 'supervisor']);
+    if (!user) return;
+
+    API.applyRoleUI(user);
+
+    /* الصفحة من مهام إدارة الحملة والمشرف العام فقط */
+    if (!API.can('manage_cultural', user)) {
+        alert('إدارة المسابقة الثقافية ليست من صلاحيات وظيفتك.');
+        window.location.href = user.role === 'supervisor' ? 'admin-supervisor.html' : 'index.html';
+        return;
+    }
     if (!user) return;
 
     const drawBtn       = document.getElementById("drawBtn");

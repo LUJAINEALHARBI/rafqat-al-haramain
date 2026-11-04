@@ -4,8 +4,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جدول الرحلة والتفويج | رفقة بلاد الحرمين</title>
+    <title>رحلتي ومحطات المناسك | رفقة بلاد الحرمين</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .station-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .station-chip {
+            background: #f3f7f5;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+
+        .station-chip strong {
+            color: var(--green);
+        }
+
+        .journey-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .summary-box strong {
+            display: block;
+            font-size: 24px;
+            color: var(--green);
+            margin-bottom: 4px;
+        }
+
+        .summary-box span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .manage-link {
+            display: inline-block;
+            background: var(--blue);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -16,17 +76,20 @@
             <img src="images/logo.png" alt="رفقة بلاد الحرمين">
             <div>
                 <h3>رفقة بلاد الحرمين</h3>
-                <span>Belad Alharamain Co. Hajj & Umrah L.C.C</span>
+                <span>Belad Alharamain Co. Hajj &amp; Umrah L.C.C</span>
             </div>
         </a>
 
-        <nav class="nav-links">
-            <a href="index.html">الرئيسية</a>
-            <a href="services.html">الخدمات</a>
-            <a href="schedule.html" class="active">الجدول</a>
-            <a href="cultural.html">الثقافي والترفيهي</a>
+        <nav class="nav-links" id="mainNav">
+            <a href="index.html" data-roles="pilgrim">الرئيسية</a>
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="services.html" data-roles="pilgrim">الخدمات</a>
+            <a href="schedule.html" class="active">رحلتي</a>
+            <a href="map.html">الخريطة والمواقع</a>
+            <a href="cultural.html" data-roles="pilgrim">الثقافي والترفيهي</a>
             <a href="rooms.html">المحادثة</a>
-            <a href="account.html">ملفي</a>
+            <a href="account.html" data-roles="pilgrim">ملفي</a>
             <a href="notifications.html">التنبيهات</a>
             <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
@@ -39,98 +102,36 @@
 
     <div class="page-heading">
         <span>رحلتك بين يديك</span>
-        <h1>جدول الرحلة والتفويج</h1>
-        <p>تابع برنامج رحلتك ومواعيد الأنشطة والتنقلات والتفويج اليومي بسهولة من مكان واحد.</p>
+        <h1 id="pageTitle">محطات رحلة الحج</h1>
+        <p id="pageSubtitle">تابع رحلتك محطة محطة: ما انتهى منها، وما أنت فيه الآن، وما بقي لك ومتى وبأي وسيلة انتقال.</p>
     </div>
 
-    <!-- حالة الرحلة والتقدم -->
+    <a href="admin-journey.html" class="manage-link" id="manageLink" style="display: none;">
+        إدارة برنامج المناسك ←
+    </a>
+
+    <!-- حالة الرحلة ونسبة التقدم -->
     <div class="journey-progress">
         <div class="progress-top">
             <div>
-                <span>حالة الرحلة والحافلات</span>
-                <h2 id="currentStageTitle">المرحلة الحالية: الوصول والتسكين</h2>
+                <span id="programName">جاري تحميل برنامج الرحلة...</span>
+                <h2 id="currentStageTitle">—</h2>
             </div>
-            <strong id="progressPercentage">35%</strong>
+            <strong id="progressPercentage">0%</strong>
         </div>
 
         <div class="progress-line">
-            <span id="progressBarSpan" style="width: 35%;"></span>
+            <span id="progressBarSpan" style="width: 0%;"></span>
         </div>
 
-        <div class="journey-steps">
-            <div class="journey-step done">
-                <div>✓</div>
-                <span>الاستعداد والتجمع</span>
-            </div>
-
-            <div class="journey-step active-step">
-                <div>2</div>
-                <span>الوصول والسكن</span>
-            </div>
-
-            <div class="journey-step">
-                <div>3</div>
-                <span>برنامج المناسك</span>
-            </div>
-
-            <div class="journey-step">
-                <div>4</div>
-                <span>التفويج والعودة</span>
-            </div>
-        </div>
+        <div class="journey-steps" id="journeySteps"></div>
     </div>
 
-    <!-- الخط الزمني للأنشطة -->
+    <div class="journey-summary" id="journeySummary"></div>
+
+    <!-- محطات الرحلة -->
     <div class="timeline" id="scheduleTimeline">
-
-        <div class="timeline-item completed">
-            <div class="timeline-dot">✓</div>
-            <div class="timeline-content">
-                <div class="timeline-time">08:00 ص</div>
-                <h3>التجمع وانطلاق الحافلات</h3>
-                <p>التجمع في مركز الانطلاق المخصص وحصر الحجاج التابعين لكل مشرف قبل تحرك الحافلة.</p>
-                <span class="timeline-tag">مكتمل</span>
-            </div>
-        </div>
-
-        <div class="timeline-item current">
-            <div class="timeline-dot">📍</div>
-            <div class="timeline-content">
-                <div class="timeline-time">12:30 م</div>
-                <h3>الوصول إلى مقر السكن</h3>
-                <p>تسجيل الدخول واستلام الأسرة والتوزيع على الخيام والغرف حسب القسم الخاص بالحاج.</p>
-                <span class="timeline-tag current-tag">الآن</span>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">🍽️</div>
-            <div class="timeline-content">
-                <div class="timeline-time">01:30 م</div>
-                <h3>وجبة الغداء</h3>
-                <p>تقديم وجبة الغداء بالبوفيه المخصص في السكن تحت إشراف طاقم الضيافة.</p>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">🕋</div>
-            <div class="timeline-content">
-                <div class="timeline-time">04:00 م</div>
-                <h3>البرنامج الإيماني والتوجيهي</h3>
-                <p>جلسة إرشادية وتوزيع كروت التفويج للحرم قبل الانطلاق.</p>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">🎭</div>
-            <div class="timeline-content">
-                <div class="timeline-time">08:00 م</div>
-                <h3>النشاط الثقافي والقرعة</h3>
-                <p>المشاركة في المسابقة الثقافية والدخول في السحب اليومي على الجوائز.</p>
-                <a href="cultural.html" class="timeline-link">المشاركة في المسابقة ←</a>
-            </div>
-        </div>
-
+        <p style="color: var(--muted); text-align: center; padding: 20px;">جاري تحميل المحطات...</p>
     </div>
 
 </main>
@@ -138,27 +139,154 @@
 <script src="js/app.js"></script>
 <script src="js/api.js"></script>
 <script>
-/* المرحلة الحالية تُخصَّص حسب قسم الحاج المقروء من قاعدة البيانات */
+/* محطات الرحلة كلها تُقرأ من جدولي journey_programs و journey_stations
+   عبر api/journey.php ، ولا يوجد أي نص ثابت مكتوب في هذه الصفحة. */
+
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const user = await API.requireLogin(['pilgrim']);
+    const user = await API.requireLogin();
     if (!user) return;
 
-    try {
-        const res = await API.get('pilgrims.php', 'get');
-        const p = res.data;
+    API.applyRoleUI(user);
 
-        const currentStage = document.getElementById("currentStageTitle");
-        if (currentStage) {
-            const where = p.camp_id || p.tent_number || 'المخيم';
-            currentStage.innerText = p.section === 'women'
-                ? `المرحلة الحالية: الوصول والتسكين (قسم النساء - ${where})`
-                : `المرحلة الحالية: الوصول والتسكين (قسم الرجال - ${where})`;
-        }
+    try {
+        const res = await API.get('journey.php', 'program');
+        render(res.data, user);
     } catch (err) {
-        console.error(err);
+        document.getElementById('scheduleTimeline').innerHTML =
+            `<p style="color: var(--muted); text-align: center; padding: 20px;">${API.esc(err.message)}</p>`;
+        document.getElementById('programName').innerText = 'برنامج الرحلة';
+        document.getElementById('currentStageTitle').innerText = 'لا يوجد برنامج منشور';
     }
 });
+
+/* ------------------------------------------------------------------ */
+function render(data, user) {
+
+    const program  = data.program;
+    const stations = data.stations;
+    const progress = data.progress;
+
+    /* زر الإدارة يظهر لمن وظيفته تسمح بإدارة برنامج المناسك فقط */
+    if (data.can_manage) {
+        document.getElementById('manageLink').style.display = 'inline-block';
+    }
+
+    document.getElementById('programName').innerText =
+        program.program_name + (program.hijri_year ? ' - ' + program.hijri_year : '');
+
+    document.getElementById('currentStageTitle').innerText = progress.current
+        ? 'المرحلة الحالية: ' + progress.current.station_name
+        : 'تمّت جميع محطات الرحلة بحمد الله';
+
+    document.getElementById('progressPercentage').innerText = progress.percent + '%';
+    document.getElementById('progressBarSpan').style.width = progress.percent + '%';
+
+    /* ملخص الرحلة بالأرقام */
+    document.getElementById('journeySummary').innerHTML = `
+        <div class="summary-box">
+            <strong>${progress.total}</strong>
+            <span>إجمالي المحطات</span>
+        </div>
+        <div class="summary-box">
+            <strong>${progress.done}</strong>
+            <span>محطات منجزة</span>
+        </div>
+        <div class="summary-box">
+            <strong>${progress.remaining}</strong>
+            <span>محطات متبقية</span>
+        </div>
+        <div class="summary-box">
+            <strong>${API.esc(program.section === 'women' ? 'النساء' : program.section === 'men' ? 'الرجال' : 'القسمان')}</strong>
+            <span>القسم المستهدف</span>
+        </div>`;
+
+    /* الأشرطة العلوية: المشاعر الرئيسية في الرحلة */
+    document.getElementById('journeySteps').innerHTML = stations.map((s, i) => {
+        const cls = s.status === 'مكتملة' ? 'journey-step done'
+                  : s.status === 'جارية'  ? 'journey-step active-step'
+                  : 'journey-step';
+        const mark = s.status === 'مكتملة' ? '✓' : (i + 1);
+        return `<div class="${cls}" title="${API.esc(s.station_name)}">
+                    <div>${mark}</div>
+                    <span>${API.esc(shortName(s.place_name || s.station_name))}</span>
+                </div>`;
+    }).join('');
+
+    /* الخط الزمني: كل محطة بوقتها ووسيلتها وحالتها */
+    if (!stations.length) {
+        document.getElementById('scheduleTimeline').innerHTML =
+            '<p style="color: var(--muted); text-align: center; padding: 20px;">لم تُضف محطات للرحلة بعد.</p>';
+        return;
+    }
+
+    document.getElementById('scheduleTimeline').innerHTML = stations.map(s => {
+
+        const itemClass = s.status === 'مكتملة' ? 'timeline-item completed'
+                        : s.status === 'جارية'  ? 'timeline-item current'
+                        : 'timeline-item';
+
+        const dot = s.status === 'مكتملة' ? '✓' : s.status === 'جارية' ? '📍' : s.station_order;
+
+        const tag = s.status === 'مكتملة'
+            ? '<span class="timeline-tag">مكتمل</span>'
+            : s.status === 'جارية'
+                ? '<span class="timeline-tag current-tag">الآن</span>'
+                : '<span class="timeline-tag">لم تبدأ</span>';
+
+        const chips = [];
+        if (s.place_name)     chips.push(`<span class="station-chip">المكان: <strong>${API.esc(s.place_name)}</strong></span>`);
+        if (s.hijri_day)      chips.push(`<span class="station-chip">اليوم: <strong>${API.esc(s.hijri_day)}</strong></span>`);
+        if (s.transport_type && s.transport_type !== 'لا يوجد')
+                              chips.push(`<span class="station-chip">الانتقال: <strong>${API.esc(s.transport_type)}</strong></span>`);
+        if (s.latitude && s.longitude)
+                              chips.push(`<a class="station-chip" target="_blank"
+                                             href="https://maps.google.com/?q=${s.latitude},${s.longitude}">الموقع على الخريطة</a>`);
+
+        return `<div class="${itemClass}">
+                    <div class="timeline-dot">${dot}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">${API.esc(timeRange(s.start_datetime, s.end_datetime))}</div>
+                        <h3>${API.esc(s.station_name)}</h3>
+                        ${s.notes ? `<p>${API.esc(s.notes)}</p>` : ''}
+                        <div class="station-meta">${chips.join('')}</div>
+                        ${tag}
+                    </div>
+                </div>`;
+    }).join('');
+}
+
+/* ------------------------------------------------------------------ */
+/* أدوات عرض بسيطة */
+
+function shortName(name) {
+    if (!name) return '';
+    const words = String(name).split(' ');
+    return words.length > 2 ? words.slice(0, 2).join(' ') : name;
+}
+
+function hhmm(datetime) {
+    if (!datetime) return '';
+    const t = String(datetime).substring(11, 16);
+    if (!t) return '';
+    let [h, m] = t.split(':').map(Number);
+    const period = h < 12 ? 'ص' : 'م';
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function dayMonth(datetime) {
+    if (!datetime) return '';
+    const d = String(datetime).substring(0, 10).split('-');
+    return d.length === 3 ? `${d[2]}/${d[1]}` : '';
+}
+
+function timeRange(start, end) {
+    if (!start && !end) return 'الوقت لم يُحدَّد';
+    if (start && end)    return `${dayMonth(start)} — من ${hhmm(start)} إلى ${hhmm(end)}`;
+    return `${dayMonth(start || end)} — ${hhmm(start || end)}`;
+}
 </script>
 
 </body>

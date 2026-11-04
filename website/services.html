@@ -125,7 +125,8 @@
         <nav class="nav-links">
             <a href="index.html">الرئيسية</a>
             <a href="services.html" class="active">الخدمات</a>
-            <a href="schedule.html">الجدول</a>
+            <a href="schedule.html">رحلتي</a>
+            <a href="map.html">الخريطة</a>
             <a href="cultural.html">الثقافي والترفيهي</a>
             <a href="rooms.html">المحادثة</a>
             <a href="account.html">ملفي</a>
@@ -215,22 +216,8 @@
     <div class="modal-content">
         <button class="close-modal" onclick="closeModal('medicalModal')">×</button>
         <h2>فريق الرعاية الطبية</h2>
-        
-        <div class="info-card-item">
-            <h4>د. أحمد الشمري (طبيب الحملة العام)</h4>
-            <p>📞 رقم الجوال: 0551122334 — 📍 خيمة رقم 3</p>
-        </div>
-        <div class="info-card-item">
-            <h4>د. سارة الأحمد (طبيبة الطوارئ)</h4>
-            <p>📞 رقم الجوال: 0552233445 — 📍 المركز الطبي الرئيسي</p>
-        </div>
-        <div class="info-card-item">
-            <h4>الممرض/ محمد علي</h4>
-            <p>📞 رقم الجوال: 0553344556 — متاح 24 ساعة</p>
-        </div>
-        <div class="info-card-item">
-            <h4>الممرضة/ فاطمة الشهري</h4>
-            <p>📞 رقم الجوال: 0554455667 — متاح 24 ساعة</p>
+        <div id="medicalTeamList">
+            <p style="color:#777;">جاري التحميل...</p>
         </div>
     </div>
 </div>
@@ -251,18 +238,8 @@
     <div class="modal-content">
         <button class="close-modal" onclick="closeModal('mealsModal')">×</button>
         <h2>جدول وأصناف الوجبات</h2>
-        
-        <div class="info-card-item">
-            <h4>وجبة الإفطار (6:00 ص - 8:00 ص)</h4>
-            <p>🍳 الأصناف: بيض مسلوق، فول، خبز، شاي، وجبن.</p>
-        </div>
-        <div class="info-card-item">
-            <h4>وجبة الغداء (1:00 م - 3:00 م)</h4>
-            <p>🍗 الأصناف: أرز بخاري ودجاج، سلطة، ومياه معدنية.</p>
-        </div>
-        <div class="info-card-item">
-            <h4>وجبة العشاء (7:00 م - 9:00 م)</h4>
-            <p>🥩 الأصناف: كبسة لحم أو دجاج، خبز، مع لبن وفواكه.</p>
+        <div id="mealsList">
+            <p style="color:#777;">جاري التحميل...</p>
         </div>
     </div>
 </div>
@@ -333,8 +310,9 @@
      • قائمة المشرفين  : api/supervisors.php?action=list
      • بلاغ المفقودات  : api/services.php?action=request → service_provisions
      • تقييم الخدمات   : api/ratings.php?action=add      → ratings
-       (قائمة الخدمات في نافذة التقييم تُبنى من جدول services)
-   جدول الوجبات وفريق الرعاية الطبية نصوص ثابتة — لا جدول لهما.
+     • فريق الرعاية الطبية : المشرفون أصحاب الوظيفة الصحية من جدول supervisors
+     • جدول الوجبات    : خدمات نوعها catering من جدول services
+   لا يوجد اسم شخص ولا رقم جوال ولا موعد وجبة مكتوب داخل هذه الصفحة.
    --------------------------------------------------------------- */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -345,13 +323,103 @@ document.addEventListener("DOMContentLoaded", async () => {
     // لا يحتوي أي ربط بالحاج. تُخفى البطاقة عن الحاج حتى لا يُنقل
     // إلى صفحة يرفضها الخادم، وتبقى ظاهرة لمن يملك صلاحيتها.
     const expensesCard = document.getElementById('expensesCard');
-    if (expensesCard && user.role === 'pilgrim') {
+    if (expensesCard && !API.can('manage_expenses', user)) {
         expensesCard.style.display = 'none';
     }
 
+    API.applyRoleUI(user);
+
     loadSupervisors();
     loadRatingServices();
+    loadMedicalTeam();
+    loadMeals();
+    prefillRoom(user);
 });
+
+/* ------------------------------------------------------------------ */
+/* فريق الرعاية الطبية = المشرفون الذين وظيفتهم صحية */
+async function loadMedicalTeam() {
+    const box = document.getElementById('medicalTeamList');
+    if (!box) return;
+
+    try {
+        const res  = await API.get('supervisors.php', 'list');
+        const team = (res.data || []).filter(x => x.role_key === 'medical');
+
+        if (!team.length) {
+            box.innerHTML = '<p style="color:#777;">لم يُسجَّل طاقم صحي للحملة بعد.</p>';
+            return;
+        }
+
+        box.innerHTML = team.map(s => {
+            const sec = s.gender_section === 'women' ? 'قسم النساء'
+                      : s.gender_section === 'men'   ? 'قسم الرجال' : 'القسمان';
+            return `
+                <div class="info-card-item">
+                    <h4>${API.esc(s.name)} — ${API.esc(s.job_title || 'الموظف الصحي')}</h4>
+                    <p>📞 ${API.esc(s.phone || '—')} — 📍 ${API.esc(sec)}</p>
+                </div>`;
+        }).join('');
+
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;">تعذّر التحميل: ' + API.esc(err.message) + '</p>';
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* جدول الوجبات = خدمات نوعها catering */
+async function loadMeals() {
+    const box = document.getElementById('mealsList');
+    if (!box) return;
+
+    try {
+        const res   = await API.get('services.php', 'list');
+        const meals = (res.data || []).filter(x => x.service_type === 'catering' && x.service_datetime);
+
+        if (!meals.length) {
+            box.innerHTML = '<p style="color:#777;">لم تُسجَّل مواعيد وجبات في جدول الخدمات.</p>';
+            return;
+        }
+
+        meals.sort((a, b) => String(a.service_datetime).substring(11)
+                            .localeCompare(String(b.service_datetime).substring(11)));
+
+        box.innerHTML = meals.map(m => `
+            <div class="info-card-item">
+                <h4>${API.esc(m.service_name)} (${API.esc(timeOnly(m.service_datetime))})</h4>
+                <p>${API.esc(m.description || '')}${m.service_location ? ' — 📍 ' + API.esc(m.service_location) : ''}</p>
+            </div>`).join('');
+
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;">تعذّر التحميل: ' + API.esc(err.message) + '</p>';
+    }
+}
+
+function timeOnly(datetime) {
+    const t = String(datetime || '').substring(11, 16);
+    if (!t) return '—';
+    let [h, m] = t.split(':').map(Number);
+    const period = h < 12 ? 'ص' : 'م';
+    if (h === 0) h = 12; else if (h > 12) h -= 12;
+    return `${h}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* رقم الخيمة في بلاغ المفقودات يُعبّأ من تسكين الحاج نفسه */
+async function prefillRoom(user) {
+    if (user.role !== 'pilgrim') return;
+    try {
+        const res = await API.get('pilgrims.php', 'get');
+        const p   = res.data;
+        const box = document.getElementById('lostRoom');
+        if (box) {
+            box.value = [p.tent_number, p.bed_number ? 'سرير ' + p.bed_number : null]
+                          .filter(Boolean).join(' - ');
+        }
+    } catch (e) {
+        /* يبقى الحقل فارغاً ليكتبه الحاج */
+    }
+}
 
 async function loadSupervisors() {
     const box = document.getElementById('supervisorsList');
@@ -423,9 +491,16 @@ async function submitLostReport(btn) {
 
     btn.disabled = true;
     try {
-        // رقم 5 = خدمة "الأمتعة المفقودة" في جدول services
+        /* رقم الخدمة يُقرأ من جدول services بالاسم، لا رقماً ثابتاً */
+        const list = await API.get('services.php', 'list');
+        const lost = (list.data || []).find(x => x.service_name.indexOf('الأمتعة') !== -1);
+
+        if (!lost) {
+            throw new Error('خدمة الأمتعة المفقودة غير مسجّلة في جدول الخدمات.');
+        }
+
         await API.post('services.php', 'request', {
-            service_id: 5,
+            service_id: lost.service_id,
             details: `${type} — خيمة/غرفة ${room || 'غير محددة'} — ${desc}`
         });
         closeModal('lostModal');

@@ -70,7 +70,10 @@ function list_expenses(): void
 function add_expense(): void
 {
     require_post();
-    $u = require_user(['supervisor', 'campaign']);
+    require_user(['supervisor', 'campaign']);
+    // تسجيل المصروفات من مهام المشرف العام ومدير الحملة،
+    // ولا تدخل في مهام الموظف الصحي أو الإعاشة أو السكن
+    $u = require_permission('manage_expenses');
 
     $description = require_text('description', 255);
 
@@ -108,7 +111,8 @@ function add_expense(): void
 function approve_expense(): void
 {
     require_post();
-    $u  = require_user(['campaign']);
+    require_user(['campaign']);
+    $u  = require_permission('approve_expenses');
     $id = require_int('id');
 
     $st = db()->prepare(

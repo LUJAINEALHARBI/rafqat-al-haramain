@@ -3,65 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خريطة متابعة المشرف والمخيمات | رفقة بلاد الحرمين</title>
+    <title>الخريطة وتتبع المواقع | رفقة بلاد الحرمين</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map { 
-            width: 100%; 
-            height: 420px; 
-            border-radius: 20px; 
-            box-shadow: var(--shadow); 
-            margin: 20px 0; 
-            border: 2px solid var(--border); 
-            z-index: 1; 
+        #map {
+            width: 100%;
+            height: 430px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+            border: 2px solid var(--border);
+            z-index: 1;
         }
-        .map-controls { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
-            margin-bottom: 20px; 
+
+        .map-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
-        .map-btn { 
-            background: white; 
-            border: 2px solid var(--border); 
-            padding: 15px; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            text-align: right; 
-            transition: 0.3s; 
+
+        .map-btn {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: right;
+            transition: 0.3s;
         }
-        .map-btn:hover, .map-btn.active { 
-            border-color: var(--green); 
-            background: #eef7f4; 
+
+        .map-btn:hover, .map-btn.active {
+            border-color: var(--green);
+            background: #eef7f4;
         }
-        .map-btn h4 { 
-            color: var(--green); 
-            margin-bottom: 5px; 
-            font-size: 15px; 
+
+        .map-btn h4 {
+            color: var(--green);
+            margin-bottom: 5px;
+            font-size: 15px;
         }
-        .map-btn p { 
-            color: var(--muted); 
-            font-size: 12px; 
-            margin: 0; 
+
+        .map-btn p {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
         }
-        .map-actions { 
-            margin-top: 15px; 
-            text-align: center; 
+
+        .map-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .map-link-btn { 
-            display: inline-block; 
-            background: var(--blue); 
-            color: white; 
-            padding: 10px 20px; 
-            border-radius: 10px; 
-            font-weight: 700; 
-            font-size: 13px; 
-            text-decoration: none; 
-            transition: 0.3s; 
+
+        .map-link-btn {
+            display: inline-block;
+            background: var(--blue);
+            color: white;
+            padding: 11px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.3s;
         }
-        .map-link-btn:hover { 
-            background: var(--blue-dark); 
+
+        .map-link-btn:hover {
+            background: var(--blue-dark);
+        }
+
+        .map-link-btn.green {
+            background: var(--green);
+        }
+
+        .map-link-btn.green:hover {
+            background: var(--green-dark);
+        }
+
+        .share-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .share-box h2 {
+            font-size: 18px;
+            color: var(--green);
+            margin-bottom: 8px;
+        }
+
+        .share-box p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .pilgrim-loc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .pilgrim-loc-table th {
+            background: #f3f7f5;
+            color: var(--green);
+            padding: 12px 8px;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .pilgrim-loc-table td {
+            padding: 12px 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .fresh {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .stale {
+            color: #b06a1f;
         }
     </style>
 </head>
@@ -69,19 +139,22 @@
 
 <header class="navbar">
     <div class="nav-container">
-        <a href="admin-supervisor.html" class="logo-area">
+        <a href="index.html" class="logo-area">
             <img src="images/logo.png" alt="شعار رفقة بلاد الحرمين">
             <div>
                 <h3>رفقة بلاد الحرمين</h3>
-                <span>متابعة المشرف والمخيمات</span>
+                <span>الخريطة وتتبع المواقع</span>
             </div>
         </a>
         <nav class="nav-links">
-            <a href="admin-supervisor.html">لوحة التحكم</a>
-            <a href="admin-supervisor.html">متابعة الخدمات</a>
+            <a href="index.html" data-roles="pilgrim">الرئيسية</a>
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="schedule.html">رحلتي</a>
             <a href="map.html" class="active">الخريطة والمواقع</a>
-            <a href="admin-supervisor.html">غرفة المحادثة</a>
-            <a href="javascript:void(0);" onclick="logoutSupervisor()" style="color: #dc3545;">تسجيل خروج</a>
+            <a href="rooms.html">المحادثة</a>
+            <a href="notifications.html">التنبيهات</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
         <button class="menu-button">☰</button>
     </div>
@@ -89,84 +162,303 @@
 
 <main class="page-container">
     <div class="page-heading">
-        <span>النطاق الميداني للمشرف</span>
-        <h1>الخريطة التفاعلية لمواقع المخيمات والمشاعر</h1>
-        <p>استعراض الفنادق، مخيمات منى، مزدلفة، عرفات، ونقاط التجمع الخاصة بقطاع الإشراف والمجموعات.</p>
+        <span id="headingTag">مواقع الحملة</span>
+        <h1 id="headingTitle">الخريطة التفاعلية للمخيمات والمشاعر</h1>
+        <p id="headingText">مواقع الفندق ومخيمات منى ومزدلفة وعرفات ونقاط التجمع، مقروءة من قاعدة بيانات الحملة.</p>
     </div>
 
-    <div class="map-controls">
-        <div class="map-btn active" onclick="updateLocation(21.4225, 39.8262, 'فندق مكة (رفقة الضيافة)', 'الفترة: من 4 إلى 7 ذو الحجة - نطاق إشراف القطاع', 'https://maps.google.com/?q=21.4225,39.8262', this)">
-            <h4>فندق مكة</h4>
-            <p>الفترة: 4 - 7 ذو الحجة</p>
-        </div>
-        <div class="map-btn" onclick="updateLocation(21.4135, 39.8925, 'مخيم مِنا (قطاع المشرف المباشر)', 'الفترة: من 8 إلى 10 ذو الحجة - خيام المجموعة', 'https://maps.google.com/?q=21.4135,39.8925', this)">
-            <h4>مخيم مِنا</h4>
-            <p>الفترة: 8 - 10 ذو الحجة</p>
-        </div>
-        <div class="map-btn" onclick="updateLocation(21.4012, 39.9015, 'مخيم ومبيت مزدلفة', 'الفترة: ليلة عيد الأضحى (المبيت والنفرة)', 'https://maps.google.com/?q=21.4012,39.9015', this)">
-            <h4>مزدلفة</h4>
-            <p>الفترة: ليلة 10 ذو الحجة</p>
-        </div>
-        <div class="map-btn" onclick="updateLocation(21.3548, 39.9840, 'مخيم عرفات', 'الفترة: يوم عرفة (9 ذو الحجة)', 'https://maps.google.com/?q=21.3548,39.9840', this)">
-            <h4>مخيم عرفات</h4>
-            <p>الفترة: يوم عرفة</p>
-        </div>
+    <!-- مشاركة الموقع: تظهر للحاج فقط -->
+    <div class="share-box" id="shareBox" style="display: none;">
+        <h2>مشاركة موقعي مع المشرف</h2>
+        <p>
+            عند الضغط على الزر يطلب المتصفح الإذن بمعرفة موقعك، ثم يُحفظ الموقع في
+            قاعدة البيانات ليظهر لمشرف مجموعتك. هذا يساعد في الوصول إليك بسرعة
+            إذا انفصلت عن المجموعة في الحرم أو المشاعر.
+        </p>
+        <button class="map-link-btn green" id="shareBtn" type="button">شارك موقعي الآن</button>
+        <div id="shareResult" style="margin-top: 15px; font-size: 13px;"></div>
     </div>
+
+    <!-- أزرار المواقع -->
+    <div class="map-controls" id="siteButtons"></div>
 
     <div id="map"></div>
 
     <div class="map-actions">
-        <a id="googleMapsLink" href="https://maps.google.com/?q=21.4225,39.8262" target="_blank" class="map-link-btn">
-            فتح الموقع الحقيقي في خرائط Google
+        <a id="googleMapsLink" href="https://maps.google.com/" target="_blank" class="map-link-btn">
+            فتح الموقع المحدد في خرائط Google
         </a>
+        <button class="map-link-btn" id="refreshBtn" type="button" style="display: none;">تحديث مواقع الحجاج</button>
     </div>
 
     <div class="housing-hero" style="margin-top: 25px;">
         <div class="housing-main">
-            <span class="status-pill" id="sectionPill">حالة القطاع: مؤشر التواجد الميداني آمن ومستقر</span>
-            <h2 id="locationTitle">فندق مكة (رفقة الضيافة)</h2>
-            <p id="locationDesc">الفترة: من 4 إلى 7 ذو الحجة - نطاق إشراف القطاع</p>
+            <span class="status-pill" id="sectionPill">—</span>
+            <h2 id="locationTitle">—</h2>
+            <p id="locationDesc">—</p>
         </div>
         <div class="housing-icon">توجيه</div>
+    </div>
+
+    <!-- جدول مواقع الحجاج: للمشرف المخوّل وإدارة الحملة -->
+    <div class="table-container" id="pilgrimsBox" style="margin-top: 30px; display: none;">
+        <h2 class="section-title">آخر موقع شاركه الحجاج</h2>
+        <table class="pilgrim-loc-table">
+            <thead>
+                <tr>
+                    <th>الحاج</th>
+                    <th>رقم العضوية</th>
+                    <th>أقرب موقع للحملة</th>
+                    <th>وقت المشاركة</th>
+                    <th>الخريطة</th>
+                </tr>
+            </thead>
+            <tbody id="pilgrimsBody"></tbody>
+        </table>
     </div>
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/app.js"></script>
-<script>
-    const map = L.map('map').setView([21.4225, 39.8262], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: 'رفقة بلاد الحرمين'
-    }).addTo(map);
-
-    let marker = L.marker([21.4225, 39.8262]).addTo(map)
-        .bindPopup('<b>فندق مكة</b><br>نطاق إشراف القطاع')
-        .openPopup();
-
-    function updateLocation(lat, lng, title, desc, mapsUrl, element) {
-        map.setView([lat, lng], 16);
-        marker.setLatLng([lat, lng])
-            .bindPopup(`<b>${title}</b><br>${desc}`)
-            .openPopup();
-
-        document.getElementById('locationTitle').textContent = title;
-        document.getElementById('locationDesc').textContent = desc;
-        document.getElementById('googleMapsLink').href = mapsUrl;
-
-        document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
-        if (element) {
-            element.classList.add('active');
-        }
-    }
-
-    function logoutSupervisor() {
-        if (confirm("تسجيل الخروج من لوحة التحكم؟")) {
-            sessionStorage.clear();
-            window.location.href = "login.html";
-        }
-    }
-</script>
 <script src="js/api.js"></script>
+<script>
+/* الخريطة تُبنى من جدول site_locations ومن جدول pilgrim_locations،
+   ولا توجد إحداثيات مكتوبة داخل الصفحة. */
+
+let map, siteLayer, pilgrimLayer, currentUser;
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    currentUser = await API.requireLogin();
+    if (!currentUser) return;
+
+    API.applyRoleUI(currentUser);
+
+    /* إذا تعذّر تحميل مكتبة الخرائط (انقطاع إنترنت مثلاً) تبقى
+       قوائم المواقع وجدول الحجاج تعمل، ويظهر تنبيه مكان الخريطة. */
+    if (typeof L === 'undefined') {
+        document.getElementById('map').innerHTML =
+            '<p style="padding:30px; text-align:center; color:var(--muted);">'
+            + 'تعذّر تحميل مكتبة الخرائط. تحقق من الاتصال بالإنترنت،'
+            + ' وتبقى المواقع والإحداثيات معروضة في الأسفل.</p>';
+    } else {
+        map = L.map('map').setView([21.4225, 39.8262], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'رفقة بلاد الحرمين'
+        }).addTo(map);
+
+        siteLayer    = L.layerGroup().addTo(map);
+        pilgrimLayer = L.layerGroup().addTo(map);
+    }
+
+    adaptHeading();
+    await loadSites();
+
+    if (currentUser.role === 'pilgrim') {
+        document.getElementById('shareBox').style.display = 'block';
+        document.getElementById('shareBtn').addEventListener('click', shareMyLocation);
+        await showMyLastLocation();
+    }
+
+    if (API.can('view_locations', currentUser)) {
+        document.getElementById('pilgrimsBox').style.display = 'block';
+        document.getElementById('refreshBtn').style.display = 'inline-block';
+        document.getElementById('refreshBtn').addEventListener('click', loadPilgrimLocations);
+        await loadPilgrimLocations();
+    }
+});
+
+/* ------------------------------------------------------------------ */
+function adaptHeading() {
+    const tag   = document.getElementById('headingTag');
+    const title = document.getElementById('headingTitle');
+    const text  = document.getElementById('headingText');
+
+    if (currentUser.role === 'pilgrim') {
+        tag.innerText   = 'موقعي ومواقع الحملة';
+        title.innerText = 'الخريطة ومشاركة الموقع';
+        text.innerText  = 'اعرف مواقع المخيمات والمشاعر الخاصة بحملتك، وشارك موقعك مع مشرفك عند الحاجة.';
+    } else if (API.can('view_locations', currentUser)) {
+        tag.innerText   = 'النطاق الميداني';
+        title.innerText = 'تتبع مواقع الحجاج والمخيمات';
+        text.innerText  = 'مواقع المخيمات والمشاعر، وآخر موقع شاركه كل حاج من حجاج نطاقك.';
+    } else {
+        tag.innerText   = 'مواقع الحملة';
+        title.innerText = 'خريطة المخيمات والمشاعر';
+        text.innerText  = 'متابعة مواقع الحجاج غير متاحة لوظيفتك، وتظهر لك مواقع الحملة فقط.';
+    }
+
+    document.getElementById('sectionPill').innerText =
+        currentUser.section === 'women' ? 'القسم: النساء'
+        : currentUser.section === 'men' ? 'القسم: الرجال' : 'القسمان';
+}
+
+/* ------------------------------------------------------------------ */
+async function loadSites() {
+    try {
+        const res   = await API.get('location.php', 'sites');
+        const sites = res.data || [];
+
+        const box = document.getElementById('siteButtons');
+
+        if (!sites.length) {
+            box.innerHTML = '<p style="color: var(--muted);">لم تُسجَّل مواقع للحملة في قاعدة البيانات بعد.</p>';
+            return;
+        }
+
+        box.innerHTML = sites.map((s, i) => `
+            <div class="map-btn ${i === 0 ? 'active' : ''}" onclick="focusSite(${s.latitude}, ${s.longitude},
+                 '${API.esc(s.site_name).replace(/'/g, '')}', '${API.esc(s.period_note || s.site_type || '').replace(/'/g, '')}', this)">
+                <h4>${API.esc(s.site_name)}</h4>
+                <p>${API.esc(s.period_note || s.site_type || '')}</p>
+            </div>`).join('');
+
+        if (siteLayer) {
+            siteLayer.clearLayers();
+            sites.forEach(s => {
+                L.marker([s.latitude, s.longitude])
+                    .addTo(siteLayer)
+                    .bindPopup(`<b>${API.esc(s.site_name)}</b><br>${API.esc(s.description || s.site_type || '')}`);
+            });
+        }
+
+        focusSite(sites[0].latitude, sites[0].longitude,
+                  sites[0].site_name, sites[0].period_note || sites[0].site_type || '', null);
+
+    } catch (err) {
+        API.showError(err);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function focusSite(lat, lng, title, desc, element) {
+    if (map) map.setView([lat, lng], 15);
+
+    document.getElementById('locationTitle').innerText = title;
+    document.getElementById('locationDesc').innerText  = desc || '';
+    document.getElementById('googleMapsLink').href     = `https://maps.google.com/?q=${lat},${lng}`;
+
+    document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+    if (element) element.classList.add('active');
+}
+
+/* ------------------------------------------------------------------ */
+/* الحاج: مشاركة الموقع الحالي */
+async function shareMyLocation() {
+
+    const result = document.getElementById('shareResult');
+
+    if (!navigator.geolocation) {
+        result.innerHTML = '<span style="color:#b03a3a;">متصفحك لا يدعم تحديد الموقع.</span>';
+        return;
+    }
+
+    const btn = document.getElementById('shareBtn');
+    btn.disabled = true;
+    btn.innerText = 'جاري تحديد الموقع...';
+    result.innerText = '';
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+            const res = await API.post('location.php', 'report', {
+                latitude:  pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy:  Math.round(pos.coords.accuracy || 0)
+            });
+
+            const near = res.data.nearest;
+            result.innerHTML = 'تم حفظ موقعك ومشاركته مع مشرفك.'
+                + (near ? ` أقرب موقع للحملة: <strong>${API.esc(near.site_name)}</strong> على بعد ${near.distance_km} كم.` : '');
+
+            showPoint(pos.coords.latitude, pos.coords.longitude, 'موقعي الآن');
+
+        } catch (err) {
+            result.innerHTML = `<span style="color:#b03a3a;">${API.esc(err.message)}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'شارك موقعي الآن';
+        }
+    }, (err) => {
+        btn.disabled = false;
+        btn.innerText = 'شارك موقعي الآن';
+        result.innerHTML = '<span style="color:#b03a3a;">لم يُسمح بالوصول للموقع. فعّل إذن الموقع في المتصفح ثم أعد المحاولة.</span>';
+    }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+/* ------------------------------------------------------------------ */
+async function showMyLastLocation() {
+    try {
+        const res = await API.get('location.php', 'my_last');
+        if (!res.data) return;
+
+        const l = res.data;
+        showPoint(l.latitude, l.longitude, 'آخر موقع شاركته');
+
+        document.getElementById('shareResult').innerHTML =
+            `آخر مشاركة: ${API.esc(String(l.recorded_at).substring(0, 16))}`
+            + (l.nearest ? ` — أقرب موقع: <strong>${API.esc(l.nearest.site_name)}</strong> (${l.nearest.distance_km} كم)` : '');
+
+    } catch (err) {
+        /* لا يوجد موقع محفوظ بعد — لا داعي لرسالة خطأ */
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function showPoint(lat, lng, label) {
+    if (!map || !pilgrimLayer) return;
+    pilgrimLayer.clearLayers();
+    L.circleMarker([lat, lng], {
+        radius: 9, color: '#087fa3', fillColor: '#087fa3', fillOpacity: 0.7
+    }).addTo(pilgrimLayer).bindPopup(`<b>${API.esc(label)}</b>`).openPopup();
+    map.setView([lat, lng], 16);
+}
+
+/* ------------------------------------------------------------------ */
+/* المشرف وإدارة الحملة: آخر موقع لكل حاج */
+async function loadPilgrimLocations() {
+
+    const tbody = document.getElementById('pilgrimsBody');
+    API.tableMessage(tbody, 5, 'جاري التحميل...');
+
+    try {
+        const res  = await API.get('location.php', 'pilgrims');
+        const rows = res.data || [];
+
+        if (pilgrimLayer) pilgrimLayer.clearLayers();
+
+        if (!rows.length) {
+            API.tableMessage(tbody, 5,
+                'لم يشارك أي حاج موقعه بعد. يظهر الحاج هنا بعد أن يضغط "شارك موقعي" من صفحة الخريطة.');
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+            const ago = r.minutes_ago === null ? '—'
+                      : r.minutes_ago < 60 ? `قبل ${r.minutes_ago} دقيقة`
+                      : `قبل ${Math.floor(r.minutes_ago / 60)} ساعة`;
+            const cls = (r.minutes_ago !== null && r.minutes_ago <= 30) ? 'fresh' : 'stale';
+
+            return `<tr>
+                <td><strong>${API.esc(r.name)}</strong></td>
+                <td>${r.pilgrim_id}</td>
+                <td>${r.nearest ? API.esc(r.nearest.site_name) + ' (' + r.nearest.distance_km + ' كم)' : '—'}</td>
+                <td class="${cls}">${ago}</td>
+                <td><a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank">فتح</a></td>
+            </tr>`;
+        }).join('');
+
+        if (pilgrimLayer) rows.forEach(r => {
+            L.circleMarker([r.latitude, r.longitude], {
+                radius: 8, color: '#287b5a', fillColor: '#287b5a', fillOpacity: 0.7
+            }).addTo(pilgrimLayer)
+              .bindPopup(`<b>${API.esc(r.name)}</b><br>رقم العضوية: ${r.pilgrim_id}`);
+        });
+
+    } catch (err) {
+        API.tableMessage(tbody, 5, err.message);
+    }
+}
+</script>
 </body>
 </html>

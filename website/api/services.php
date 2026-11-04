@@ -54,9 +54,15 @@ function list_requests(): void
         $sql .= ' AND sp.pilgrim_id = ?';
         $args[] = $u['id'];
     } elseif ($u['role'] === 'supervisor' && empty($u['is_general'])) {
-        // المشرف المتخصص يرى طلبات تخصصه في قسمه
-        $sql .= ' AND sp.supervisor_id = ?';
+        // المشرف المتخصص يرى طلبات تخصصه في قسمه فقط:
+        // الطلبات الطبية مثلاً لا تظهر لموظف الإعاشة ولا لموظف السكن.
+        $sql .= ' AND s.service_type = (SELECT j.role_key FROM supervisors sv
+                                          JOIN jobs j ON j.job_id = sv.job_id
+                                         WHERE sv.supervisor_id = ?)';
         $args[] = $u['id'];
+
+        $sql .= ' AND p.gender = ?';
+        $args[] = ($u['section'] ?? 'men') === 'women' ? 'female' : 'male';
     }
 
     $sql .= ' ORDER BY sp.provision_id DESC';
@@ -134,12 +140,42 @@ function update_status(): void
     $id     = require_int('id');
     $status = require_text('status', 50);
 
+    // نوع الخدمة يحدّد الصلاحية المطلوبة لتحديث الطلب
+    $st = db()->prepare(
+        'SELECT s.service_type
+           FROM service_provisions sp JOIN services s ON s.service_id = sp.service_id
+          WHERE sp.provision_id = ? LIMIT 1'
+    );
+    $st->execute([$id]);
+    $serviceType = $st->fetchColumn();
+    if ($serviceType === false) {
+        fail('الطلب غير موجود.', 404);
+    }
+    require_permission(service_type_permission($serviceType));
+
     if ($u['role'] === 'supervisor' && empty($u['is_general'])) {
+        // الطلب يجب أن يكون من نوع تخصصه ومن قسمه، سواء كان موجّهاً
+        // إليه بالاسم أو لم يُوجّه لأحد بعد
         $st = db()->prepare(
-            'UPDATE service_provisions SET status = ?
-              WHERE provision_id = ? AND supervisor_id = ?'
+            'UPDATE service_provisions sp
+               JOIN services s  ON s.service_id = sp.service_id
+               JOIN pilgrims p  ON p.pilgrim_id = sp.pilgrim_id
+                SET sp.status = ?, sp.supervisor_id = ?
+              WHERE sp.provision_id = ?
+                AND p.campaign_id = ?
+                AND p.gender = ?
+                AND s.service_type = (SELECT j.role_key FROM supervisors sv
+                                        JOIN jobs j ON j.job_id = sv.job_id
+                                       WHERE sv.supervisor_id = ?)'
         );
-        $st->execute([$status, $id, $u['id']]);
+        $st->execute([
+            $status,
+            $u['id'],
+            $id,
+            $u['campaign_id'],
+            ($u['section'] ?? 'men') === 'women' ? 'female' : 'male',
+            $u['id'],
+        ]);
     } else {
         $st = db()->prepare(
             'UPDATE service_provisions SET status = ?

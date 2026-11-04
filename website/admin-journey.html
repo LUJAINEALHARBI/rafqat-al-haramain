@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة برنامج المناسك | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .station-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .station-table th {
+            background: #f3f7f5;
+            color: var(--green);
+            padding: 12px 8px;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .station-table td {
+            padding: 12px 8px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .station-table tr:hover td {
+            background: #fbfdfc;
+        }
+
+        .state-done {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .state-now {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        .state-wait {
+            color: var(--muted);
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mini-btn {
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text);
+            border-radius: 9px;
+            padding: 5px 9px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .mini-btn:hover {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .mini-btn.danger:hover {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .status-select {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 5px;
+            font-size: 11px;
+            font-family: inherit;
+        }
+
+        .program-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .program-bar > div {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .no-access {
+            background: #fff6f6;
+            border: 1px solid #f3d6d6;
+            color: #8a3a3a;
+            padding: 25px;
+            border-radius: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-supervisor.html" class="logo-area">
+            <img src="images/logo.png" alt="رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>إدارة برنامج المناسك</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="admin-journey.html" class="active">برنامج المناسك</a>
+            <a href="map.html">الخريطة والمواقع</a>
+            <a href="schedule.html">عرض الرحلة كما يراها الحاج</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <span>تتبع رحلة الحج</span>
+        <h1>برنامج المناسك ومحطات الرحلة</h1>
+        <p>أنشئ الرحلة، رتّب محطاتها، حدّد وقت كل محطة ووسيلة الانتقال إليها، ثم علّم المنجز منها ليظهر للحاج في صفحة رحلته.</p>
+    </div>
+
+    <div id="noAccess" class="no-access" style="display: none;">
+        إدارة برنامج المناسك من مهام المشرف العام وموظف الحشود والتنقل وإدارة الحملة.
+        وظيفتك الحالية لا تتضمن هذه الصلاحية، ويمكنك متابعة الرحلة من
+        <a href="schedule.html">صفحة الرحلة</a>.
+    </div>
+
+    <div id="manageArea" style="display: none;">
+
+        <!-- اختيار البرنامج وإنشاء برنامج جديد -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">الرحلة</div>
+                <div>
+                    <h2>برامج الرحلة</h2>
+                    <p id="programSummary">—</p>
+                </div>
+            </div>
+
+            <div class="program-bar">
+                <div>
+                    <label>البرنامج المعروض</label>
+                    <select id="programSelect"></select>
+                </div>
+                <div style="flex: 0;">
+                    <button class="mini-btn" id="toggleNewProgram" type="button">+ برنامج جديد</button>
+                </div>
+            </div>
+
+            <form id="programForm" style="display: none; border-top: 1px solid var(--border); padding-top: 18px;">
+                <div class="form-grid">
+                    <div>
+                        <label>اسم البرنامج</label>
+                        <input type="text" name="program_name" placeholder="مثال: برنامج مناسك الحج" required>
+                    </div>
+                    <div>
+                        <label>السنة الهجرية</label>
+                        <input type="text" name="hijri_year" placeholder="1447هـ" maxlength="10">
+                    </div>
+                    <div>
+                        <label>القسم المستهدف</label>
+                        <select name="section">
+                            <option value="all">القسمان</option>
+                            <option value="men">الرجال</option>
+                            <option value="women">النساء</option>
+                        </select>
+                    </div>
+                    <div class="full-field">
+                        <label>ملاحظات</label>
+                        <textarea name="notes" rows="2" placeholder="وصف مختصر للبرنامج"></textarea>
+                    </div>
+                </div>
+                <button class="main-button" type="submit" style="margin-top: 15px;">حفظ البرنامج</button>
+            </form>
+        </div>
+
+        <!-- محطات البرنامج -->
+        <div class="table-container" style="margin-top: 30px;">
+            <h2 class="section-title">محطات الرحلة</h2>
+            <table class="station-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>المحطة</th>
+                        <th>المكان</th>
+                        <th>اليوم</th>
+                        <th>الوقت</th>
+                        <th>الانتقال</th>
+                        <th>الحالة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="stationsBody">
+                    <tr><td colspan="8" style="text-align: center; color: var(--muted);">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- إضافة أو تعديل محطة -->
+        <div class="profile-card" style="margin-top: 30px;">
+            <div class="profile-header">
+                <div class="profile-avatar" id="formBadge">محطة</div>
+                <div>
+                    <h2 id="stationFormTitle">إضافة محطة جديدة</h2>
+                    <p>المحطة تظهر للحاج في صفحة رحلته بترتيبها ووقتها ووسيلة الانتقال إليها.</p>
+                </div>
+            </div>
+
+            <form id="stationForm">
+                <input type="hidden" name="station_id" id="stationId">
+
+                <div class="form-grid">
+                    <div class="full-field">
+                        <label>اسم المحطة</label>
+                        <input type="text" name="station_name" id="stationName"
+                               placeholder="مثال: الانتقال من عرفة إلى مزدلفة" required>
+                    </div>
+
+                    <div>
+                        <label>المكان</label>
+                        <select name="place_name" id="placeName"></select>
+                    </div>
+
+                    <div>
+                        <label>اليوم الهجري</label>
+                        <input type="text" name="hijri_day" id="hijriDay" placeholder="9 ذو الحجة" maxlength="40">
+                    </div>
+
+                    <div>
+                        <label>وقت البداية</label>
+                        <input type="datetime-local" name="start_datetime" id="startDatetime">
+                    </div>
+
+                    <div>
+                        <label>وقت النهاية</label>
+                        <input type="datetime-local" name="end_datetime" id="endDatetime">
+                    </div>
+
+                    <div>
+                        <label>وسيلة الانتقال</label>
+                        <select name="transport_type" id="transportType"></select>
+                    </div>
+
+                    <div>
+                        <label>خط العرض (اختياري)</label>
+                        <input type="text" name="latitude" id="latitude" placeholder="21.3548">
+                    </div>
+
+                    <div>
+                        <label>خط الطول (اختياري)</label>
+                        <input type="text" name="longitude" id="longitude" placeholder="39.9840">
+                    </div>
+
+                    <div class="full-field">
+                        <label>ملاحظات للحجاج</label>
+                        <textarea name="notes" id="stationNotes" rows="2"
+                                  placeholder="تعليمات مختصرة تظهر للحاج مع المحطة"></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
+                    <button class="main-button" type="submit" id="stationSubmit">إضافة المحطة</button>
+                    <button class="mini-btn" type="button" id="cancelEdit" style="display: none;">إلغاء التعديل</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script>
+/* إدارة برنامج المناسك — كل البيانات من journey_programs و journey_stations */
+
+let currentProgramId = null;
+let transportOptions = [];
+let statusOptions     = [];
+let sites             = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['supervisor', 'campaign']);
+    if (!user) return;
+
+    API.applyRoleUI(user);
+
+    /* الصفحة كلها محجوبة عن وظيفة لا تملك صلاحية إدارة الرحلة */
+    if (!API.can('manage_journey', user)) {
+        document.getElementById('noAccess').style.display = 'block';
+        return;
+    }
+    document.getElementById('manageArea').style.display = 'block';
+
+    await loadSites();
+    await loadPrograms();
+
+    document.getElementById('programSelect').addEventListener('change', (e) => {
+        currentProgramId = e.target.value ? Number(e.target.value) : null;
+        loadStations();
+    });
+
+    document.getElementById('toggleNewProgram').addEventListener('click', () => {
+        const f = document.getElementById('programForm');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('programForm').addEventListener('submit', saveProgram);
+    document.getElementById('stationForm').addEventListener('submit', saveStation);
+    document.getElementById('cancelEdit').addEventListener('click', resetStationForm);
+    document.getElementById('placeName').addEventListener('change', fillCoordsFromPlace);
+});
+
+/* ------------------------------------------------------------------ */
+async function loadSites() {
+    try {
+        const res = await API.get('location.php', 'sites');
+        sites = res.data || [];
+    } catch (err) {
+        sites = [];
+    }
+
+    const select = document.getElementById('placeName');
+    select.innerHTML = '<option value="">— بدون مكان محدد —</option>'
+        + sites.map(s => `<option value="${API.esc(s.site_name)}">${API.esc(s.site_name)}</option>`).join('')
+        + '<option value="__other">مكان آخر (أكتبه في اسم المحطة)</option>';
+}
+
+/* ------------------------------------------------------------------ */
+function fillCoordsFromPlace() {
+    const name = document.getElementById('placeName').value;
+    const site = sites.find(s => s.site_name === name);
+    if (site) {
+        document.getElementById('latitude').value  = site.latitude;
+        document.getElementById('longitude').value = site.longitude;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+async function loadPrograms() {
+    try {
+        const res = await API.get('journey.php', 'programs');
+        const programs = res.data || [];
+
+        const select = document.getElementById('programSelect');
+        if (!programs.length) {
+            select.innerHTML = '<option value="">لا يوجد برنامج — أنشئ برنامجاً جديداً</option>';
+            document.getElementById('programSummary').innerText = 'لم يُنشأ أي برنامج بعد.';
+            document.getElementById('programForm').style.display = 'block';
+            document.getElementById('stationsBody').innerHTML =
+                '<tr><td colspan="8" style="text-align:center; color: var(--muted);">أنشئ البرنامج أولاً ثم أضف محطاته.</td></tr>';
+            return;
+        }
+
+        select.innerHTML = programs.map(p =>
+            `<option value="${p.program_id}">${API.esc(p.program_name)}${p.hijri_year ? ' - ' + API.esc(p.hijri_year) : ''}
+              (${p.done_count}/${p.stations_count} منجزة)</option>`).join('');
+
+        currentProgramId = programs[0].program_id;
+        document.getElementById('programSummary').innerText =
+            `عدد البرامج: ${programs.length} — البرنامج المعروض فيه ${programs[0].stations_count} محطة، منجز منها ${programs[0].done_count}.`;
+
+        await loadStations();
+
+    } catch (err) {
+        API.showError(err);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+async function loadStations() {
+    const tbody = document.getElementById('stationsBody');
+    if (!currentProgramId) return;
+
+    API.tableMessage(tbody, 8, 'جاري التحميل...');
+
+    try {
+        const res = await API.get('journey.php', 'program', { program_id: currentProgramId });
+        const data = res.data;
+
+        transportOptions = data.options.transport;
+        statusOptions    = data.options.statuses;
+        fillSelect('transportType', transportOptions);
+
+        if (!data.stations.length) {
+            API.tableMessage(tbody, 8, 'لا توجد محطات في هذا البرنامج بعد.');
+            return;
+        }
+
+        tbody.innerHTML = data.stations.map(s => {
+            const cls = s.status === 'مكتملة' ? 'state-done'
+                      : s.status === 'جارية'  ? 'state-now' : 'state-wait';
+
+            const options = statusOptions.map(st =>
+                `<option value="${API.esc(st)}" ${st === s.status ? 'selected' : ''}>${API.esc(st)}</option>`).join('');
+
+            return `<tr>
+                <td><strong>${s.station_order}</strong></td>
+                <td>
+                    <strong>${API.esc(s.station_name)}</strong>
+                    ${s.notes ? `<div style="color: var(--muted); font-size: 11px;">${API.esc(s.notes)}</div>` : ''}
+                </td>
+                <td>${API.esc(s.place_name || '—')}</td>
+                <td>${API.esc(s.hijri_day || '—')}</td>
+                <td style="white-space: nowrap;">${API.esc(shortTime(s.start_datetime))}<br>${API.esc(shortTime(s.end_datetime))}</td>
+                <td>${API.esc(s.transport_type)}</td>
+                <td class="${cls}">
+                    <select class="status-select" onchange="setStatus(${s.station_id}, this.value)">${options}</select>
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="mini-btn" onclick="moveStation(${s.station_id}, 'up')" title="أعلى">↑</button>
+                        <button class="mini-btn" onclick="moveStation(${s.station_id}, 'down')" title="أسفل">↓</button>
+                        <button class="mini-btn" onclick='editStation(${JSON.stringify(s).replace(/'/g, "&#39;")})'>تعديل</button>
+                        <button class="mini-btn danger" onclick="removeStation(${s.station_id})">حذف</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 8, err.message);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function fillSelect(id, values) {
+    const select = document.getElementById(id);
+    if (!select || !values || !values.length) return;
+    const keep = select.value;
+    select.innerHTML = values.map(v => `<option value="${API.esc(v)}">${API.esc(v)}</option>`).join('');
+    if (keep) select.value = keep;
+}
+
+function shortTime(datetime) {
+    if (!datetime) return '—';
+    const s = String(datetime);
+    return s.substring(8, 10) + '/' + s.substring(5, 7) + ' ' + s.substring(11, 16);
+}
+
+/* ------------------------------------------------------------------ */
+async function saveProgram(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try {
+        const res = await API.post('journey.php', 'add_program', data);
+        alert('تم إنشاء البرنامج. أضف محطاته الآن.');
+        form.reset();
+        form.style.display = 'none';
+        currentProgramId = res.data.program_id;
+        await loadPrograms();
+        document.getElementById('programSelect').value = currentProgramId;
+    } catch (err) {
+        API.showError(err);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+async function saveStation(e) {
+    e.preventDefault();
+
+    if (!currentProgramId) {
+        alert('أنشئ برنامج رحلة أولاً.');
+        return;
+    }
+
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (data.place_name === '__other') data.place_name = '';
+    data.program_id = currentProgramId;
+
+    const editing = data.station_id && data.station_id !== '';
+    const button  = document.getElementById('stationSubmit');
+    const label   = button.innerText;
+    button.disabled = true;
+    button.innerText = 'جاري الحفظ...';
+
+    try {
+        await API.post('journey.php', editing ? 'update_station' : 'add_station', data);
+        resetStationForm();
+        await loadStations();
+    } catch (err) {
+        API.showError(err);
+    } finally {
+        button.disabled = false;
+        button.innerText = label;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function editStation(s) {
+    document.getElementById('stationId').value       = s.station_id;
+    document.getElementById('stationName').value     = s.station_name || '';
+    document.getElementById('hijriDay').value        = s.hijri_day || '';
+    document.getElementById('startDatetime').value   = toLocalInput(s.start_datetime);
+    document.getElementById('endDatetime').value     = toLocalInput(s.end_datetime);
+    document.getElementById('latitude').value        = s.latitude  || '';
+    document.getElementById('longitude').value       = s.longitude || '';
+    document.getElementById('stationNotes').value    = s.notes || '';
+
+    const place = document.getElementById('placeName');
+    place.value = s.place_name && sites.some(x => x.site_name === s.place_name) ? s.place_name : '';
+
+    const transport = document.getElementById('transportType');
+    if (s.transport_type) transport.value = s.transport_type;
+
+    document.getElementById('stationFormTitle').innerText = 'تعديل المحطة رقم ' + s.station_order;
+    document.getElementById('formBadge').innerText = 'تعديل';
+    document.getElementById('stationSubmit').innerText = 'حفظ التعديل';
+    document.getElementById('cancelEdit').style.display = 'inline-block';
+
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function resetStationForm() {
+    const form = document.getElementById('stationForm');
+    form.reset();
+    document.getElementById('stationId').value = '';
+    document.getElementById('stationFormTitle').innerText = 'إضافة محطة جديدة';
+    document.getElementById('formBadge').innerText = 'محطة';
+    document.getElementById('stationSubmit').innerText = 'إضافة المحطة';
+    document.getElementById('cancelEdit').style.display = 'none';
+}
+
+function toLocalInput(datetime) {
+    if (!datetime) return '';
+    return String(datetime).substring(0, 16).replace(' ', 'T');
+}
+
+/* ------------------------------------------------------------------ */
+async function setStatus(stationId, status) {
+    try {
+        await API.post('journey.php', 'set_status', { station_id: stationId, status: status });
+        await loadStations();
+    } catch (err) {
+        API.showError(err);
+        await loadStations();
+    }
+}
+
+async function moveStation(stationId, direction) {
+    try {
+        await API.post('journey.php', 'move_station', { station_id: stationId, direction: direction });
+        await loadStations();
+    } catch (err) {
+        API.showError(err);
+    }
+}
+
+async function removeStation(stationId) {
+    if (!confirm('حذف هذه المحطة من البرنامج؟')) return;
+    try {
+        await API.post('journey.php', 'delete_station', { station_id: stationId });
+        await loadStations();
+    } catch (err) {
+        API.showError(err);
+    }
+}
+</script>
+
+</body>
+</html>

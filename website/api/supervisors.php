@@ -5,6 +5,8 @@
  *   GET supervisors.php?action=list[&section=men|women]
  *   GET supervisors.php?action=profile      (ملف المشرف المسجّل دخوله)
  *   GET supervisors.php?action=jobs         (قائمة الوظائف والصلاحيات)
+ *   GET supervisors.php?action=permissions  (مصفوفة صلاحيات الوظائف — للمراجعة)
+ *   GET supervisors.php?action=my_permissions (صلاحيات المستخدم الحالي)
  */
 
 require_once __DIR__ . '/helpers.php';
@@ -15,6 +17,8 @@ switch ($action) {
     case 'list':    list_supervisors(); break;
     case 'profile': supervisor_profile(); break;
     case 'jobs':    list_jobs();        break;
+    case 'permissions':    permissions_matrix(); break;
+    case 'my_permissions': my_permissions();     break;
     default: fail('عملية غير معروفة.', 404);
 }
 
@@ -83,6 +87,9 @@ function supervisor_profile(): void
     $c->execute([$u['id']]);
     $row['pilgrims_count'] = (int) ($c->fetch()['n'] ?? 0);
 
+    // صلاحيات وظيفته مقروءة من جدول job_permissions
+    $row['permissions'] = user_permissions();
+
     ok($row);
 }
 
@@ -102,4 +109,75 @@ function list_jobs(): void
     }
 
     ok($rows);
+}
+
+// ------------------------------------------------------------------
+/**
+ * مصفوفة الصلاحيات: كل وظيفة وما يُسمح لها به، تُقرأ من جدولي
+ * app_permissions و job_permissions لتراجعها إدارة الحملة على الشاشة.
+ */
+function permissions_matrix(): void
+{
+    require_user(['campaign', 'supervisor']);
+
+    $perms = db()->query(
+        'SELECT permission_key, permission_label, category
+           FROM app_permissions ORDER BY category, permission_key'
+    )->fetchAll();
+
+    $jobs = db()->query(
+        'SELECT job_id, job_title, role_key, permission_level FROM jobs ORDER BY job_id'
+    )->fetchAll();
+
+    $pairs = db()->query('SELECT job_id, permission_key FROM job_permissions')->fetchAll();
+
+    $byJob = [];
+    foreach ($pairs as $row) {
+        $byJob[(int) $row['job_id']][] = $row['permission_key'];
+    }
+
+    foreach ($jobs as &$job) {
+        $job['job_id']      = (int) $job['job_id'];
+        $job['permissions'] = $byJob[$job['job_id']] ?? [];
+    }
+    unset($job);
+
+    // عدد المشرفين في كل وظيفة داخل الحملة
+    $u  = current_user();
+    $st = db()->prepare(
+        'SELECT job_id, COUNT(*) AS n FROM supervisors WHERE campaign_id = ? GROUP BY job_id'
+    );
+    $st->execute([$u['campaign_id']]);
+    $counts = [];
+    foreach ($st->fetchAll() as $row) {
+        $counts[(int) $row['job_id']] = (int) $row['n'];
+    }
+    foreach ($jobs as &$job) {
+        $job['supervisors_count'] = $counts[$job['job_id']] ?? 0;
+    }
+    unset($job);
+
+    ok(['permissions' => $perms, 'jobs' => $jobs]);
+}
+
+// ------------------------------------------------------------------
+/** صلاحيات المستخدم الحالي بأسمائها العربية */
+function my_permissions(): void
+{
+    $u    = require_user();
+    $keys = user_permissions();
+
+    if (!$keys) {
+        ok(['role' => $u['role'], 'keys' => [], 'list' => []]);
+    }
+
+    $in = implode(',', array_fill(0, count($keys), '?'));
+    $st = db()->prepare(
+        "SELECT permission_key, permission_label, category
+           FROM app_permissions WHERE permission_key IN ($in)
+       ORDER BY category, permission_key"
+    );
+    $st->execute($keys);
+
+    ok(['role' => $u['role'], 'keys' => $keys, 'list' => $st->fetchAll()]);
 }

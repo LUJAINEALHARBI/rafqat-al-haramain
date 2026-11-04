@@ -115,6 +115,61 @@ const API = {
     },
 
     /* ---------------------------------------------------------------
+       تكييف الواجهة حسب نوع المستخدم
+       ---------------------------------------------------------------
+       كل صفحة تعرض عناصرها حسب دور المستخدم وصلاحيات وظيفته،
+       فلا يظهر للحاج زر إداري ولا يظهر لموظف الإعاشة قسم طبي.
+
+       الاستخدام في HTML:
+         data-roles="pilgrim supervisor"   يظهر لهذه الأدوار فقط
+         data-hide-roles="pilgrim"         يختفي عن هذه الأدوار
+         data-perm="manage_journey"        يظهر لمن يملك هذه الصلاحية
+         data-jobs="medical crowd"         يظهر لهذه الوظائف فقط
+       --------------------------------------------------------------- */
+
+    /** هل يملك المستخدم الحالي هذه الصلاحية؟ */
+    can(permission, user = API._user) {
+        const list = (user && user.permissions) || [];
+        return list.indexOf(permission) !== -1;
+    },
+
+    /** يخفي من الصفحة كل ما لا يخص هذا المستخدم */
+    applyRoleUI(user) {
+        if (!user) return;
+
+        const role = user.role || '';
+        const job  = user.job_role || '';
+        const list = (s) => String(s || '').split(/[\s,]+/).filter(Boolean);
+
+        document.body.setAttribute('data-user-role', role);
+        if (job) document.body.setAttribute('data-user-job', job);
+
+        document.querySelectorAll('[data-roles]').forEach(el => {
+            if (list(el.dataset.roles).indexOf(role) === -1) el.style.display = 'none';
+        });
+
+        document.querySelectorAll('[data-hide-roles]').forEach(el => {
+            if (list(el.dataset.hideRoles).indexOf(role) !== -1) el.style.display = 'none';
+        });
+
+        document.querySelectorAll('[data-jobs]').forEach(el => {
+            if (list(el.dataset.jobs).indexOf(job) === -1) el.style.display = 'none';
+        });
+
+        document.querySelectorAll('[data-perm]').forEach(el => {
+            const needed = list(el.dataset.perm);
+            const allowed = needed.some(p => API.can(p, user));
+            if (!allowed) el.style.display = 'none';
+        });
+
+        /* أماكن تُكتب فيها بيانات المستخدم مباشرة */
+        document.querySelectorAll('[data-user-field]').forEach(el => {
+            const value = user[el.dataset.userField];
+            if (value !== undefined && value !== null) el.innerText = value;
+        });
+    },
+
+    /* ---------------------------------------------------------------
        أدوات صغيرة
        --------------------------------------------------------------- */
 

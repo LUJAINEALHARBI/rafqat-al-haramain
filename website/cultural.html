@@ -98,21 +98,19 @@
             </form>
         </section>
 
-        <!-- القرعة والسحب اليومي -->
+        <!-- بطاقة مشاركتي في النشاط الثقافي -->
         <section class="lottery-card">
-            <span>🎁 سحب وقرعة اليوم</span>
-            <h2>هل أنت الفائز؟</h2>
-            <p>بعد المشاركة في المسابقة وإدخال الإجابات، يمكنك التأكد من دخول اسمك في السحب اليومي.</p>
+            <span>🎁 مشاركتي في السحب اليومي</span>
+            <h2>بطاقة مشاركتك</h2>
+            <p>
+                السحب على الجوائز تجريه إدارة الحملة من بين الحجاج المشاركين في
+                المسابقة، وهذه بطاقتك بأرقامها الحقيقية من قاعدة البيانات.
+            </p>
 
             <div class="lottery-number" id="drawNumber">---</div>
 
-            <button id="drawBtn" class="gold-button" style="width: 100%;">
-                عرض نتيجة السحب اليومي
-            </button>
-
-            <div id="winnerMessage" class="winner-message" style="display: none; margin-top: 15px; padding: 15px; background: #f9f6ed; border-radius: 8px; border: 1px dashed #c5a059; text-align: center;">
-                <h2>🎉 مبروك!</h2>
-                <p id="winnerName"></p>
+            <div id="participationBox" style="font-size: 14px; line-height: 2; text-align: center;">
+                جاري قراءة مشاركتك...
             </div>
         </section>
 
@@ -125,12 +123,13 @@
 <script>
 /* ---------------------------------------------------------------
    الصفحة الثقافية:
-     • السحب اليومي يعرض بيانات الحاج الحقيقية من جدول pilgrims.
-     • أسئلة المسابقة والتصحيح ما زالت داخل الصفحة لأنه لا يوجد
-       جدول للأسئلة في قاعدة البيانات (انظري تقرير التعديلات).
+     • الأسئلة من جدول cultural_questions ، والتصحيح في الخادم.
+     • بطاقة المشاركة تُحسب من إجابات الحاج في جدول cultural_answers.
    --------------------------------------------------------------- */
 
 let ME = null;
+let QUESTIONS = [];
+let loadQuestions = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
 
@@ -147,15 +146,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     const quizForm   = document.getElementById("quizForm");
     const quizResult = document.getElementById("quizResult");
     const container  = document.getElementById("questionsContainer");
-    const drawBtn    = document.getElementById("drawBtn");
-    const drawNumber = document.getElementById("drawNumber");
-    const winnerMessage = document.getElementById("winnerMessage");
-    const winnerName    = document.getElementById("winnerName");
-
-    let QUESTIONS = [];
 
     /* الأسئلة تُقرأ من جدول cultural_questions، والتصحيح يتم في الخادم */
-    async function loadQuestions() {
+    loadQuestions = async function () {
         try {
             const res = await API.get('cultural.php', 'list');
             QUESTIONS = res.data || [];
@@ -184,6 +177,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     await loadQuestions();
+    renderParticipation();
 
     if (quizForm) {
         quizForm.addEventListener("submit", async function (e) {
@@ -225,6 +219,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                     quizResult.className = "quiz-result error";
                     quizResult.innerHTML = `حصلت على: ${score}/${total}<br>حاول مرة أخرى للحصول على الدرجة الكاملة والدخول في السحب.`;
                 }
+                /* نعيد قراءة الأسئلة لتحديث بطاقة المشاركة من القاعدة */
+                await loadQuestions();
+                renderParticipation();
+
             } catch (err) {
                 quizResult.className = "quiz-result error";
                 quizResult.innerText = err.message;
@@ -235,17 +233,34 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     }
 
-    if (drawBtn) {
-        drawBtn.addEventListener("click", function () {
-            if (!ME) { alert('تعذّر قراءة بياناتك من قاعدة البيانات.'); return; }
-
-            drawNumber.innerText = `# ${ME.pilgrim_id}`;
-            winnerName.innerHTML = `تم تأكيد مشاركة: <strong>${API.esc(ME.name)}</strong> في سحب اليوم ✓`;
-            winnerMessage.style.display = "block";
-            drawBtn.innerText = "تمت المراجعة ✓";
-        });
-    }
 });
+
+/* ------------------------------------------------------------------ */
+/* بطاقة المشاركة: أرقامها من جدول cultural_answers */
+function renderParticipation() {
+    const box = document.getElementById('participationBox');
+    const num = document.getElementById('drawNumber');
+    if (!box || !ME) return;
+
+    num.innerText = '# ' + ME.pilgrim_id;
+
+    const total    = QUESTIONS.length;
+    const answered = QUESTIONS.filter(q => q.answered).length;
+    const correct  = QUESTIONS.filter(q => q.is_correct === true).length;
+
+    if (!answered) {
+        box.innerHTML = `باسم <strong>${API.esc(ME.name)}</strong><br>
+            لم تشارك في المسابقة بعد. أجب عن الأسئلة أعلاه لتدخل سحب اليوم.`;
+        return;
+    }
+
+    box.innerHTML = `باسم <strong>${API.esc(ME.name)}</strong><br>
+        أجبت عن <strong>${answered}</strong> من <strong>${total}</strong> سؤالاً،
+        منها <strong>${correct}</strong> إجابة صحيحة.<br>
+        ${answered === total
+            ? 'أكملت المسابقة ودخلت سحب اليوم ✓'
+            : 'أكمل بقية الأسئلة لتكتمل مشاركتك.'}`;
+}
 </script>
 
 </body>

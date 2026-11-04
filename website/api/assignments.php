@@ -53,7 +53,8 @@ function list_assignments(): void
 function assign_batch(): void
 {
     require_post();
-    $u   = require_user(['campaign']);
+    require_user(['campaign']);
+    $u   = require_permission('edit_pilgrims');
     $pdo = db();
 
     $ids = param('pilgrim_ids');

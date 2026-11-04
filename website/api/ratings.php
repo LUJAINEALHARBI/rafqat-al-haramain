@@ -23,7 +23,8 @@ switch ($action) {
 // ------------------------------------------------------------------
 function list_ratings(): void
 {
-    $u = require_user(['campaign', 'supervisor']);
+    require_user(['campaign', 'supervisor']);
+    $u = require_permission('view_ratings');
 
     // موضوع التقييم: الخدمة المختارة مباشرة، أو خدمة الطلب إن قُيِّم طلب محدد
     $st = db()->prepare(

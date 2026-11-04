@@ -109,7 +109,8 @@
         <nav class="nav-links">
             <a href="index.html" class="active">الرئيسية</a>
             <a href="services.html">الخدمات</a>
-            <a href="schedule.html">الجدول</a>
+            <a href="schedule.html">رحلتي</a>
+            <a href="map.html">الخريطة</a>
             <a href="cultural.html">الثقافي والترفيهي</a>
             <a href="rooms.html">المحادثة</a>
             <a href="account.html">ملفي</a>
@@ -144,18 +145,18 @@
             <a href="schedule.html" class="secondary-button">جدول رحلتي</a>
         </div>
 
-        <div class="statistics">
+        <div class="statistics" id="homeStats">
             <div class="stat-box">
-                <strong>24/7</strong>
-                <span>دعم ومساعدة</span>
+                <strong id="statServices">—</strong>
+                <span>خدمة مُتاحة</span>
             </div>
             <div class="stat-box">
-                <strong>+8</strong>
-                <span>خدمات رقمية</span>
+                <strong id="statStations">—</strong>
+                <span>محطة في برنامج المناسك</span>
             </div>
             <div class="stat-box">
-                <strong>1</strong>
-                <span>منصة متكاملة</span>
+                <strong id="statSites">—</strong>
+                <span>موقع مخيم ومشعر</span>
             </div>
         </div>
     </div>
@@ -164,13 +165,13 @@
         <div class="hero-circle">
             <img src="images/logo.png" alt="رفقة بلاد الحرمين">
         </div>
-        <span class="small-badge">
+        <span class="small-badge" id="campaignTag">
             رحلتك أسهل
         </span>
-        <h2>
+        <h2 id="campaignName">
             نرافق خطواتك
         </h2>
-        <p>
+        <p id="campaignInfo">
             لتؤدي مناسكك بطمأنينة وتبقى جميع تفاصيل رحلتك أمامك.
         </p>
         <a href="services.html" class="green-button">
@@ -190,27 +191,8 @@
         <a href="services.html" class="light-button">جميع الخدمات</a>
     </div>
 
-    <div class="services-grid">
-        <div class="service-card">
-            <div class="service-icon">🩺</div>
-            <h3>الرعاية الطبية</h3>
-            <p>التواصل مع طبيب الحملة والممرضين للاستشارات والمساعدة الطبية.</p>
-            <a href="services.html">اكتشف الخدمة ←</a>
-        </div>
-
-        <div class="service-card">
-            <div class="service-icon">🧳</div>
-            <h3>الأمتعة المفقودة</h3>
-            <p>تسجيل الحقيبة المفقودة ووصفها ومتابعة البلاغ.</p>
-            <a href="services.html">اكتشف الخدمة ←</a>
-        </div>
-
-        <div class="service-card">
-            <div class="service-icon">💬</div>
-            <h3>غرفة المحادثة</h3>
-            <p>تحدث مباشرة مع مشرف الحملة والاستفسارات العامة.</p>
-            <a href="rooms.html">ابدأ المحادثة ←</a>
-        </div>
+    <div class="services-grid" id="servicesGrid">
+        <p style="color: var(--muted);">جاري تحميل الخدمات من قاعدة البيانات...</p>
     </div>
 </section>
 
@@ -224,51 +206,8 @@
         </div>
     </div>
 
-    <div class="packages-grid">
-        <!-- باقة 1 -->
-        <div class="package-card">
-            <span class="package-tag">اقتصادية</span>
-            <h3>باقة السكينة</h3>
-            <div class="package-price">1,850 <small>ر.س</small></div>
-            <ul>
-                <li>✓ الإقامة</li>
-                <li>✓ النقل</li>
-                <li>✓ الوجبات</li>
-                <li>✓ التواصل مع المشرف</li>
-                <li>✓ جدول الرحلة</li>
-            </ul>
-            <a href="services.html#packages" class="package-button">عرض التفاصيل</a>
-        </div>
-
-        <!-- باقة 2 -->
-        <div class="package-card featured-package">
-            <span class="featured-label">الأكثر طلبًا</span>
-            <span class="package-tag">متكاملة</span>
-            <h3>باقة الطمأنينة</h3>
-            <div class="package-price">2,650 <small>ر.س</small></div>
-            <ul>
-                <li>✓ جميع خدمات السكينة</li>
-                <li>✓ الرعاية الطبية</li>
-                <li>✓ الأمتعة المفقودة</li>
-                <li>✓ القسم الثقافي</li>
-                <li>✓ غرفة المحادثة</li>
-            </ul>
-            <a href="services.html#packages" class="package-button main-package-button">عرض التفاصيل</a>
-        </div>
-
-        <!-- باقة 3 -->
-        <div class="package-card">
-            <span class="package-tag">مميزة</span>
-            <h3>باقة الرفقة</h3>
-            <div class="package-price">3,450 <small>ر.س</small></div>
-            <ul>
-                <li>✓ جميع خدمات الطمأنينة</li>
-                <li>✓ أولوية التواصل</li>
-                <li>✓ متابعة المشرف</li>
-                <li>✓ مزايا إضافية</li>
-            </ul>
-            <a href="services.html#packages" class="package-button">عرض التفاصيل</a>
-        </div>
+    <div class="packages-grid" id="packagesGrid">
+        <p style="color: var(--muted);">جاري تحميل الباقات من قاعدة البيانات...</p>
     </div>
 </section>
 
@@ -282,8 +221,8 @@
         <div>
             <h3>روابط سريعة</h3>
             <a href="services.html">الخدمات</a>
-            <a href="schedule.html">جدول الرحلة</a>
-            <a href="account.html">الملف الشخصي</a>
+            <a href="schedule.html">رحلتي ومحطات المناسك</a>
+            <a href="map.html">الخريطة والمواقع</a>
         </div>
         <div>
             <h3>مساعدة</h3>
@@ -297,7 +236,119 @@
 </footer>
 
 <script src="js/app.js"></script>
-
 <script src="js/api.js"></script>
+<script>
+/* الصفحة الرئيسية تقرأ بيانات الحملة وخدماتها وباقاتها وأرقامها من
+   api/public.php ، فلا يوجد اسم خدمة أو سعر باقة مكتوب داخل الصفحة. */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    /* زر "ملفي الشخصي" وروابط الحاج لا تظهر قبل تسجيل الدخول */
+    const user = await API.me();
+    adaptNav(user);
+
+    try {
+        const res = await API.get('public.php', 'home');
+        fillStats(res.data.stats);
+        fillCampaign(res.data.campaign);
+        fillServices(res.data.services);
+        fillPackages(res.data.packages);
+    } catch (err) {
+        document.getElementById('servicesGrid').innerHTML =
+            '<p style="color: var(--muted);">تعذّر تحميل البيانات من قاعدة البيانات. تأكد أن الخادم يعمل.</p>';
+        document.getElementById('packagesGrid').innerHTML = '';
+    }
+});
+
+/* ------------------------------------------------------------------ */
+function adaptNav(user) {
+    const loginLink   = document.querySelector('.nav-links a[href="login.html"]');
+    const profileBtn  = document.querySelector('.profile-button');
+    const pilgrimOnly = document.querySelectorAll('.nav-links a[href="account.html"], .nav-links a[href="notifications.html"], .nav-links a[href="cultural.html"]');
+
+    if (!user) {
+        if (profileBtn) profileBtn.style.display = 'none';
+        pilgrimOnly.forEach(a => a.style.display = 'none');
+        return;
+    }
+
+    if (loginLink) {
+        loginLink.innerText = 'لوحتي';
+        loginLink.href = user.role === 'campaign' ? 'admin-campaign.html'
+                       : user.role === 'supervisor' ? 'admin-supervisor.html'
+                       : 'account.html';
+    }
+
+    /* المشرف ومدير الحملة ليس لهما ملف حاج ولا مسابقة ثقافية */
+    if (user.role !== 'pilgrim') {
+        if (profileBtn) profileBtn.style.display = 'none';
+        pilgrimOnly.forEach(a => a.style.display = 'none');
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function fillStats(stats) {
+    document.getElementById('statServices').innerText = stats.services;
+    document.getElementById('statStations').innerText = stats.stations;
+    document.getElementById('statSites').innerText    = stats.sites;
+}
+
+/* ------------------------------------------------------------------ */
+function fillCampaign(c) {
+    if (!c) return;
+    document.getElementById('campaignTag').innerText  = c.company_name || 'رفقة بلاد الحرمين';
+    document.getElementById('campaignName').innerText = c.campaign_name;
+    document.getElementById('campaignInfo').innerText =
+        [c.extra_info, c.location ? 'المقر: ' + c.location : null, c.phone ? 'هاتف: ' + c.phone : null]
+        .filter(Boolean).join(' — ');
+}
+
+/* ------------------------------------------------------------------ */
+function fillServices(services) {
+    const icons = {
+        medical:  '🩺',
+        crowd:    '🚌',
+        catering: '🍽️',
+        housing:  '🏕️'
+    };
+
+    const grid = document.getElementById('servicesGrid');
+
+    if (!services.length) {
+        grid.innerHTML = '<p style="color: var(--muted);">لا توجد خدمات متاحة حالياً.</p>';
+        return;
+    }
+
+    grid.innerHTML = services.slice(0, 6).map(s => `
+        <div class="service-card">
+            <div class="service-icon">${icons[s.service_type] || '🕋'}</div>
+            <h3>${API.esc(s.service_name)}</h3>
+            <p>${API.esc(s.description || '')}</p>
+            <a href="services.html">اكتشف الخدمة ←</a>
+        </div>`).join('');
+}
+
+/* ------------------------------------------------------------------ */
+function fillPackages(packages) {
+    const grid = document.getElementById('packagesGrid');
+
+    if (!packages.length) {
+        grid.innerHTML = '<p style="color: var(--muted);">لم تُسجَّل باقات للحملة بعد.</p>';
+        return;
+    }
+
+    grid.innerHTML = packages.map(p => `
+        <div class="package-card ${p.is_featured ? 'featured-package' : ''}">
+            ${p.is_featured ? `<span class="featured-label">${API.esc(p.package_tag || 'الأكثر طلباً')}</span>` : ''}
+            <span class="package-tag">${API.esc(p.package_tag || '')}</span>
+            <h3>${API.esc(p.package_name)}</h3>
+            <div class="package-price">${Number(p.price).toLocaleString('en-US')} <small>ر.س</small></div>
+            <ul>
+                ${p.features.map(f => `<li>✓ ${API.esc(f)}</li>`).join('')}
+            </ul>
+            <a href="services.html#packages" class="package-button ${p.is_featured ? 'main-package-button' : ''}">عرض التفاصيل</a>
+        </div>`).join('');
+}
+</script>
 </body>
 </html>

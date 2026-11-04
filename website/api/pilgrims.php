@@ -25,11 +25,13 @@ switch ($action) {
 // ------------------------------------------------------------------
 function list_pilgrims(): void
 {
-    $u   = require_user(['supervisor', 'campaign']);
+    require_user(['supervisor', 'campaign']);
+    $u   = require_permission('view_pilgrims');
     $pdo = db();
 
     $sql = "SELECT p.pilgrim_id, p.name, p.gender, p.nationality, p.city, p.age,
-                   p.phone, p.id_or_passport, p.booking_number, p.camp_id,
+                   p.phone, p.id_or_passport, p.id_type, p.id_expiry, p.nusuk_number,
+                   p.booking_number, p.camp_id,
                    p.tent_number, p.bed_number, p.chronic_conditions,
                    p.package_type, p.supervisor_id,
                    s.name  AS supervisor_name,
@@ -66,7 +68,15 @@ function list_pilgrims(): void
     foreach ($rows as &$r) {
         $r['section'] = $r['gender'] === 'female' ? 'women' : 'men';
         $r['room']    = trim(($r['tent_number'] ?? '') . ($r['bed_number'] ? ' - سرير ' . $r['bed_number'] : ''));
+
+        // تنبيه صلاحية الهوية: منتهية أو تنتهي خلال 30 يوماً
+        $r['id_status'] = id_expiry_status($r['id_expiry'] ?? null);
     }
+    unset($r);
+
+    // الأمراض المزمنة لا تظهر إلا لمن وظيفته تسمح بذلك
+    $rows = hide_medical_fields($rows);
+
     ok($rows);
 }
 
@@ -87,11 +97,18 @@ function get_pilgrim(): void
         fail('ليس لديك صلاحية لعرض هذا الملف.', 403);
     }
 
+    // المشرف لا يفتح ملف حاج من حملة أخرى ولا من قسم غير قسمه
+    if ($u['role'] !== 'pilgrim') {
+        require_permission('view_pilgrims');
+        pilgrim_in_scope($id, $u);
+    }
+
     $st = db()->prepare(
         "SELECT p.pilgrim_id, p.campaign_id, p.supervisor_id, p.booking_number, p.name,
                 p.id_or_passport, p.phone, p.nationality, p.age, p.city, p.package_type,
                 p.gathering_point, p.tent_number, p.bed_number, p.gender, p.email,
                 p.marital_status, p.chronic_conditions, p.camp_id,
+                p.id_type, p.id_expiry, p.nusuk_number,
                 s.name AS supervisor_name,
                 (SELECT pr.permission_name FROM permissions pr
                   WHERE pr.pilgrim_id = p.pilgrim_id LIMIT 1) AS permit_number
@@ -105,7 +122,15 @@ function get_pilgrim(): void
     if (!$row) {
         fail('لا يوجد حاج بهذا الرقم.', 404);
     }
-    $row['section'] = $row['gender'] === 'female' ? 'women' : 'men';
+    $row['section']   = $row['gender'] === 'female' ? 'women' : 'men';
+    $row['id_status']  = id_expiry_status($row['id_expiry'] ?? null);
+    $row['id_type_ar'] = id_type_label($row['id_type'] ?? null);
+
+    // الحاج يرى حالته الصحية في ملفه، والمشرف حسب صلاحية وظيفته
+    if ($u['role'] !== 'pilgrim') {
+        $row = hide_medical_fields([$row])[0];
+    }
+
     ok($row);
 }
 
@@ -120,6 +145,22 @@ function register_pilgrim(): void
     $nationalId  = require_text('nationalId', 50);
     $phone       = require_text('phone', 20);
     $gender      = one_of('gender', ['male', 'female'], 'male');
+    $idType      = one_of('idType', ['national_id', 'iqama', 'passport'], 'national_id');
+    $nusuk       = (string) (param('nusukNumber') ?? '');
+    $idExpiry    = opt_date('idExpiry');
+
+    // صلاحية الهوية: الرقم يطابق نوعه، والتاريخ لم ينتهِ
+    validate_identity($idType, $nationalId);
+
+    if ($nusuk === '') {
+        fail('رقم النسك مطلوب، وهو رقم تصريح الحج الصادر من منصة نسك.', 422);
+    }
+    if (!preg_match('/^[A-Za-z0-9\-]{5,30}$/', $nusuk)) {
+        fail('رقم النسك يجب أن يكون من 5 إلى 30 حرفاً أو رقماً (يسمح بالشرطة -).', 422);
+    }
+    if ($idExpiry !== null && $idExpiry < date('Y-m-d')) {
+        fail('الهوية منتهية الصلاحية، لا يمكن إكمال التسجيل بها.', 422);
+    }
 
     if (mb_strlen($password) < 6) {
         fail('كلمة المرور يجب ألا تقل عن 6 خانات.', 422);
@@ -159,12 +200,18 @@ function register_pilgrim(): void
         fail('رقم الهوية/الجواز مسجّل من قبل.', 409);
     }
 
+    $st = $pdo->prepare('SELECT 1 FROM pilgrims WHERE nusuk_number = ?');
+    $st->execute([$nusuk]);
+    if ($st->fetch()) {
+        fail('رقم النسك مسجّل من قبل لحاج آخر.', 409);
+    }
+
     $st = $pdo->prepare(
         'INSERT INTO pilgrims
             (campaign_id, supervisor_id, booking_number, name, id_or_passport, phone,
              nationality, age, city, password_hash, gender, email, marital_status,
-             chronic_conditions)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+             chronic_conditions, id_type, id_expiry, nusuk_number)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
     );
     $st->execute([
         (int) $campaignId,
@@ -181,6 +228,9 @@ function register_pilgrim(): void
         $email,
         opt_text('marital', 50),
         opt_text('chronic', 1000),
+        $idType,
+        $idExpiry,
+        $nusuk,
     ]);
 
     $newId = (int) $pdo->lastInsertId();
@@ -204,6 +254,18 @@ function update_pilgrim(): void
     }
     if ($u['role'] === 'pilgrim' && $id !== $u['id']) {
         fail('ليس لديك صلاحية لتعديل هذا الملف.', 403);
+    }
+
+    // المشرف يعدّل بيانات حجاج قسمه فقط، وبشرط أن وظيفته تسمح بالتعديل
+    if ($u['role'] !== 'pilgrim') {
+        require_permission('edit_pilgrims');
+        pilgrim_in_scope($id, $u);
+    }
+
+    // الحالة الصحية يعدّلها الحاج في ملفه، أو من وظيفته متابعة الحالات الطبية
+    $chronic = opt_text('chronic', 1000);
+    if ($chronic !== null && $u['role'] !== 'pilgrim' && !can('manage_medical')) {
+        fail('تعديل الحالة الصحية من مهام الموظف الصحي.', 403);
     }
 
     $email = opt_text('email', 150);
@@ -234,7 +296,7 @@ function update_pilgrim(): void
         opt_text('city', 80),
         $email,
         opt_text('marital', 50),
-        opt_text('chronic', 1000),
+        $chronic,
         $id,
     ]);
 

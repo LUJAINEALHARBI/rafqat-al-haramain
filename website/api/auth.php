@@ -202,6 +202,8 @@ function set_session_user(array $user): void
     start_app_session();
     session_regenerate_id(true);       // يمنع تثبيت الجلسة
     $_SESSION['user'] = $user;
+
+    $user['permissions'] = user_permissions();
     ok($user);
 }
 
@@ -226,5 +228,10 @@ function do_me(): void
     if (!$u) {
         json_out(['ok' => true, 'data' => null, 'loggedIn' => false]);
     }
+
+    // الصلاحيات تُرسل مع بيانات المستخدم حتى تبني كل صفحة واجهتها
+    // على صلاحيات وظيفته فعلاً، بدل إظهار كل الأزرار للجميع.
+    $u['permissions'] = user_permissions();
+
     json_out(['ok' => true, 'data' => $u, 'loggedIn' => true]);
 }

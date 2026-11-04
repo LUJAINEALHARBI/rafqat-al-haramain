@@ -35,6 +35,13 @@ function get_campaign(): void
     if (!$row) {
         fail('لم يتم العثور على بيانات الحملة.', 404);
     }
+
+    // الحاج يحتاج اسم الحملة ومقرها وهاتفها، أما رقم الترخيص وبيانات
+    // اتصال المدير الشخصية فهي بيانات إدارية لا تخصه.
+    if (($u['role'] ?? '') === 'pilgrim') {
+        unset($row['license_number'], $row['manager_email'], $row['manager_phone']);
+    }
+
     ok($row);
 }
 
@@ -123,10 +130,32 @@ function campaign_stats(): void
            FROM expenses WHERE campaign_id = ?", [$cid]
     );
 
+    // توزيع الحجاج على المخيمات وعدد من تم تسكينه فعلاً
+    $st = $pdo->prepare(
+        "SELECT camp_id, gender, COUNT(*) AS total,
+                SUM(tent_number IS NOT NULL AND tent_number <> '') AS housed
+           FROM pilgrims
+          WHERE campaign_id = ? AND camp_id IS NOT NULL AND camp_id <> ''
+       GROUP BY camp_id, gender
+       ORDER BY camp_id"
+    );
+    $st->execute([$cid]);
+
+    $camps = [];
+    foreach ($st->fetchAll() as $row) {
+        $camps[] = [
+            'camp_id' => $row['camp_id'],
+            'section' => $row['gender'] === 'female' ? 'women' : 'men',
+            'total'   => (int) $row['total'],
+            'housed'  => (int) $row['housed'],
+        ];
+    }
+
     ok([
         'pilgrims'    => ['total' => (int) $pilgrims['total'],
                           'men'   => (int) $pilgrims['men'],
                           'women' => (int) $pilgrims['women']],
+        'camps'       => $camps,
         'supervisors' => (int) $sups['total'],
         'expenses'    => ['count'    => (int) $exp['count'],
                           'total'    => (float) $exp['total'],

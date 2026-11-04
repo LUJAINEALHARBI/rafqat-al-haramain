@@ -100,10 +100,31 @@
             <span id="supScope">مخيم مِنا (قطاع الرجال) - فندق مكة</span>
         </div>
 
-        <div class="profile-info-group" style="border: none;">
-            <label>حالة الحساب</label>
-            <span style="color: #2e7d32;">● نشط ومعتمد من الإدارة المركزية</span>
+        <div class="profile-info-group">
+            <label>عدد الحجاج تحت إشرافك</label>
+            <span id="supPilgrims">—</span>
         </div>
+
+        <div class="profile-info-group" style="border: none;">
+            <label>وصف الصلاحية في جدول الوظائف</label>
+            <span id="supPermissionLevel">—</span>
+        </div>
+    </div>
+
+    <!-- صلاحيات الوظيفة كما هي مسجّلة في قاعدة البيانات -->
+    <div class="profile-card" style="margin-top: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>الصلاحيات المتاحة لوظيفتك</h2>
+            <span class="badge-role" id="permCount">—</span>
+        </div>
+
+        <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
+            هذه الصلاحيات مقروءة من جدول <strong>job_permissions</strong> المرتبط بوظيفتك،
+            وهي نفسها التي يتحقق منها النظام قبل تنفيذ أي عملية. ما لا يظهر في هذه
+            القائمة لا يمكن تنفيذه من حسابك، ولا تظهر أزراره في الشاشات.
+        </p>
+
+        <div id="permList"></div>
     </div>
 </main>
 
@@ -143,10 +164,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         set('supScope', [s.campaign_name, s.location].filter(Boolean).join(' - ')
                         || 'غير محدد');
 
+        set('supPilgrims', s.pilgrims_count + ' حاج');
+        set('supPermissionLevel', s.permission_level || 'غير مسجّل');
+
+        await loadPermissions();
+
     } catch (err) {
         API.showError(err, 'تعذّر تحميل بيانات المشرف.');
     }
 });
+
+/* ------------------------------------------------------------------ */
+/* قائمة الصلاحيات بأسمائها العربية مجمّعة حسب المجال */
+async function loadPermissions() {
+    const box = document.getElementById('permList');
+
+    try {
+        const res  = await API.get('supervisors.php', 'my_permissions');
+        const list = res.data.list || [];
+
+        document.getElementById('permCount').innerText = list.length + ' صلاحية';
+
+        if (!list.length) {
+            box.innerHTML = '<p style="color: var(--muted);">لا توجد صلاحيات مسجّلة لوظيفتك.</p>';
+            return;
+        }
+
+        const groups = {};
+        list.forEach(p => {
+            const key = p.category || 'عام';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(p.permission_label);
+        });
+
+        box.innerHTML = Object.keys(groups).map(cat => `
+            <div style="margin-bottom: 14px;">
+                <strong style="color: var(--green); font-size: 13px;">${API.esc(cat)}</strong>
+                <ul style="margin: 6px 0 0 0; padding-inline-start: 18px; font-size: 13px; line-height: 1.9;">
+                    ${groups[cat].map(l => `<li>${API.esc(l)}</li>`).join('')}
+                </ul>
+            </div>`).join('');
+
+    } catch (err) {
+        box.innerHTML = `<p style="color: var(--muted);">${API.esc(err.message)}</p>`;
+    }
+}
 </script>
 
 </body>

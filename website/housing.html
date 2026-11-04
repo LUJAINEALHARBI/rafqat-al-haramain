@@ -45,17 +45,13 @@
 
     <div class="housing-hero">
         <div class="housing-main">
-            <span class="status-pill">
-                ● الحجز مؤكد (نظام Segregation مفعل)
-            </span>
+            <span class="status-pill" id="bookingPill">—</span>
 
             <h2 id="hotelName">
                 فندق رفقة الضيافة (قسم الضيوف)
             </h2>
 
-            <p id="hotelLocation">
-                مكة المكرمة - برج أ
-            </p>
+            <p id="hotelLocation">—</p>
 
             <div class="housing-details">
                 <div>
@@ -80,29 +76,29 @@
         </div>
     </div>
 
-    <div class="info-grid">
+    <div class="info-grid" id="housingInfo">
         <div class="info-card">
-            <div class="info-card-icon">🕐</div>
-            <h3>تسجيل الدخول</h3>
-            <p>من الساعة 12:00 ظهرًا</p>
+            <div class="info-card-icon">📍</div>
+            <h3>نقطة التجمع</h3>
+            <p id="gatheringPoint">—</p>
         </div>
 
         <div class="info-card">
-            <div class="info-card-icon">🍽️</div>
-            <h3>المطعم</h3>
-            <p>الدور الأرضي (مواعيد محددة)</p>
+            <div class="info-card-icon">👤</div>
+            <h3>المشرف المسؤول</h3>
+            <p id="supervisorInfo">—</p>
         </div>
 
         <div class="info-card">
-            <div class="info-card-icon">🛗</div>
-            <h3>المصاعد</h3>
-            <p>متاحة على مدار الساعة</p>
+            <div class="info-card-icon">🗺️</div>
+            <h3>موقع المخيم</h3>
+            <p id="campSite">—</p>
         </div>
 
         <div class="info-card">
             <div class="info-card-icon">📞</div>
-            <h3>استقبال الفندق</h3>
-            <p>920000000</p>
+            <h3>هاتف الحملة</h3>
+            <p id="campaignPhone">—</p>
         </div>
     </div>
 
@@ -135,6 +131,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         set('roomNumber', bed || 'لم يتم التسكين بعد');
         set('roomType',   p.package_type || (isFemale ? 'مجموعة نسائية' : 'مجموعة رجالية'));
         set('hotelFloor', p.camp_id || (isFemale ? 'القسم النسائي المستقل' : 'القسم الرجالي المستقل'));
+
+        /* بطاقات المعلومات: كلها من القاعدة بدل أرقام ومواعيد ثابتة */
+        set('gatheringPoint', p.gathering_point || 'لم تُحدَّد نقطة التجمع بعد');
+        set('supervisorInfo', p.supervisor_name
+            ? p.supervisor_name + (p.supervisor_id ? ' (رقم ' + p.supervisor_id + ')' : '')
+            : 'لم يُسنَد مشرف بعد');
+
+        set('bookingPill', p.booking_number
+            ? '● رقم الحجز: ' + p.booking_number + (isFemale ? ' — قسم النساء' : ' — قسم الرجال')
+            : '● لم يُصدر رقم حجز بعد');
+
+        /* اسم الحملة ومقرها وهاتفها من جدول campaigns */
+        try {
+            const camp = await API.get('campaign.php', 'get');
+            set('campaignPhone',  camp.data.phone || '—');
+            set('hotelLocation',  camp.data.location || '—');
+        } catch (e) {
+            set('campaignPhone', '—');
+        }
+
+        /* موقع المخيم من جدول site_locations حسب قسم الحاج */
+        try {
+            const sites = await API.get('location.php', 'sites');
+            const camp  = (sites.data || []).find(x => x.site_type === 'مخيم')
+                       || (sites.data || [])[0];
+            if (camp) {
+                const el = document.getElementById('campSite');
+                el.innerHTML = API.esc(camp.site_name)
+                    + '<br><a href="map.html">عرضه على الخريطة ←</a>';
+            } else {
+                set('campSite', 'لم تُسجَّل مواقع للحملة بعد');
+            }
+        } catch (e) {
+            set('campSite', '—');
+        }
 
     } catch (err) {
         API.showError(err, 'تعذّر تحميل بيانات السكن.');

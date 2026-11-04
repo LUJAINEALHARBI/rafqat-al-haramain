@@ -51,12 +51,12 @@
             </div>
         </a>
         <nav class="nav-links">
-            <a href="index.html">الرئيسية</a>
-            <a href="services.html">الخدمات</a>
-            <a href="schedule.html">الجدول</a>
-            <a href="map.html">الخريطة</a>
-            <a href="housing.html" class="active">السكن</a>
-            <a href="rooms.html">المحادثة</a>
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="housing2.html" class="active">السكن والمخيمات</a>
+            <a href="map.html">الخريطة والمواقع</a>
+            <a href="admin-journey.html" data-perm="manage_journey">برنامج المناسك</a>
+            <a href="rooms.html" data-perm="manage_chat">المحادثة</a>
             <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
         <button class="menu-button">☰</button>
@@ -70,97 +70,126 @@
         <p>تنظيم وتوزيع المخيمات والغرف والفترات الزمنية لكل قسم بدقة مطابقة لقواعد البيانات.</p>
     </div>
 
-    <div class="services-grid">
-        <!-- قسم الرجال -->
-        <div class="service-card" style="border-top: 4px solid var(--blue, #0d6efd);">
-            <div class="service-icon">👨‍💼</div>
-            <h3>قسم الرجال (مخيم أ / الغرف الفردية)</h3>
-            <p>مخصص لحجاج الحملة من الرجال. يشمل خيام مجهزة ومرافق متكاملة بإشراف مباشر.</p>
-            <span class="timeline-tag" id="menSupervisorTag">المشرف: —</span>
-            <button onclick="openModal('menHousingModal')" class="main-button" style="margin-top: 15px; width: 100%;">تفاصيل مخيم الرجال</button>
-        </div>
-
-        <!-- قسم النساء -->
-        <div class="service-card" style="border-top: 4px solid var(--gold, #c5a059);">
-            <div class="service-icon">🧕</div>
-            <h3>قسم النساء (مخيم ب / الغرف المخصصة)</h3>
-            <p>مخصص لحجاج الحملة من النساء. يتميز بالخصوصية التامة والخدمات الطبية القريبة.</p>
-            <span class="timeline-tag" id="womenSupervisorTag" style="background: #fbf3df; color: var(--gold, #c5a059);">المشرفة: —</span>
-            <button onclick="openModal('womenHousingModal')" class="main-button" style="margin-top: 15px; width: 100%; background: #c5a059;">تفاصيل مخيم النساء</button>
-        </div>
+    <div class="services-grid" id="campsGrid">
+        <p style="color: var(--muted);">جاري تحميل بيانات المخيمات من قاعدة البيانات...</p>
     </div>
+
 </main>
 
-<!-- نافذة تفاصيل قسم الرجال -->
-<div id="menHousingModal" class="modal-overlay">
-    <div class="modal-box">
-        <button class="close-btn" onclick="closeModal('menHousingModal')">✕</button>
-        <h3>👨‍💼 تفاصيل مخيم وسكن الرجال (مخيم أ)</h3>
-        <ul class="info-list">
-            <li><strong>الموقع الجغرافي:</strong> مشعر منى - مربع 4 (قسم الرجال).</li>
-            <li><strong>الطاقة الاستيعابية:</strong> مجهز للمجموعات والخيام المطورة.</li>
-            <li><strong>المشرف المسؤول:</strong> <span id="menSupervisorDetail">—</span></li>
-            <li><strong>المرافق والخدمات:</strong> عيادة طبية رجالية، بوفيه وجبات، وعيادات إرشادية.</li>
-        </ul>
-    </div>
-</div>
-
-<!-- نافذة تفاصيل قسم النساء -->
-<div id="womenHousingModal" class="modal-overlay">
-    <div class="modal-box">
-        <button class="close-btn" onclick="closeModal('womenHousingModal')">✕</button>
-        <h3>🧕 تفاصيل مخيم وسكن النساء (مخيم ب)</h3>
-        <ul class="info-list">
-            <li><strong>الموقع الجغرافي:</strong> مشعر منى - مربع 5 (القسم النسائي المستقل).</li>
-            <li><strong>الخصوصية والأمان:</strong> حراسة ومرافق نسائية كاملة بدون اختلاط.</li>
-            <li><strong>المشرفة المسؤولة:</strong> <span id="womenSupervisorDetail">—</span></li>
-            <li><strong>المرافق والخدمات:</strong> عيادة طبيبة مقيمة، مرشدات دينيّات، ومجلس ضيافة.</li>
-        </ul>
-    </div>
-</div>
+<div id="campModals"></div>
 
 <script src="js/app.js"></script>
-<script>
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.style.display = 'flex';
-    }
-
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.style.display = 'none';
-    }
-
-    function logoutUser() {
-        if (confirm("هل تريد تسجيل الخروج؟")) {
-            sessionStorage.clear();
-            window.location.href = "login.html";
-        }
-    }
-</script>
 <script src="js/api.js"></script>
 <script>
-/* أسماء المشرفين المسؤولين عن كل مخيم تُقرأ من جدول supervisors */
+/* مواقع المخيمات تُقرأ من جدول site_locations ، وأسماء المشرفين من
+   جدول supervisors ، وعدد الحجاج المسكّنين من جدول pilgrims.
+   لا يوجد رقم مربع ولا اسم مرفق مكتوب داخل هذه الصفحة. */
+
 document.addEventListener("DOMContentLoaded", async () => {
-    const user = await API.me();
+
+    const user = await API.requireLogin(['supervisor', 'campaign']);
     if (!user) return;
 
-    const fill = (section, tagId, detailId, label) => {
-        API.get('supervisors.php', 'list', { section: section }).then(res => {
-            const sup = res.data.find(x => x.gender_section === section
-                                        && x.role_key === 'housing')
-                     || res.data.find(x => x.gender_section === section);
-            if (!sup) return;
-            const tag = document.getElementById(tagId);
-            const det = document.getElementById(detailId);
-            if (tag) tag.innerText = `${label}: ${sup.name}`;
-            if (det) det.innerText = `${sup.name} — ${sup.job_title || ''} (هاتف: ${sup.phone || '—'})`;
-        }).catch(() => {});
-    };
+    API.applyRoleUI(user);
 
-    fill('men',   'menSupervisorTag',   'menSupervisorDetail',   'المشرف');
-    fill('women', 'womenSupervisorTag', 'womenSupervisorDetail', 'المشرفة');
+    const grid = document.getElementById('campsGrid');
+
+    try {
+        const [sitesRes, supsRes] = await Promise.all([
+            API.get('location.php', 'sites'),
+            API.get('supervisors.php', 'list')
+        ]);
+
+        let camps = [];
+        try {
+            const statsRes = await API.get('campaign.php', 'stats');
+            camps = statsRes.data.camps || [];
+        } catch (e) {
+            camps = [];
+        }
+
+        const sites = (sitesRes.data || []).filter(x => x.site_type === 'مخيم');
+        const sups  = supsRes.data || [];
+
+        if (!sites.length) {
+            grid.innerHTML = '<p style="color: var(--muted);">لم تُسجَّل مخيمات للحملة في جدول المواقع.</p>';
+            return;
+        }
+
+        grid.innerHTML = sites.map((site, i) => {
+
+            const isWomen = site.section === 'women';
+            const color   = isWomen ? 'var(--gold)' : 'var(--blue)';
+
+            /* مشرف السكن لنفس القسم، وإن لم يوجد فأي مشرف للقسم */
+            const sup = sups.find(x => x.gender_section === site.section && x.role_key === 'housing')
+                     || sups.find(x => x.gender_section === site.section);
+
+            /* عدد الحجاج في هذا القسم من جدول الحجاج */
+            const campRow = camps.find(c => c.section === site.section);
+
+            return `<div class="service-card" style="border-top: 4px solid ${color};">
+                <div class="service-icon">${isWomen ? '🧕' : '👨‍💼'}</div>
+                <h3>${API.esc(site.site_name)}</h3>
+                <p>${API.esc(site.description || '')}</p>
+                <span class="timeline-tag" ${isWomen ? 'style="background:#fbf3df; color:var(--gold);"' : ''}>
+                    ${isWomen ? 'المشرفة' : 'المشرف'}: ${API.esc(sup ? sup.name : 'لم يُسنَد بعد')}
+                </span>
+                <div style="margin-top:12px; font-size:13px; color:var(--muted);">
+                    عدد الحجاج: <strong>${campRow ? campRow.total : 0}</strong> —
+                    تم تسكين <strong>${campRow ? campRow.housed : 0}</strong>
+                    ${campRow ? '(' + API.esc(campRow.camp_id) + ')' : ''}
+                </div>
+                <button onclick="showCamp(${i})" class="main-button"
+                        style="margin-top: 15px; width: 100%; ${isWomen ? 'background:' + 'var(--gold);' : ''}">
+                    تفاصيل ${API.esc(site.site_name)}
+                </button>
+            </div>`;
+        }).join('');
+
+        /* نوافذ التفاصيل تُبنى من نفس البيانات */
+        window.campData = sites.map(site => {
+            const sup = sups.find(x => x.gender_section === site.section && x.role_key === 'housing')
+                     || sups.find(x => x.gender_section === site.section);
+            const campRow = camps.find(c => c.section === site.section);
+            return { site, sup, campRow };
+        });
+
+        document.getElementById('campModals').innerHTML = window.campData.map((d, i) => `
+            <div id="campModal${i}" class="modal-overlay">
+                <div class="modal-box">
+                    <button class="close-btn" onclick="hideCamp(${i})">✕</button>
+                    <h3>${API.esc(d.site.site_name)}</h3>
+                    <ul class="info-list">
+                        <li><strong>نوع الموقع:</strong> ${API.esc(d.site.site_type || '—')}</li>
+                        <li><strong>الوصف:</strong> ${API.esc(d.site.description || '—')}</li>
+                        <li><strong>فترة الإقامة:</strong> ${API.esc(d.site.period_note || '—')}</li>
+                        <li><strong>القسم:</strong> ${d.site.section === 'women' ? 'النساء' : d.site.section === 'men' ? 'الرجال' : 'القسمان'}</li>
+                        <li><strong>المشرف المسؤول:</strong> ${d.sup ? API.esc(d.sup.name) + ' — ' + API.esc(d.sup.job_title || '') + ' (هاتف: ' + API.esc(d.sup.phone || '—') + ')' : 'لم يُسنَد بعد'}</li>
+                        <li><strong>عدد الحجاج:</strong> ${d.campRow ? d.campRow.total + ' حاج، تم تسكين ' + d.campRow.housed : '0'}</li>
+                        <li><strong>الإحداثيات:</strong>
+                            <a href="https://maps.google.com/?q=${d.site.latitude},${d.site.longitude}" target="_blank">
+                                ${d.site.latitude}, ${d.site.longitude}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>`).join('');
+
+    } catch (err) {
+        grid.innerHTML = `<p style="color: var(--muted);">${API.esc(err.message)}</p>`;
+    }
 });
+
+function showCamp(i) {
+    const m = document.getElementById('campModal' + i);
+    if (m) m.style.display = 'flex';
+}
+
+function hideCamp(i) {
+    const m = document.getElementById('campModal' + i);
+    if (m) m.style.display = 'none';
+}
 </script>
 </body>
 </html>

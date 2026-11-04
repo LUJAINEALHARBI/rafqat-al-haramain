@@ -122,8 +122,38 @@
                 </div>
 
                 <div>
-                    <label>رقم الهوية / الإقامة / الجواز</label>
-                    <input type="text" name="nationalId" placeholder="رقم الهوية" required>
+                    <label>نوع الهوية</label>
+                    <select name="idType" id="idType" required>
+                        <option value="national_id">الهوية الوطنية (تبدأ بـ 1)</option>
+                        <option value="iqama">رقم الإقامة (يبدأ بـ 2)</option>
+                        <option value="passport">جواز السفر</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label id="idNumberLabel">رقم الهوية الوطنية</label>
+                    <input type="text" name="nationalId" id="nationalId"
+                           placeholder="1xxxxxxxxx" maxlength="15" required>
+                    <small id="idHint" style="color: var(--muted); font-size: 11px;">
+                        10 أرقام تبدأ بالرقم 1
+                    </small>
+                </div>
+
+                <div>
+                    <label>تاريخ انتهاء صلاحية الهوية</label>
+                    <input type="date" name="idExpiry" id="idExpiry" required>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        لا يُقبل التسجيل بهوية منتهية الصلاحية
+                    </small>
+                </div>
+
+                <div>
+                    <label>رقم النسك</label>
+                    <input type="text" name="nusukNumber" placeholder="مثال: NSK-1447-100105"
+                           maxlength="30" required>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        رقم تصريح الحج الصادر لك من منصة نسك
+                    </small>
                 </div>
 
                 <div>
@@ -172,6 +202,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const registerForm = document.getElementById('registerForm');
     if (!registerForm) return;
 
+    /* وصف حقل الرقم يتغيّر حسب نوع الهوية المختار */
+    const idType  = document.getElementById('idType');
+    const idLabel = document.getElementById('idNumberLabel');
+    const idInput = document.getElementById('nationalId');
+    const idHint  = document.getElementById('idHint');
+
+    const idRules = {
+        national_id: { label: 'رقم الهوية الوطنية', hint: '10 أرقام تبدأ بالرقم 1',   holder: '1xxxxxxxxx' },
+        iqama:       { label: 'رقم الإقامة',        hint: '10 أرقام تبدأ بالرقم 2',   holder: '2xxxxxxxxx' },
+        passport:    { label: 'رقم جواز السفر',     hint: 'من 6 إلى 15 حرفاً أو رقماً', holder: 'A1234567' }
+    };
+
+    idType.addEventListener('change', () => {
+        const rule = idRules[idType.value] || idRules.national_id;
+        idLabel.innerText      = rule.label;
+        idHint.innerText       = rule.hint;
+        idInput.placeholder    = rule.holder;
+    });
+
+    /* لا يُسمح باختيار تاريخ انتهاء في الماضي */
+    const expiry = document.getElementById('idExpiry');
+    if (expiry) {
+        const today = new Date();
+        expiry.min = today.toISOString().substring(0, 10);
+    }
+
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -182,6 +238,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const data = Object.fromEntries(new FormData(registerForm).entries());
+
+            /* تحقق سريع في المتصفح، والتحقق الحقيقي في pilgrims.php */
+            const rule = {
+                national_id: /^1\d{9}$/,
+                iqama:       /^2\d{9}$/,
+                passport:    /^[A-Za-z0-9]{6,15}$/
+            }[data.idType];
+
+            if (rule && !rule.test(String(data.nationalId).trim())) {
+                throw new Error('رقم الهوية لا يطابق النوع المختار. راجع الوصف تحت الحقل.');
+            }
+
             const res = await API.post('pilgrims.php', 'register', data);
 
             alert('تم إنشاء الحساب بنجاح ✓\n\n'

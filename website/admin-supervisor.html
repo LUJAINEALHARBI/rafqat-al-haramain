@@ -96,10 +96,11 @@
         </a>
         <nav class="nav-links">
             <a href="admin-supervisor.html" class="active">لوحة التحكم</a>
-            <a href="supervisor-account.html">ملفي</a>
+            <a href="supervisor-account.html">ملفي وصلاحياتي</a>
             <a href="javascript:void(0);" onclick="openModal('tasksModal')">مهام الاختصاص</a>
+            <a href="admin-journey.html" data-perm="manage_journey">برنامج المناسك</a>
             <a href="map.html">الخريطة والمواقع</a>
-            <a href="javascript:void(0);" onclick="openModal('supervisorChatModal')">غرفة المحادثة</a>
+            <a href="javascript:void(0);" onclick="openModal('supervisorChatModal')" data-perm="manage_chat">غرفة المحادثة</a>
             <a href="javascript:void(0);" onclick="logoutSupervisor()" style="color: #dc3545;">تسجيل خروج</a>
         </nav>
         <button class="menu-button">☰</button>
@@ -120,19 +121,19 @@
             <button onclick="openModal('tasksModal')" class="main-button" style="width:100%; margin-top:10px;">عرض كافة المهام</button>
         </div>
 
-        <div class="service-large-card">
+        <div class="service-large-card" data-perm="view_pilgrims">
             <h2>ملخص حالة المخيم</h2>
             <p>مؤشرات الأداء اليومية وجداول التفويج الشاملة الخاصة بالحجاج.</p>
             <button onclick="openModal('summaryModal')" class="main-button" style="width:100%; margin-top:10px;">عرض الملخص والجدول</button>
         </div>
 
-        <div class="service-large-card">
+        <div class="service-large-card" data-perm="view_pilgrims">
             <h2>مراقبة الحجاج</h2>
             <p>إدارة وتوزيع الحجاج ومتابعة حالاتهم ضمن كافة التخصصات.</p>
             <button onclick="openModal('pilgrimsGroupModal')" class="main-button" style="width:100%; margin-top:10px;">عرض قائمة الحجاج الشاملة</button>
         </div>
 
-        <div class="service-large-card">
+        <div class="service-large-card" data-perm="manage_medical manage_transport manage_catering manage_housing manage_services manage_expenses">
             <h2>متابعة الخدمات والقيود المالية</h2>
             <p>متابعة كافة طلبات الخدمات ومراجعة القيود والمصروفات لكل التخصصات.</p>
             <button onclick="openModal('medicalServicesModal')" class="main-button" style="width:100%; margin-top:10px;">متابعة الخدمات والقيود</button>
@@ -144,13 +145,19 @@
             <a href="map.html" class="main-button" style="display:block; text-align:center; text-decoration:none; width:100%; margin-top:10px; box-sizing:border-box;">استعراض الخريطة الشاملة</a>
         </div>
 
-        <div class="service-large-card">
+        <div class="service-large-card" data-perm="manage_chat">
             <h2>غرفة المحادثة الخاصة</h2>
             <p>التواصل المباشر مع الحجاج والمشرفين والتفاعل الذكي مع الرسائل.</p>
             <button onclick="openModal('supervisorChatModal')" class="main-button" style="width:100%; margin-top:10px;">فتح المحادثة والرد الفوري</button>
         </div>
 
-        <div class="service-large-card" style="border: 2px dashed #d9534f; background: #fff9f9;">
+        <div class="service-large-card" data-perm="manage_journey">
+            <h2>برنامج المناسك ورحلة الحجاج</h2>
+            <p>إنشاء محطات الرحلة وترتيبها وتحديد المنجز منها ليتابعها الحاج في صفحة رحلته.</p>
+            <a href="admin-journey.html" class="main-button" style="display:block; text-align:center; text-decoration:none; width:100%; margin-top:10px; box-sizing:border-box;">إدارة محطات الرحلة</a>
+        </div>
+
+        <div class="service-large-card" data-perm="send_notifications" style="border: 2px dashed #d9534f; background: #fff9f9;">
             <h2>تنبيه طوارئ عاجل</h2>
             <p>إرسال بلاغ طوارئ فور لغرفة العمليات وإشعار كافة الحجاج.</p>
             <button onclick="sendEmergencyAlert()" class="main-button" style="background:#d9534f; border:none; margin-top:10px; width:100%;">إرسال تنبيه طوارئ الآن</button>
@@ -229,7 +236,7 @@
             <tbody id="allServicesTableBody"></tbody>
         </table>
 
-        <h4 style="margin-top:25px; color:#0d6efd;" id="expensesHeaderTitle">مراقبة القيود والمصروفات المالية لجميع التخصصات:</h4>
+        <h4 style="margin-top:25px; color:#0d6efd;" id="expensesHeaderTitle" data-perm="manage_expenses">مراقبة القيود والمصروفات المالية لجميع التخصصات:</h4>
         <table class="data-table">
             <thead>
                 <tr>
@@ -292,6 +299,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = await API.requireLogin(['supervisor']);
     if (!user) return;
 
+    /* الواجهة تُبنى على صلاحيات وظيفة المشرف المقروءة من القاعدة */
+    API.applyRoleUI(user);
+    hideExpensesTable(user);
+
     try {
         const res = await API.get('supervisors.php', 'profile');
         ME = res.data;
@@ -306,6 +317,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadServicesData();
     loadSupervisorExpenses();
 });
+
+/* جدول المصروفات كامل يختفي عن الوظائف التي لا تسجّل مصروفات */
+function hideExpensesTable(user) {
+    if (API.can('manage_expenses', user)) return;
+    const table = document.getElementById('supervisorExpensesTable');
+    if (table && table.closest('table')) table.closest('table').style.display = 'none';
+}
 
 /* ---------- ترويسة الصفحة حسب الوظيفة والقسم ---------- */
 function renderHeader() {
@@ -400,7 +418,10 @@ async function loadGroupData() {
         tbody.innerHTML = MY_PILGRIMS.map((p, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td><strong>${API.esc(p.name)}</strong></td>
+                <td>
+                    <strong>${API.esc(p.name)}</strong>
+                    ${idWarning(p)}
+                </td>
                 <td>${API.esc(p.pilgrim_id)}</td>
                 <td>${API.esc(p.room || p.camp_id || '—')}</td>
                 <td><span class="${isFemale ? 'status-badge-female' : 'status-badge'}">${API.esc(pilgrimStatus(p))}</span></td>
@@ -412,10 +433,24 @@ async function loadGroupData() {
     }
 }
 
+/** تنبيه صلاحية الهوية: يظهر إذا كانت منتهية أو تنتهي خلال شهر */
+function idWarning(p) {
+    const st = p.id_status;
+    if (!st || st.state === 'valid') return '';
+
+    const color = st.state === 'expired' ? '#b03a3a'
+                : st.state === 'soon'    ? '#b06a1f' : '#71818a';
+
+    return `<div style="font-size:11px; color:${color}; margin-top:3px;">
+                ${API.esc(st.label)}${p.id_expiry ? ' (' + API.esc(p.id_expiry) + ')' : ''}
+            </div>`;
+}
+
 /** الحالة المعروضة تختلف حسب تخصص المشرف — كلها من بيانات حقيقية */
 function pilgrimStatus(p) {
-    const chronic = p.chronic_conditions && p.chronic_conditions !== 'لا يوجد'
-        ? p.chronic_conditions : 'لا يوجد';
+    /* الأمراض المزمنة لا تصل أصلاً للوظائف التي لا تملك صلاحية عرضها */
+    const chronic = p.chronic_conditions === undefined ? 'غير متاح لوظيفتك'
+        : (p.chronic_conditions && p.chronic_conditions !== 'لا يوجد' ? p.chronic_conditions : 'لا يوجد');
 
     const lastOf = (type) => {
         const r = MY_REQUESTS.filter(x => x.pilgrim_id == p.pilgrim_id && x.service_type === type).pop();

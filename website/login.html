@@ -202,40 +202,26 @@
 <div id="forgotPasswordModal" class="modal-overlay">
     <div class="modal-box">
         <button class="close-modal-btn" onclick="closeForgotPasswordModal()">✕</button>
-        
-        <div id="step1" class="step-content active">
-            <h3 style="color:#0b3c49; margin-bottom:5px;">استعادة كلمة المرور</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:15px;">الخطوة 1 من 3: أدخل رقم العضوية للتحقق من الحساب.</p>
-            <label style="font-weight:bold; font-size:14px;">رقم العضوية / الهوية (ID)</label>
-            <input type="text" id="recoveryId" placeholder="مثال: 100123">
-            <button type="button" class="login-button" onclick="goToStep2()">التالي (إرسال رمز التحقق)</button>
+
+        <h3 style="color:#0b3c49; margin-bottom:5px;">استعادة كلمة المرور</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">
+            المنصة لا ترسل رموز تحقق بالرسائل، وإعادة التعيين تتم عبر إدارة الحملة
+            بعد التأكد من هوية صاحب الحساب.
+        </p>
+
+        <div class="password-rules">
+            <strong>خطوات استعادة كلمة المرور:</strong><br>
+            ١. تواصل مع إدارة الحملة أو مشرف مجموعتك.<br>
+            ٢. أبلغهم برقم عضويتك واسمك ورقم هويتك للتأكد من هويتك.<br>
+            ٣. يعيد مدير الحملة تعيين كلمة المرور من لوحة الحملة ويسلّمك كلمة مرور مؤقتة.<br>
+            ٤. غيّر كلمة المرور من صفحة "ملفي" بعد أول دخول.
         </div>
 
-        <div id="step2" class="step-content">
-            <h3 style="color:#0b3c49; margin-bottom:5px;">رمز التحقق الأمني (OTP)</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:15px;">الخطوة 2 من 3: تم إرسال رمز تحقق وهمي (مثال: 1234) لجوالك المسجل.</p>
-            <label style="font-weight:bold; font-size:14px;">أدخل رمز التحقق المكون من 4 أرقام</label>
-            <input type="text" id="otpCode" placeholder="أدخل الرمز هنا (مثال: 1234)" maxlength="4">
-            <button type="button" class="login-button" onclick="goToStep3()">التحقق من الرمز</button>
-        </div>
+        <p style="font-size:13px; color:#0b3c49; margin-top:15px;">
+            هاتف الحملة: <strong id="campaignPhoneBox">—</strong>
+        </p>
 
-        <div id="step3" class="step-content">
-            <h3 style="color:#0b3c49; margin-bottom:5px;">إنشاء كلمة مرور جديدة</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:15px;">الخطوة 3 من 3: أدخل كلمة المرور الجديدة وفق معايير الأمان المعتمدة.</p>
-            
-            <div class="password-rules">
-                <strong>شروط كلمة المرور الآمنة:</strong><br>
-                • ألا تقل عن 8 خانات.<br>
-                • تحتوي على أحرف إنجليزية كبيرة (A-Z) وصغيرة (a-z).<br>
-                • تحتوي على أرقام (0-9) ورموز خاصة.
-            </div>
-
-            <label style="font-weight:bold; font-size:14px;">كلمة المرور الجديدة</label>
-            <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
-            
-            <button type="button" class="login-button" onclick="resetPasswordFinal()">حفظ وتغيير كلمة المرور</button>
-        </div>
-
+        <button type="button" class="login-button" onclick="closeForgotPasswordModal()">فهمت، إغلاق</button>
     </div>
 </div>
 
@@ -305,12 +291,7 @@
 
     function openForgotPasswordModal() {
         document.getElementById('forgotPasswordModal').style.display = 'flex';
-        document.getElementById('step1').classList.add('active');
-        document.getElementById('step2').classList.remove('active');
-        document.getElementById('step3').classList.remove('active');
-        document.getElementById('recoveryId').value = '';
-        document.getElementById('otpCode').value = '';
-        document.getElementById('newPassword').value = '';
+        loadCampaignPhone();
     }
 
     function closeForgotPasswordModal() {
@@ -320,27 +301,15 @@
     /* لا توجد خدمة رسائل على الاستضافة، والرمز الثابت 1234 كان يسمح لأي شخص
        بتغيير كلمة مرور أي حساب برقم العضوية وحده. استعادة كلمة المرور صارت
        تتم عبر مدير الحملة من لوحته (نافذة الصلاحيات). */
-    function forgotPasswordNotice() {
-        alert('لاستعادة كلمة المرور، تواصل مع مدير الحملة.\n'
-            + 'يقوم بتغييرها لك من: لوحة الحملة ← الصلاحيات ← إعادة تعيين كلمة مرور حساب.');
-        closeForgotPasswordModal();
-    }
-
-    function goToStep2() {
-        const id = document.getElementById('recoveryId').value.trim();
-        if (!id) {
-            alert('الرجاء إدخال رقم العضوية أولاً.');
-            return;
+    /* هاتف الحملة يُقرأ من جدول campaigns عبر api/public.php */
+    async function loadCampaignPhone() {
+        try {
+            const res = await API.get('public.php', 'home');
+            const box = document.getElementById('campaignPhoneBox');
+            if (box) box.innerText = res.data.campaign.phone || 'راجع إدارة الحملة';
+        } catch (e) {
+            /* الصفحة تعمل بدون الرقم */
         }
-        forgotPasswordNotice();
-    }
-
-    function goToStep3() {
-        forgotPasswordNotice();
-    }
-
-    function resetPasswordFinal() {
-        forgotPasswordNotice();
     }
 </script>
 </body>

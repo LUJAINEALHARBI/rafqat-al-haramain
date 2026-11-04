@@ -189,8 +189,27 @@
                 </div>
 
                 <div>
+                    <label>نوع الهوية</label>
+                    <input type="text" id="idTypeBox" disabled>
+                </div>
+
+                <div>
                     <label>رقم الهوية</label>
-                    <input type="text" name="nationalId" placeholder="رقم الهوية">
+                    <input type="text" id="idNumberBox" disabled>
+                </div>
+
+                <div>
+                    <label>انتهاء صلاحية الهوية</label>
+                    <input type="text" id="idExpiryBox" disabled>
+                    <small id="idStatusNote" style="font-size: 11px;"></small>
+                </div>
+
+                <div>
+                    <label>رقم النسك</label>
+                    <input type="text" id="nusukBox" disabled>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        رقم تصريح الحج. تعديله يتم عبر إدارة الحملة.
+                    </small>
                 </div>
 
                 <div>
@@ -204,8 +223,11 @@
                 </div>
 
                 <div>
-                    <label>رقم المشرف</label>
-                    <input type="text" name="supervisorId" value="50001">
+                    <label>المشرف المسؤول</label>
+                    <input type="text" id="supervisorBox" disabled>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        توزيع المشرفين من إدارة الحملة.
+                    </small>
                 </div>
 
                 <div class="full-field">
@@ -251,11 +273,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         setField('nationality', p.nationality);
         setField('city', p.city);
         setField('marital', p.marital_status);
-        setField('nationalId', p.id_or_passport);
         setField('phone', p.phone);
         setField('email', p.email);
         setField('chronic', p.chronic_conditions);
-        setField('supervisorId', p.supervisor_id);
+
+        /* بيانات الهوية ورقم النسك للعرض فقط — تعديلها من إدارة الحملة */
+        const show = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '—';
+        };
+
+        show('idTypeBox',   p.id_type_ar);
+        show('idNumberBox', p.id_or_passport);
+        show('idExpiryBox', p.id_expiry);
+        show('nusukBox',    p.nusuk_number);
+        show('supervisorBox', p.supervisor_name
+            ? p.supervisor_name + ' (رقم ' + p.supervisor_id + ')'
+            : 'لم يُسنَد مشرف بعد');
+
+        /* تنبيه صلاحية الهوية بلونه */
+        const note = document.getElementById('idStatusNote');
+        if (note && p.id_status) {
+            note.innerText = p.id_status.label;
+            note.style.color = p.id_status.state === 'expired' ? '#b03a3a'
+                             : p.id_status.state === 'soon'    ? '#b06a1f'
+                             : 'var(--muted)';
+        }
 
         // رقم العضوية واسم المشرف إن وُجدت أماكن لعرضهما
         const idBox = document.getElementById('membershipId');
