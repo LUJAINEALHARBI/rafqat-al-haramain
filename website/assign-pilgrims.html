@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توزيع الحجاج على المشرفين | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
     <!-- مكتبة تصدير الإكسل SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -128,11 +128,8 @@
                 <div class="form-group">
                     <label>المشرف المتخصص</label>
                     <select id="supervisorSelect" required>
-                        <option value="">-- اختر المشرف المتخصص --</option>
-                        <option value="الموظف الصحي">الموظف الصحي (ينتهي بـ 1)</option>
-                        <option value="موظف الحشود والتنقل">موظف الحشود والتنقل (ينتهي بـ 2)</option>
-                        <option value="موظف الإعاشة والأطعمة">موظف الإعاشة والأطعمة (ينتهي بـ 3)</option>
-                        <option value="موظف السكن وخدمة الحجاج">موظف السكن وخدمة الحجاج (ينتهي بـ 4)</option>
+                        <!-- القائمة تُعبّأ من جدول المشرفين حسب القسم المختار -->
+                        <option value="">-- اختر المشرف --</option>
                     </select>
                 </div>
             </div>
@@ -165,11 +162,8 @@
         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
                 <select id="exportSupervisorSelect" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-                    <option value="">-- اختر تخصص المشرف لتصدير حجاجه --</option>
-                    <option value="الموظف الصحي">الموظف الصحي</option>
-                    <option value="موظف الحشود والتنقل">موظف الحشود والتنقل</option>
-                    <option value="موظف الإعاشة والأطعمة">موظف الإعاشة والأطعمة</option>
-                    <option value="موظف السكن وخدمة الحجاج">موظف السكن وخدمة الحجاج</option>
+                    <!-- القائمة تُعبّأ من جدول المشرفين حسب القسم المختار -->
+                    <option value="">-- اختر المشرف لتصدير حجاجه --</option>
                 </select>
             </div>
             <button type="button" onclick="exportBySupervisorExcel()" class="main-button" style="background: #0d6efd; padding: 10px 20px;">تحميل إكسل المشرف المحدد</button>
@@ -197,7 +191,7 @@
     </div>
 </main>
 
-<script src="js/api.js?v=3"></script>
+<script src="js/api.js?v=4"></script>
 <script>
 /* ---------------------------------------------------------------
    صفحة توزيع الحجاج — صارت تقرأ وتكتب في قاعدة البيانات مباشرة:
@@ -237,14 +231,21 @@ async function loadSupervisorOptions() {
 
     try {
         const res = await API.get('supervisors.php', 'list', { section: selectedSection() });
-        // المشرف العام لا يُسند له حجاج — الإسناد للمتخصصين
-        const list = res.data.filter(s => s.gender_section !== 'all');
 
-        const options = list.map(s =>
-            `<option value="${s.supervisor_id}">${API.esc(s.job_title || 'مشرف')} — ${API.esc(s.name)}</option>`
-        ).join('');
+        /* المشرف العام يشرف على المخيم كاملاً، فيُسند له حجاج أيضاً
+           ويظهر في أول القائمة ومعه وسم يوضّح أنه يتابع القسمين */
+        const list = [...res.data].sort((a, b) => {
+            const ga = a.gender_section === 'all' ? 0 : 1;
+            const gb = b.gender_section === 'all' ? 0 : 1;
+            return ga - gb;
+        });
 
-        assignSelect.innerHTML = '<option value="">-- اختر المشرف المتخصص --</option>' + options;
+        const options = list.map(s => {
+            const general = s.gender_section === 'all' ? ' (يتابع القسمين)' : '';
+            return `<option value="${s.supervisor_id}">${API.esc(s.job_title || 'مشرف')} — ${API.esc(s.name)}${general}</option>`;
+        }).join('');
+
+        assignSelect.innerHTML = '<option value="">-- اختر المشرف --</option>' + options;
         exportSelect.innerHTML = '<option value="">-- اختر المشرف لتصدير حجاجه --</option>' + options;
 
     } catch (err) {

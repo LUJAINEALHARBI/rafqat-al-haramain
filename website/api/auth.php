@@ -148,6 +148,15 @@ function do_login(): void
             fail('رقم العضوية أو كلمة المرور غير صحيحة.', 401);
         }
 
+        // القسم المختار في الشاشة يجب أن يطابق قسم الحاج في قاعدة البيانات،
+        // وإلا يُرفض الدخول بدل أن يُصحَّح الاختيار بصمت
+        $pilgrimSection = $row['gender'] === 'female' ? 'women' : 'men';
+        if ($section !== null && $section !== $pilgrimSection) {
+            fail('رقم العضوية هذا مسجّل في '
+                 . ($pilgrimSection === 'women' ? 'قسم النساء' : 'قسم الرجال')
+                 . '، اختاري القسم الصحيح ثم أعيدي المحاولة.', 401);
+        }
+
         set_session_user([
             'role'        => 'pilgrim',
             'id'          => (int) $row['pilgrim_id'],
@@ -177,8 +186,17 @@ function do_login(): void
             fail('رقم العضوية أو كلمة المرور غير صحيحة.', 401);
         }
 
-        // مشرف قسم محدد: القسم من قاعدة البيانات.
-        // المشرف العام (gender_section = all): يتابع القسم الذي اختاره في الشاشة.
+        // المشرف العام (gender_section = all) يتابع القسم الذي اختاره في الشاشة.
+        // أما المشرف المتخصص فقسمه ثابت في قاعدة البيانات، وإذا اختار قسماً
+        // غير قسمه يُرفض الدخول بدل أن يُصحَّح اختياره بصمت.
+        if ($row['gender_section'] !== 'all'
+            && $section !== null
+            && $section !== $row['gender_section']) {
+            fail('رقم العضوية هذا يتبع '
+                 . ($row['gender_section'] === 'women' ? 'قسم النساء' : 'قسم الرجال')
+                 . '، اختاري القسم الصحيح ثم أعيدي المحاولة.', 401);
+        }
+
         $resolved = $row['gender_section'] === 'all'
             ? ($section ?: 'men')
             : $row['gender_section'];

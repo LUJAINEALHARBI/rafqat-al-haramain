@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة المشرف العام | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
     <style>
         .modal-overlay {
             display: none;
@@ -229,6 +229,16 @@
     <div class="modal-box">
         <button class="close-btn" onclick="closeModal('pilgrimsGroupModal')">X</button>
         <h3 id="pilgrimsModalTitle">قائمة الحجاج الشاملة لكافة التخصصات</h3>
+
+        <!-- بوابة المشرف العام: يتابع كل حجاج القسم أو المسندين إليه هو -->
+        <div id="generalScope" style="display: none; margin-bottom: 14px; font-size: 13px;">
+            العرض:
+            <button type="button" class="section-btn scope-btn active" data-scope="section"
+                    onclick="setGroupScope('section')">كل حجاج القسم</button>
+            <button type="button" class="section-btn scope-btn" data-scope="mine"
+                    onclick="setGroupScope('mine')">الحجاج المسندون لي</button>
+        </div>
+
         <table class="data-table">
             <thead>
                 <tr>
@@ -302,8 +312,8 @@
     </div>
 </div>
 
-<script src="js/app.js?v=3"></script>
-<script src="js/api.js?v=3"></script>
+<script src="js/app.js?v=4"></script>
+<script src="js/api.js?v=4"></script>
 <script>
 /* ---------------------------------------------------------------
    لوحة المشرف — كل المحتوى صار من قاعدة البيانات:
@@ -319,6 +329,8 @@
    --------------------------------------------------------------- */
 
 let ME         = null;   // بيانات المشرف الحالي
+let TASK_STATUSES = ['نشط', 'قيد المتابعة', 'مكتمل'];
+let GROUP_SCOPE   = 'section';   // نطاق قائمة الحجاج للمشرف العام
 let MY_PILGRIMS = [];
 let MY_REQUESTS = [];
 let CHAT_ROOM_ID = null;
@@ -384,6 +396,15 @@ function renderHeader() {
     }
 }
 
+/* ---------- بوابة المشرف العام: نطاق قائمة الحجاج ---------- */
+function setGroupScope(scope) {
+    GROUP_SCOPE = scope;
+    document.querySelectorAll('.scope-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.scope === scope);
+    });
+    loadGroupData();
+}
+
 /* ---------- تبديل القسم (المشرف العام) ---------- */
 async function switchSection(section) {
     if (!ME || !ME.is_general || section === ME.active_section) return;
@@ -401,35 +422,62 @@ async function loadTasks() {
     const tbody = document.getElementById("specificTasksTableBody");
     API.tableMessage(tbody, 5, 'جاري التحميل...');
 
+    /* الحالات المسموحة من الخادم حتى لا تُكتب مرتين */
+    try {
+        const st = await API.get('tasks.php', 'statuses');
+        if (Array.isArray(st.data) && st.data.length) TASK_STATUSES = st.data;
+    } catch (e) { /* نكمل بالقائمة الافتراضية */ }
+
     try {
         const res = await API.get('tasks.php', 'list');
         if (!res.data.length) {
             API.tableMessage(tbody, 5, 'لا توجد مهام مسجلة لك.');
             return;
         }
-        tbody.innerHTML = res.data.map((t, i) => `
+        tbody.innerHTML = res.data.map((t, i) => {
+
+            /* القائمة تضم الحالات المسموحة، وتضيف الحالة الحالية إن كانت
+               من الحالات القديمة المسجّلة في قاعدة البيانات */
+            const choices = TASK_STATUSES.includes(t.status)
+                ? TASK_STATUSES
+                : [t.status, ...TASK_STATUSES];
+
+            const options = choices.map(v =>
+                `<option value="${API.esc(v)}" ${v === t.status ? 'selected' : ''}>${API.esc(v)}</option>`
+            ).join('');
+
+            return `
             <tr>
                 <td><strong>${i + 1}</strong></td>
                 <td><strong>${API.esc(t.title)}</strong></td>
                 <td>${API.esc(t.description)}</td>
                 <td><span class="badge-progress">${API.esc(t.status)}</span></td>
-                <td><button type="button" onclick="updateTaskStatus(${t.task_id}, this)"
-                        class="main-button" style="padding:4px 10px; font-size:12px;">تحديث</button></td>
-            </tr>`).join('');
+                <td>
+                    <select onchange="updateTaskStatus(${t.task_id}, this.value, this)"
+                            style="padding:5px; border:1px solid #ccd6d2; border-radius:8px; font-size:12px; font-family:inherit;">
+                        ${options}
+                    </select>
+                </td>
+            </tr>`;
+        }).join('');
     } catch (err) {
         API.tableMessage(tbody, 5, 'تعذّر التحميل: ' + err.message);
     }
 }
 
-async function updateTaskStatus(taskId, btn) {
-    btn.disabled = true;
+async function updateTaskStatus(taskId, status, select) {
+    if (select) select.disabled = true;
     try {
-        await API.post('tasks.php', 'update_status', { id: taskId, status: 'تم الإنجاز' });
+        const res = await API.post('tasks.php', 'update_status', { id: taskId, status: status });
         await loadTasks();
-        alert("تم تحديث حالة المهمة وحُفظت في قاعدة البيانات.");
+        alert(res.data.changed
+            ? 'تم تحديث حالة المهمة إلى "' + status + '" وحُفظت في قاعدة البيانات.'
+            : 'المهمة أصلاً بحالة "' + status + '"، لم يتغيّر شيء.');
     } catch (err) {
         alert(err.message);
-        btn.disabled = false;
+        await loadTasks();
+    } finally {
+        if (select) select.disabled = false;
     }
 }
 
@@ -438,8 +486,11 @@ async function loadGroupData() {
     const tbody    = document.getElementById("groupTableBody");
     const isFemale = ME.active_section === 'women';
 
+    const sectionName = isFemale ? "قسم النساء" : "قسم الرجال";
     document.getElementById("pilgrimsModalTitle").innerText =
-        isFemale ? "قائمة الحجاج — قسم النساء" : "قائمة الحجاج — قسم الرجال";
+        (ME.is_general && GROUP_SCOPE === 'mine')
+            ? `الحجاج المسندون لي — ${sectionName}`
+            : `قائمة الحجاج — ${sectionName}`;
 
     const headers = {
         general:  "الحالة الشاملة (صحي، تفويج، إعاشة، سكن)",
@@ -453,9 +504,17 @@ async function loadGroupData() {
 
     API.tableMessage(tbody, 6, 'جاري التحميل...');
 
+    /* المشرف العام وحده يرى أزرار تبديل النطاق */
+    const scopeBox = document.getElementById('generalScope');
+    if (scopeBox) scopeBox.style.display = ME.is_general ? 'block' : 'none';
+
+    const params = (ME.is_general && GROUP_SCOPE === 'mine')
+        ? { supervisor_id: ME.supervisor_id }
+        : {};
+
     try {
         const [pRes, rRes] = await Promise.all([
-            API.get('pilgrims.php', 'list'),
+            API.get('pilgrims.php', 'list', params),
             API.get('services.php', 'requests')
         ]);
         MY_PILGRIMS = pRes.data;

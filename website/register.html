@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب جديد | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 
 <body>
@@ -173,12 +173,19 @@
 
                 <div>
                     <label>رقم الحملة</label>
-                    <input type="text" name="campaignId" placeholder="مثال: 30089" required>
+                    <input type="text" name="campaignId" id="campaignId" readonly>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        يأتي تلقائياً من بيانات الحملة
+                    </small>
                 </div>
 
                 <div>
-                    <label>رقم المشرف</label>
-                    <input type="text" name="supervisorId" placeholder="مثال: 50001" required>
+                    <label>رقم المشرف (اختياري)</label>
+                    <input type="text" name="supervisorId" placeholder="اتركيه فارغاً إذا لم تعرفيه">
+                    <small style="color: var(--muted); font-size: 11px;">
+                        إدارة الحملة هي من توزّع الحجاج على المشرفين بعد التسجيل،
+                        فلا حاجة لتعبئته إلا إذا أعطاك مشرفك رقمه.
+                    </small>
                 </div>
 
                 <div class="full-field">
@@ -194,7 +201,7 @@
     </div>
 </main>
 
-<script src="js/api.js?v=3"></script>
+<script src="js/api.js?v=4"></script>
 <script>
 /* صار التسجيل يحفظ الحاج فعلياً في جدول pilgrims بقاعدة البيانات
    عبر api/pilgrims.php?action=register ، بدل حفظه في المتصفح. */
@@ -220,6 +227,21 @@ document.addEventListener("DOMContentLoaded", () => {
         idHint.innerText       = rule.hint;
         idInput.placeholder    = rule.holder;
     });
+
+    /* رقم الحملة يُقرأ من قاعدة البيانات بدل أن يكتبه الحاج */
+    (async () => {
+        try {
+            const res = await API.get('public.php', 'home');
+            const box = document.getElementById('campaignId');
+            if (box && res.data.campaign) box.value = res.data.campaign.campaign_id;
+        } catch (e) {
+            const box = document.getElementById('campaignId');
+            if (box) {
+                box.removeAttribute('readonly');
+                box.placeholder = 'اكتبي رقم الحملة';
+            }
+        }
+    })();
 
     /* لا يُسمح باختيار تاريخ انتهاء في الماضي */
     const expiry = document.getElementById('idExpiry');
