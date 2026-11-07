@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب جديد | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 
 <body>
@@ -122,6 +122,14 @@
                 </div>
 
                 <div>
+                    <label>الباقة (اختياري)</label>
+                    <select name="packageType" id="packageType">
+                        <option value="">— لم أختر باقة بعد —</option>
+                    </select>
+                    <small style="color:#777;">الباقات وأسعارها معروضة في الصفحة الرئيسية، ويمكن تغييرها لاحقاً مع إدارة الحملة.</small>
+                </div>
+
+                <div>
                     <label>نوع الهوية</label>
                     <select name="idType" id="idType" required>
                         <option value="national_id">الهوية الوطنية (تبدأ بـ 1)</option>
@@ -201,7 +209,7 @@
     </div>
 </main>
 
-<script src="js/api.js?v=6"></script>
+<script src="js/api.js?v=7"></script>
 <script>
 /* صار التسجيل يحفظ الحاج فعلياً في جدول pilgrims بقاعدة البيانات
    عبر api/pilgrims.php?action=register ، بدل حفظه في المتصفح. */
@@ -240,6 +248,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 box.removeAttribute('readonly');
                 box.placeholder = 'اكتبي رقم الحملة';
             }
+        }
+    })();
+
+    /* قائمة الباقات تُقرأ من قاعدة البيانات، وتُختار مسبقاً إن جاء الزائر من بطاقة باقة */
+    (async () => {
+        const sel = document.getElementById('packageType');
+        if (!sel) return;
+        try {
+            const res = await API.get('public.php', 'home');
+            (res.data.packages || []).forEach(p => {
+                const o = document.createElement('option');
+                o.value = p.package_name;
+                o.textContent = p.package_name + ' — ' + Number(p.price).toLocaleString('en-US') + ' ر.س';
+                sel.appendChild(o);
+            });
+            const wanted = new URLSearchParams(location.search).get('package');
+            if (wanted) sel.value = wanted;
+        } catch (e) {
+            /* تعذّر تحميل الباقات: يبقى الحقل اختيارياً بلا خيارات */
         }
     })();
 

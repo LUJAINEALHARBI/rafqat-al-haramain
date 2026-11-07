@@ -182,6 +182,18 @@ function register_pilgrim(): void
         fail('رقم الحملة غير موجود في قاعدة البيانات.', 422);
     }
 
+    // الباقة اختيارية — تُقبل فقط إذا كانت من باقات هذه الحملة
+    $packageType = opt_text('packageType', 100);
+    if ($packageType !== null && $packageType !== '') {
+        $st = $pdo->prepare('SELECT 1 FROM packages WHERE campaign_id = ? AND package_name = ?');
+        $st->execute([(int) $campaignId, $packageType]);
+        if (!$st->fetch()) {
+            fail('الباقة المختارة غير موجودة ضمن باقات الحملة.', 422);
+        }
+    } else {
+        $packageType = null;
+    }
+
     // المشرف اختياري — يُقبل فقط إذا كان موجوداً فعلاً
     $supervisorId = param('supervisorId');
     if ($supervisorId !== null && $supervisorId !== '') {
@@ -208,8 +220,8 @@ function register_pilgrim(): void
         'INSERT INTO pilgrims
             (campaign_id, supervisor_id, booking_number, name, id_or_passport, phone,
              nationality, age, city, password_hash, gender, email, marital_status,
-             chronic_conditions, id_type, id_expiry, nusuk_number)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+             chronic_conditions, id_type, id_expiry, nusuk_number, package_type)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
     );
     $st->execute([
         (int) $campaignId,
@@ -229,6 +241,7 @@ function register_pilgrim(): void
         $idType,
         $idExpiry,
         $nusuk,
+        $packageType,
     ]);
 
     $newId = (int) $pdo->lastInsertId();

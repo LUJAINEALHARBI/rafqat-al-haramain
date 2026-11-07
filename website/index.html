@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رفقة بلاد الحرمين | الرئيسية</title>
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=7">
     <style>
         /* حل دائرية الشعار */
         .logo-area img {
@@ -77,6 +77,80 @@
                 transform: translateX(-100%);
             }
         }
+
+        /* قسم «الحملة بالأرقام» */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+            margin-top: 25px;
+        }
+
+        .number-box {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        }
+
+        .number-box strong {
+            display: block;
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--primary, #0b3c29);
+            line-height: 1.1;
+        }
+
+        .number-box span {
+            display: block;
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        /* نافذة تفاصيل الباقة */
+        .pkg-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 999;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .pkg-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+
+        .pkg-box {
+            background: #fff;
+            border-radius: 18px;
+            max-width: 520px;
+            width: 100%;
+            margin: auto;
+            padding: 28px;
+            position: relative;
+        }
+
+        .pkg-box h3 { margin: 0 0 6px; font-size: 24px; color: var(--primary, #0b3c29); }
+        .pkg-box .pkg-price { font-size: 30px; font-weight: 800; color: var(--primary, #0b3c29); margin: 12px 0 4px; }
+        .pkg-box .pkg-price small { font-size: 14px; font-weight: 500; }
+        .pkg-box ul { list-style: none; padding: 0; margin: 18px 0; }
+        .pkg-box ul li { padding: 9px 0; border-bottom: 1px dashed #e6e6e6; }
+        .pkg-box .pkg-meta { background: #f6faf8; border-radius: 12px; padding: 14px; font-size: 14px; color: #44584f; }
+        .pkg-close {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: #f2f2f2;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -145,20 +219,6 @@
             <a href="schedule.html" class="secondary-button">جدول رحلتي</a>
         </div>
 
-        <div class="statistics" id="homeStats">
-            <div class="stat-box">
-                <strong id="statServices">—</strong>
-                <span>خدمة مُتاحة</span>
-            </div>
-            <div class="stat-box">
-                <strong id="statStations">—</strong>
-                <span>محطة في برنامج المناسك</span>
-            </div>
-            <div class="stat-box">
-                <strong id="statSites">—</strong>
-                <span>موقع مخيم ومشعر</span>
-            </div>
-        </div>
     </div>
 
     <div class="hero-card">
@@ -196,6 +256,40 @@
     </div>
 </section>
 
+<!-- الحملة بالأرقام -->
+<section class="section numbers-section">
+    <div class="section-title">
+        <div>
+            <span>أرقام</span>
+            <h2>الحملة بالأرقام</h2>
+            <p>كل رقم هنا محسوب مباشرة من قاعدة بيانات الحملة، ويتغيّر بتغيّرها.</p>
+        </div>
+    </div>
+
+    <div class="numbers-grid" id="homeStats">
+        <div class="number-box">
+            <strong id="statServices">—</strong>
+            <span>خدمة متاحة</span>
+        </div>
+        <div class="number-box">
+            <strong id="statPackages">—</strong>
+            <span>باقة حج</span>
+        </div>
+        <div class="number-box">
+            <strong id="statStations">—</strong>
+            <span>محطة في برنامج المناسك</span>
+        </div>
+        <div class="number-box">
+            <strong id="statSites">—</strong>
+            <span>موقع مخيم ومشعر</span>
+        </div>
+        <div class="number-box">
+            <strong id="statJobs">—</strong>
+            <span>تخصص للمشرفين</span>
+        </div>
+    </div>
+</section>
+
 <!-- الباقات -->
 <section class="section packages-section">
     <div class="section-title">
@@ -210,6 +304,14 @@
         <p style="color: var(--muted);">جاري تحميل الباقات من قاعدة البيانات...</p>
     </div>
 </section>
+
+<!-- نافذة تفاصيل الباقة -->
+<div class="pkg-overlay" id="packageOverlay" onclick="if (event.target === this) closePackage()">
+    <div class="pkg-box">
+        <button class="pkg-close" type="button" onclick="closePackage()">×</button>
+        <div id="packageBody"></div>
+    </div>
+</div>
 
 <!-- FOOTER -->
 <footer>
@@ -235,8 +337,8 @@
     </div>
 </footer>
 
-<script src="js/app.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
+<script src="js/app.js?v=7"></script>
+<script src="js/api.js?v=7"></script>
 <script>
 /* الصفحة الرئيسية تقرأ بيانات الحملة وخدماتها وباقاتها وأرقامها من
    api/public.php ، فلا يوجد اسم خدمة أو سعر باقة مكتوب داخل الصفحة. */
@@ -250,6 +352,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const res = await API.get('public.php', 'home');
         fillStats(res.data.stats);
+        CAMPAIGN = res.data.campaign;
         fillCampaign(res.data.campaign);
         fillServices(res.data.services);
         fillPackages(res.data.packages);
@@ -292,9 +395,12 @@ function adaptNav(user) {
 
 /* ------------------------------------------------------------------ */
 function fillStats(stats) {
-    document.getElementById('statServices').innerText = stats.services;
-    document.getElementById('statStations').innerText = stats.stations;
-    document.getElementById('statSites').innerText    = stats.sites;
+    const put = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = (v ?? 0); };
+    put('statServices', stats.services);
+    put('statPackages', stats.packages);
+    put('statStations', stats.stations);
+    put('statSites',    stats.sites);
+    put('statJobs',     stats.job_types);
 }
 
 /* ------------------------------------------------------------------ */
@@ -333,6 +439,45 @@ function fillServices(services) {
 }
 
 /* ------------------------------------------------------------------ */
+/* تفاصيل الباقة تُعرض في نافذة من نفس البيانات القادمة من قاعدة البيانات */
+let PACKAGES = [];
+let CAMPAIGN = null;
+
+function showPackage(i) {
+    const p = PACKAGES[i];
+    if (!p) return;
+
+    const meta = CAMPAIGN ? `
+        <div class="pkg-meta">
+            <div>🏢 ${API.esc(CAMPAIGN.campaign_name || '')}</div>
+            <div>🛫 الانطلاق من ${API.esc(CAMPAIGN.start_city || '—')}${CAMPAIGN.start_date ? ' بتاريخ ' + API.esc(CAMPAIGN.start_date) : ''}</div>
+            <div>📞 ${API.esc(CAMPAIGN.phone || '—')}</div>
+        </div>` : '';
+
+    document.getElementById('packageBody').innerHTML = `
+        <h3>${API.esc(p.package_name)}</h3>
+        <span class="package-tag">${API.esc(p.package_tag || '')}</span>
+        <div class="pkg-price">${Number(p.price).toLocaleString('en-US')} <small>ريال للفرد</small></div>
+        <p style="color:var(--muted); margin:0 0 6px;">الخدمات المشمولة في هذه الباقة:</p>
+        <ul>${p.features.map(f => `<li>✓ ${API.esc(f)}</li>`).join('')}</ul>
+        ${meta}
+        <a href="register.html?package=${encodeURIComponent(p.package_name)}"
+           class="main-button" style="display:block; text-align:center; text-decoration:none; margin-top:18px;">
+            سجّل في هذه الباقة
+        </a>`;
+
+    document.getElementById('packageOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePackage() {
+    document.getElementById('packageOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePackage(); });
+
+/* ------------------------------------------------------------------ */
 function fillPackages(packages) {
     const grid = document.getElementById('packagesGrid');
 
@@ -341,7 +486,8 @@ function fillPackages(packages) {
         return;
     }
 
-    grid.innerHTML = packages.map(p => `
+    PACKAGES = packages;
+    grid.innerHTML = packages.map((p, i) => `
         <div class="package-card ${p.is_featured ? 'featured-package' : ''}">
             ${p.is_featured ? `<span class="featured-label">${API.esc(p.package_tag || 'الأكثر طلباً')}</span>` : ''}
             <span class="package-tag">${API.esc(p.package_tag || '')}</span>
@@ -350,7 +496,7 @@ function fillPackages(packages) {
             <ul>
                 ${p.features.map(f => `<li>✓ ${API.esc(f)}</li>`).join('')}
             </ul>
-            <a href="services.html#packages" class="package-button ${p.is_featured ? 'main-package-button' : ''}">عرض التفاصيل</a>
+            <button type="button" onclick="showPackage(${i})" class="package-button ${p.is_featured ? 'main-package-button' : ''}">عرض التفاصيل</button>
         </div>`).join('');
 }
 </script>

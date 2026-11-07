@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الملف الشخصي</title>
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 
 <body>
@@ -223,6 +223,14 @@
                 </div>
 
                 <div>
+                    <label>الباقة</label>
+                    <input type="text" id="packageBox" disabled>
+                    <small style="color: var(--muted); font-size: 11px;">
+                        تغيير الباقة يتم عبر إدارة الحملة.
+                    </small>
+                </div>
+
+                <div>
                     <label>المشرف المسؤول</label>
                     <input type="text" id="supervisorBox" disabled>
                     <small style="color: var(--muted); font-size: 11px;">
@@ -249,7 +257,7 @@
     </div>
 </main>
 
-<script src="js/api.js?v=6"></script>
+<script src="js/api.js?v=7"></script>
 <script>
 /* الملف الشخصي صار يُقرأ ويُحدَّث من جدول pilgrims في قاعدة البيانات
    عبر api/pilgrims.php (get / update) بدل localStorage. */
@@ -287,6 +295,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         show('idNumberBox', p.id_or_passport);
         show('idExpiryBox', p.id_expiry);
         show('nusukBox',    p.nusuk_number);
+        show('packageBox',  p.package_type);
         show('supervisorBox', p.supervisor_name
             ? p.supervisor_name + ' (رقم ' + p.supervisor_id + ')'
             : 'لم يُسنَد مشرف بعد');
