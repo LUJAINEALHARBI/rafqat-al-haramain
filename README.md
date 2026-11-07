@@ -1,3 +1,5 @@
+<div dir="rtl">
+
 # رفقة بلاد الحرمين
 
 نظام لإدارة حملة حج يخدم ثلاث فئات من المستخدمين: الحاج، المشرف المتخصص، ومدير الحملة.
@@ -30,6 +32,10 @@
 
 ## محتويات المستودع
 
+</div>
+
+<div dir="ltr">
+
 ```
 rafqat-al-haramain/
 ├── website/      الموقع — يوضع داخل htdocs
@@ -46,6 +52,10 @@ rafqat-al-haramain/
 ├── docs/         الشرح والتوثيق بالعربية + مخطط ER
 └── README.md
 ```
+
+</div>
+
+<div dir="rtl">
 
 ### مجلد الموقع — `website/`
 
@@ -84,11 +94,19 @@ rafqat-al-haramain/
 
 ### التطبيق
 
+</div>
+
+<div dir="ltr">
+
 ```
 cd mobile_app
 flutter pub get
 flutter run
 ```
+
+</div>
+
+<div dir="rtl">
 
 ## النشر على الإنترنت
 
@@ -138,3 +156,5 @@ flutter run
 | الصلاحيات | `app_permissions` · `job_permissions` · `permissions` |
 | المتابعة والتواصل | `supervisor_tasks` · `notifications` · `chat_rooms` · `messages` · `expenses` |
 | النشاط الثقافي | `cultural_questions` · `cultural_answers` |
+
+</div>
