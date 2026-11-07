@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الخدمات الرقمية | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
     <style>
         /* تنسيق النوافذ المنبثقة (Modals) لتكون احترافية وواضحة */
         .modal {
@@ -185,6 +185,14 @@
             <button onclick="openModal('mealsModal')">عرض الوجبات</button>
         </div>
 
+        <!-- جميع خدمات الحملة كما يحدّثها المشرفون -->
+        <div class="service-large-card">
+            <div class="large-icon">🗂️</div>
+            <h2>خدمات الحملة</h2>
+            <p>كل الخدمات المتاحة كما يحدّثها مشرف كل تخصص: الطبية والتنقل والإعاشة والسكن.</p>
+            <button onclick="openModal('allServicesModal')">عرض الخدمات</button>
+        </div>
+
         <!-- تقييم الخدمات -->
         <div class="service-large-card">
             <div class="large-icon">⭐</div>
@@ -239,6 +247,20 @@
         <button class="close-modal" onclick="closeModal('mealsModal')">×</button>
         <h2>جدول وأصناف الوجبات</h2>
         <div id="mealsList">
+            <p style="color:#777;">جاري التحميل...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= نافذة خدمات الحملة ================= -->
+<div class="modal" id="allServicesModal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal('allServicesModal')">×</button>
+        <h2>خدمات الحملة المتاحة</h2>
+        <p style="color:#666; font-size:14px; margin-top:0;">
+            هذه الخدمات يضيفها ويعدّلها مشرف كل تخصص، وتظهر هنا فور تحديثها.
+        </p>
+        <div id="allServicesList">
             <p style="color:#777;">جاري التحميل...</p>
         </div>
     </div>
@@ -302,8 +324,8 @@
     </div>
 </div>
 
-<script src="js/app.js?v=5"></script>
-<script src="js/api.js?v=5"></script>
+<script src="js/app.js?v=6"></script>
+<script src="js/api.js?v=6"></script>
 <script>
 /* ---------------------------------------------------------------
    صفحة الخدمات:
@@ -333,6 +355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadRatingServices();
     loadMedicalTeam();
     loadMeals();
+    loadAllServices();
     prefillRoom(user);
 });
 
@@ -359,6 +382,58 @@ async function loadMedicalTeam() {
                     <h4>${API.esc(s.name)} — ${API.esc(s.job_title || 'الموظف الصحي')}</h4>
                     <p>📞 ${API.esc(s.phone || '—')} — 📍 ${API.esc(sec)}</p>
                 </div>`;
+        }).join('');
+
+    } catch (err) {
+        box.innerHTML = '<p style="color:#c00;">تعذّر التحميل: ' + API.esc(err.message) + '</p>';
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* كل خدمات الحملة المتاحة مجمّعة حسب التخصص — يضيفها المشرف فتظهر هنا */
+const SERVICE_TYPE_LABELS = {
+    medical:  'الرعاية الطبية',
+    crowd:    'التفويج والتنقل',
+    catering: 'الإعاشة والوجبات',
+    housing:  'السكن وخدمة الحجاج',
+    general:  'خدمات عامة'
+};
+
+async function loadAllServices() {
+    const box = document.getElementById('allServicesList');
+    if (!box) return;
+
+    try {
+        const res  = await API.get('services.php', 'list');
+        const list = (res.data || []).filter(x => x.status === 'متاحة');
+
+        if (!list.length) {
+            box.innerHTML = '<p style="color:#777;">لا توجد خدمات متاحة حالياً.</p>';
+            return;
+        }
+
+        const order  = ['medical', 'crowd', 'catering', 'housing', 'general'];
+        const groups = {};
+        list.forEach(x => {
+            const t = SERVICE_TYPE_LABELS[x.service_type] ? x.service_type : 'general';
+            (groups[t] = groups[t] || []).push(x);
+        });
+
+        box.innerHTML = order.filter(t => groups[t]).map(t => {
+            const items = groups[t].map(x => {
+                const when  = x.service_datetime ? API.esc(String(x.service_datetime).substring(11, 16)) : '';
+                const where = x.service_location ? ' — 📍 ' + API.esc(x.service_location) : '';
+                return `
+                    <div class="info-card-item">
+                        <h4>${API.esc(x.service_name)}${when ? ' <span style="color:#0b3c29;">(' + when + ')</span>' : ''}</h4>
+                        <p>${API.esc(x.description || 'لا توجد تفاصيل إضافية.')}${where}</p>
+                    </div>`;
+            }).join('');
+            return `
+                <h3 style="margin:18px 0 8px; color:#0b3c29; border-bottom:1px solid #e3e3e3; padding-bottom:6px;">
+                    ${API.esc(SERVICE_TYPE_LABELS[t])}
+                </h3>
+                ${items}`;
         }).join('');
 
     } catch (err) {
