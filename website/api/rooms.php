@@ -23,10 +23,19 @@ function list_rooms(): void
 {
     $u = require_user();
 
-    $sql = "SELECT room_id, room_name, section, staff_only, message_type
-              FROM chat_rooms
-             WHERE campaign_id = ? AND (section = ? OR section = 'all')";
-    $args = [$u['campaign_id'], $u['section']];
+    $sql  = "SELECT room_id, room_name, section, staff_only, message_type
+               FROM chat_rooms WHERE campaign_id = ?";
+    $args = [$u['campaign_id']];
+
+    // مدير الحملة والمشرف العام يتابعان القسمين، فتظهر لهما كل الغرف.
+    // أما المشرف المتخصص والحاج فيريان غرفة قسمهما والغرفة العامة فقط.
+    $seesAll = ($u['role'] === 'campaign')
+            || ($u['role'] === 'supervisor' && !empty($u['is_general']));
+
+    if (!$seesAll) {
+        $sql   .= " AND (section = 'all' OR section = ?)";
+        $args[] = $u['section'];
+    }
 
     // غرفة المشرفين والإدارة لا تظهر للحاج
     if ($u['role'] === 'pilgrim') {
@@ -96,7 +105,10 @@ function assert_room_access(int $roomId, array $u): void
     if ((int) $room['campaign_id'] !== (int) $u['campaign_id']) {
         fail('ليس لديك صلاحية لهذه الغرفة.', 403);
     }
-    if ($room['section'] !== 'all' && $room['section'] !== $u['section']) {
+    $seesAll = ($u['role'] === 'campaign')
+            || ($u['role'] === 'supervisor' && !empty($u['is_general']));
+
+    if (!$seesAll && $room['section'] !== 'all' && $room['section'] !== $u['section']) {
         fail('هذه الغرفة مخصصة لقسم آخر.', 403);
     }
     if ((int) $room['staff_only'] === 1 && $u['role'] === 'pilgrim') {

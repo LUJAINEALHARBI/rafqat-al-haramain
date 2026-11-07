@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة المشرف العام | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <style>
         .modal-overlay {
             display: none;
@@ -118,6 +118,7 @@
             <a href="admin-supervisor.html" class="active">لوحة التحكم</a>
             <a href="supervisor-account.html">ملفي وصلاحياتي</a>
             <a href="javascript:void(0);" onclick="openModal('tasksModal')">مهام الاختصاص</a>
+            <a href="admin-services.html" data-perm="manage_medical manage_transport manage_catering manage_housing manage_services">خدمات تخصصي</a>
             <a href="admin-journey.html" data-perm="manage_journey">برنامج المناسك</a>
             <a href="map.html">الخريطة والمواقع</a>
             <a href="javascript:void(0);" onclick="openModal('supervisorChatModal')" data-perm="manage_chat">غرفة المحادثة</a>
@@ -177,6 +178,12 @@
             <h2>غرفة المحادثة الخاصة</h2>
             <p>التواصل المباشر مع الحجاج والمشرفين والتفاعل الذكي مع الرسائل.</p>
             <button onclick="openModal('supervisorChatModal')" class="main-button" style="width:100%; margin-top:10px;">فتح المحادثة والرد الفوري</button>
+        </div>
+
+        <div class="service-large-card" data-perm="manage_medical manage_transport manage_catering manage_housing manage_services">
+            <h2>خدمات تخصصي</h2>
+            <p>أضف خدمات تخصصك وعدّلها — مثل تغيير الوجبات يومياً — وتظهر للحاج مباشرة.</p>
+            <a href="admin-services.html" class="main-button" style="display:block; text-align:center; text-decoration:none; width:100%; margin-top:10px; box-sizing:border-box;">إدارة خدمات تخصصي</a>
         </div>
 
         <div class="service-large-card" data-perm="manage_journey">
@@ -312,8 +319,8 @@
     </div>
 </div>
 
-<script src="js/app.js?v=4"></script>
-<script src="js/api.js?v=4"></script>
+<script src="js/app.js?v=5"></script>
+<script src="js/api.js?v=5"></script>
 <script>
 /* ---------------------------------------------------------------
    لوحة المشرف — كل المحتوى صار من قاعدة البيانات:

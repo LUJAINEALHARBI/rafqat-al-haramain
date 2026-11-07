@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خدمات تخصصي | رفقة بلاد الحرمين</title>
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <style>
+        .svc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .svc-table th {
+            background: #f3f7f5;
+            color: var(--green);
+            padding: 12px 8px;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .svc-table td {
+            padding: 12px 8px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .mini-btn {
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text);
+            border-radius: 9px;
+            padding: 5px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .mini-btn:hover {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .pill-on {
+            background: #e8f4ef;
+            color: var(--green);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pill-off {
+            background: #f6eeee;
+            color: #b03a3a;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .no-access {
+            background: #fff6f6;
+            border: 1px solid #f3d6d6;
+            color: #8a3a3a;
+            padding: 25px;
+            border-radius: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a href="admin-supervisor.html" class="logo-area">
+            <img src="images/logo.png" alt="رفقة بلاد الحرمين">
+            <div>
+                <h3>رفقة بلاد الحرمين</h3>
+                <span>خدمات التخصص</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="admin-supervisor.html" data-roles="supervisor">لوحة المشرف</a>
+            <a href="admin-campaign.html" data-roles="campaign">لوحة الحملة</a>
+            <a href="admin-services.html" class="active">خدمات تخصصي</a>
+            <a href="admin-journey.html" data-perm="manage_journey">برنامج المناسك</a>
+            <a href="map.html">الخريطة والمواقع</a>
+            <a href="javascript:void(0);" onclick="logoutUser()" style="color: #dc3545;">تسجيل خروج</a>
+        </nav>
+
+        <button class="menu-button">☰</button>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="page-heading">
+        <span id="headingTag">إدارة الخدمة</span>
+        <h1>خدمات تخصصي</h1>
+        <p id="headingText">
+            أضف خدمات تخصصك وعدّلها، وما تحفظه هنا يظهر مباشرة للحاج في صفحة الخدمات.
+        </p>
+    </div>
+
+    <div id="noAccess" class="no-access" style="display: none;">
+        إدارة الخدمات ليست ضمن صلاحيات وظيفتك. كل مشرف يدير خدمات تخصصه فقط.
+    </div>
+
+    <div id="manageArea" style="display: none;">
+
+        <div class="table-container">
+            <h2 class="section-title" id="listTitle">الخدمات المسجّلة</h2>
+            <table class="svc-table">
+                <thead>
+                    <tr>
+                        <th>الخدمة</th>
+                        <th>التفاصيل</th>
+                        <th>الموعد</th>
+                        <th>المكان</th>
+                        <th>الحالة</th>
+                        <th>طلبات الحجاج</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="servicesBody">
+                    <tr><td colspan="7" style="text-align:center; color: var(--muted);">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="profile-card" style="margin-top: 30px;">
+            <div class="profile-header">
+                <div class="profile-avatar" id="formBadge">جديد</div>
+                <div>
+                    <h2 id="formTitle">إضافة خدمة جديدة</h2>
+                    <p>اكتب التفاصيل كما تريد أن يراها الحاج على الموقع والتطبيق.</p>
+                </div>
+            </div>
+
+            <form id="serviceForm">
+                <input type="hidden" name="service_id" id="serviceId">
+
+                <div class="form-grid">
+                    <div id="typeField">
+                        <label>نوع الخدمة</label>
+                        <select name="service_type" id="serviceType"></select>
+                    </div>
+
+                    <div>
+                        <label>اسم الخدمة</label>
+                        <input type="text" name="service_name" id="serviceName"
+                               placeholder="مثال: وجبة السحور" maxlength="150" required>
+                    </div>
+
+                    <div>
+                        <label>الموعد (اختياري)</label>
+                        <input type="datetime-local" name="service_datetime" id="serviceDatetime">
+                    </div>
+
+                    <div>
+                        <label>المكان (اختياري)</label>
+                        <input type="text" name="service_location" id="serviceLocation"
+                               placeholder="مثال: مطعم المخيم" maxlength="255">
+                    </div>
+
+                    <div>
+                        <label>الحالة</label>
+                        <select name="status" id="serviceStatus">
+                            <option value="متاحة">متاحة للحجاج</option>
+                            <option value="غير متاحة">موقوفة مؤقتاً</option>
+                        </select>
+                    </div>
+
+                    <div class="full-field">
+                        <label>التفاصيل التي تظهر للحاج</label>
+                        <textarea name="description" id="serviceDescription" rows="2"
+                                  placeholder="مثال: تمر ولبن وخبز وجبن"></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
+                    <button class="main-button" type="submit" id="formSubmit">حفظ الخدمة</button>
+                    <button class="mini-btn" type="button" id="cancelEdit" style="display: none;">إلغاء التعديل</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</main>
+
+<script src="js/app.js?v=5"></script>
+<script src="js/api.js?v=5"></script>
+<script>
+/* كل مشرف يدير خدمات تخصصه فقط — الخادم هو من يحدد الأنواع المسموحة
+   اعتماداً على صلاحيات وظيفته في جدول job_permissions. */
+
+let TYPES = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const user = await API.requireLogin(['supervisor', 'campaign']);
+    if (!user) return;
+
+    API.applyRoleUI(user);
+
+    document.getElementById('serviceForm').addEventListener('submit', saveService);
+    document.getElementById('cancelEdit').addEventListener('click', resetForm);
+
+    await loadServices();
+});
+
+/* ------------------------------------------------------------------ */
+async function loadServices() {
+    const tbody = document.getElementById('servicesBody');
+
+    try {
+        const res = await API.get('services.php', 'my_services');
+        TYPES = res.data.types || [];
+
+        if (!TYPES.length) {
+            document.getElementById('noAccess').style.display = 'block';
+            document.getElementById('manageArea').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('manageArea').style.display = 'block';
+        document.getElementById('headingTag').innerText =
+            TYPES.length === 1 ? TYPES[0].label : 'إدارة خدمات الحملة';
+        document.getElementById('listTitle').innerText =
+            TYPES.length === 1 ? `خدمات ${TYPES[0].label}` : 'خدمات الحملة';
+
+        /* قائمة الأنواع تختفي إذا كان المشرف يدير نوعاً واحداً */
+        const typeSelect = document.getElementById('serviceType');
+        typeSelect.innerHTML = TYPES.map(t =>
+            `<option value="${API.esc(t.key)}">${API.esc(t.label)}</option>`).join('');
+        document.getElementById('typeField').style.display = TYPES.length === 1 ? 'none' : 'block';
+
+        const rows = res.data.services || [];
+        if (!rows.length) {
+            API.tableMessage(tbody, 7, 'لا توجد خدمات مسجّلة لتخصصك بعد. أضفها من النموذج بالأسفل.');
+            return;
+        }
+
+        tbody.innerHTML = rows.map(s => {
+            const on = s.status === 'متاحة';
+            return `<tr>
+                <td>
+                    <strong>${API.esc(s.service_name)}</strong>
+                    ${TYPES.length > 1 ? `<div style="color: var(--muted); font-size: 11px;">${API.esc(s.type_label)}</div>` : ''}
+                </td>
+                <td style="color: var(--muted);">${API.esc(s.description || '—')}</td>
+                <td style="white-space: nowrap;">${API.esc(formatWhen(s.service_datetime))}</td>
+                <td>${API.esc(s.service_location || '—')}</td>
+                <td><span class="${on ? 'pill-on' : 'pill-off'}">${API.esc(s.status)}</span></td>
+                <td style="text-align: center;">${s.requests_count}</td>
+                <td>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button class="mini-btn" onclick='editService(${JSON.stringify(s).replace(/'/g, "&#39;")})'>تعديل</button>
+                        <button class="mini-btn" onclick="toggleService(${s.service_id}, '${on ? 'غير متاحة' : 'متاحة'}')">
+                            ${on ? 'إيقاف' : 'تفعيل'}
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        API.tableMessage(tbody, 7, err.message);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function formatWhen(value) {
+    if (!value) return 'بدون موعد';
+    const s = String(value);
+    let hour = parseInt(s.substring(11, 13), 10);
+    const minute = s.substring(14, 16);
+    const period = hour < 12 ? 'ص' : 'م';
+    if (hour === 0) hour = 12; else if (hour > 12) hour -= 12;
+    return `${s.substring(8, 10)}/${s.substring(5, 7)} — ${hour}:${minute} ${period}`;
+}
+
+/* ------------------------------------------------------------------ */
+async function saveService(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+    const editing = data.service_id && data.service_id !== '';
+
+    if (TYPES.length === 1) data.service_type = TYPES[0].key;
+
+    const btn = document.getElementById('formSubmit');
+    const label = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'جاري الحفظ...';
+
+    try {
+        await API.post('services.php', editing ? 'update' : 'add', data);
+        resetForm();
+        await loadServices();
+        alert(editing
+            ? 'تم حفظ التعديل، وسيظهر للحاج مباشرة.'
+            : 'تمت إضافة الخدمة، وستظهر للحاج في صفحة الخدمات.');
+    } catch (err) {
+        API.showError(err);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = label;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+function editService(s) {
+    document.getElementById('serviceId').value          = s.service_id;
+    document.getElementById('serviceName').value        = s.service_name || '';
+    document.getElementById('serviceDescription').value = s.description || '';
+    document.getElementById('serviceLocation').value    = s.service_location || '';
+    document.getElementById('serviceStatus').value      = s.status || 'متاحة';
+    document.getElementById('serviceDatetime').value    =
+        s.service_datetime ? String(s.service_datetime).substring(0, 16).replace(' ', 'T') : '';
+
+    const typeSelect = document.getElementById('serviceType');
+    if (typeSelect && s.service_type) typeSelect.value = s.service_type;
+
+    document.getElementById('formTitle').innerText  = 'تعديل: ' + s.service_name;
+    document.getElementById('formBadge').innerText  = 'تعديل';
+    document.getElementById('formSubmit').innerText = 'حفظ التعديل';
+    document.getElementById('cancelEdit').style.display = 'inline-block';
+
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function resetForm() {
+    const form = document.getElementById('serviceForm');
+    form.reset();
+    document.getElementById('serviceId').value = '';
+    document.getElementById('formTitle').innerText  = 'إضافة خدمة جديدة';
+    document.getElementById('formBadge').innerText  = 'جديد';
+    document.getElementById('formSubmit').innerText = 'حفظ الخدمة';
+    document.getElementById('cancelEdit').style.display = 'none';
+}
+
+/* ------------------------------------------------------------------ */
+async function toggleService(serviceId, status) {
+    const ask = status === 'غير متاحة'
+        ? 'إيقاف هذه الخدمة؟ ستختفي عن الحجاج وتبقى طلباتهم السابقة محفوظة.'
+        : 'تفعيل هذه الخدمة لتظهر للحجاج؟';
+
+    if (!confirm(ask)) return;
+
+    try {
+        await API.post('services.php', 'availability', { service_id: serviceId, status: status });
+        await loadServices();
+    } catch (err) {
+        API.showError(err);
+    }
+}
+</script>
+
+</body>
+</html>

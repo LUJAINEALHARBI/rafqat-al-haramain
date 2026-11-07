@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رفقة بلاد الحرمين | الرئيسية</title>
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <style>
         /* حل دائرية الشعار */
         .logo-area img {
@@ -235,8 +235,8 @@
     </div>
 </footer>
 
-<script src="js/app.js?v=4"></script>
-<script src="js/api.js?v=4"></script>
+<script src="js/app.js?v=5"></script>
+<script src="js/api.js?v=5"></script>
 <script>
 /* الصفحة الرئيسية تقرأ بيانات الحملة وخدماتها وباقاتها وأرقامها من
    api/public.php ، فلا يوجد اسم خدمة أو سعر باقة مكتوب داخل الصفحة. */
@@ -272,18 +272,22 @@ function adaptNav(user) {
         return;
     }
 
-    if (loginLink) {
-        loginLink.innerText = 'لوحتي';
-        loginLink.href = user.role === 'campaign' ? 'admin-campaign.html'
-                       : user.role === 'supervisor' ? 'admin-supervisor.html'
-                       : 'account.html';
+    if (user.role === 'pilgrim') {
+        /* الحاج له مدخل واحد لملفه: زر "ملفي الشخصي".
+           كان يظهر معه رابط "ملفي" ورابط "لوحتي" وكلها لنفس الصفحة. */
+        if (loginLink) loginLink.style.display = 'none';
+        const accountLink = document.querySelector('.nav-links a[href="account.html"]');
+        if (accountLink) accountLink.style.display = 'none';
+        return;
     }
 
-    /* المشرف ومدير الحملة ليس لهما ملف حاج ولا مسابقة ثقافية */
-    if (user.role !== 'pilgrim') {
-        if (profileBtn) profileBtn.style.display = 'none';
-        pilgrimOnly.forEach(a => a.style.display = 'none');
+    /* المشرف ومدير الحملة: رابط واحد للوحتهما، وبلا ملف حاج */
+    if (loginLink) {
+        loginLink.innerText = 'لوحتي';
+        loginLink.href = user.role === 'campaign' ? 'admin-campaign.html' : 'admin-supervisor.html';
     }
+    if (profileBtn) profileBtn.style.display = 'none';
+    pilgrimOnly.forEach(a => a.style.display = 'none');
 }
 
 /* ------------------------------------------------------------------ */

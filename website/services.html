@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الخدمات الرقمية | رفقة بلاد الحرمين</title>
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <style>
         /* تنسيق النوافذ المنبثقة (Modals) لتكون احترافية وواضحة */
         .modal {
@@ -302,8 +302,8 @@
     </div>
 </div>
 
-<script src="js/app.js?v=4"></script>
-<script src="js/api.js?v=4"></script>
+<script src="js/app.js?v=5"></script>
+<script src="js/api.js?v=5"></script>
 <script>
 /* ---------------------------------------------------------------
    صفحة الخدمات:
@@ -374,19 +374,24 @@ async function loadMeals() {
 
     try {
         const res   = await API.get('services.php', 'list');
-        const meals = (res.data || []).filter(x => x.service_type === 'catering' && x.service_datetime);
+        /* كل خدمات الإعاشة المتاحة، سواء لها موعد محدد أو بلا موعد */
+        const meals = (res.data || []).filter(x => x.service_type === 'catering' && x.status === 'متاحة');
 
         if (!meals.length) {
             box.innerHTML = '<p style="color:#777;">لم تُسجَّل مواعيد وجبات في جدول الخدمات.</p>';
             return;
         }
 
-        meals.sort((a, b) => String(a.service_datetime).substring(11)
-                            .localeCompare(String(b.service_datetime).substring(11)));
+        /* المواعيد المحددة أولاً حسب الوقت، ثم ما ليس له موعد */
+        meals.sort((a, b) => {
+            const ta = a.service_datetime ? String(a.service_datetime).substring(11) : 'zz';
+            const tb = b.service_datetime ? String(b.service_datetime).substring(11) : 'zz';
+            return ta.localeCompare(tb);
+        });
 
         box.innerHTML = meals.map(m => `
             <div class="info-card-item">
-                <h4>${API.esc(m.service_name)} (${API.esc(timeOnly(m.service_datetime))})</h4>
+                <h4>${API.esc(m.service_name)}${m.service_datetime ? ' (' + API.esc(timeOnly(m.service_datetime)) + ')' : ''}</h4>
                 <p>${API.esc(m.description || '')}${m.service_location ? ' — 📍 ' + API.esc(m.service_location) : ''}</p>
             </div>`).join('');
 

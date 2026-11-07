@@ -17,6 +17,10 @@ switch ($action) {
     case 'requests':      list_requests();   break;
     case 'request':       create_request();  break;
     case 'update_status': update_status();   break;
+    case 'my_services':   my_services();     break;
+    case 'add':           add_service();     break;
+    case 'update':        update_service();  break;
+    case 'availability':  set_availability();break;
     default: fail('عملية غير معروفة.', 404);
 }
 
@@ -196,4 +200,198 @@ function update_status(): void
         fail('الطلب غير موجود أو ليس ضمن صلاحيتك.', 404);
     }
     ok(['provision_id' => $id, 'status' => $status]);
+}
+
+// ------------------------------------------------------------------
+// إدارة خدمات التخصص
+// ------------------------------------------------------------------
+
+/**
+ * أنواع الخدمات التي يملك المستخدم الحالي إدارتها.
+ * موظف الإعاشة يدير خدمات catering فقط، والصحي medical فقط،
+ * والمشرف العام ومدير الحملة يديران الأنواع كلها.
+ */
+function manageable_types(): array
+{
+    $types = ['medical', 'crowd', 'catering', 'housing', 'general'];
+
+    return array_values(array_filter($types, function (string $t) {
+        return can(service_type_permission($t));
+    }));
+}
+
+/** الاسم العربي لنوع الخدمة */
+function service_type_label(string $type): string
+{
+    switch ($type) {
+        case 'medical':  return 'الرعاية الطبية';
+        case 'crowd':    return 'التفويج والتنقل';
+        case 'catering': return 'الإعاشة والوجبات';
+        case 'housing':  return 'السكن والخيام';
+        default:         return 'خدمات عامة';
+    }
+}
+
+/** يتأكد أن المستخدم يملك إدارة هذا النوع */
+function require_service_type(string $type): void
+{
+    if (!in_array($type, manageable_types(), true)) {
+        fail('خدمات "' . service_type_label($type) . '" ليست ضمن تخصصك.', 403);
+    }
+}
+
+// ------------------------------------------------------------------
+/** خدمات تخصص المستخدم مع الأنواع التي يستطيع إضافتها */
+function my_services(): void
+{
+    require_user(['supervisor', 'campaign']);
+
+    $types = manageable_types();
+    if (!$types) {
+        ok(['types' => [], 'services' => []]);
+    }
+
+    $in = implode(',', array_fill(0, count($types), '?'));
+    $st = db()->prepare(
+        "SELECT service_id, service_name, description, service_type,
+                service_datetime, service_location, status,
+                (SELECT COUNT(*) FROM service_provisions sp
+                  WHERE sp.service_id = services.service_id) AS requests_count
+           FROM services WHERE service_type IN ($in)
+       ORDER BY service_type, service_id"
+    );
+    $st->execute($types);
+    $rows = $st->fetchAll();
+
+    foreach ($rows as &$r) {
+        $r['service_id']     = (int) $r['service_id'];
+        $r['requests_count'] = (int) $r['requests_count'];
+        $r['type_label']     = service_type_label((string) $r['service_type']);
+    }
+    unset($r);
+
+    ok([
+        'types' => array_map(function (string $t) {
+            return ['key' => $t, 'label' => service_type_label($t)];
+        }, $types),
+        'services' => $rows,
+    ]);
+}
+
+// ------------------------------------------------------------------
+/** يقرأ حقول الخدمة المشتركة بين الإضافة والتعديل */
+function service_input(): array
+{
+    $when = opt_text('service_datetime', 20);
+
+    // النموذج يرسل 2026-05-21T06:00 فنحوّلها لصيغة القاعدة
+    if ($when !== null && $when !== '') {
+        $when = str_replace('T', ' ', $when);
+        if (strlen($when) === 16) {
+            $when .= ':00';
+        }
+    } else {
+        $when = null;
+    }
+
+    return [
+        'service_name'     => require_text('service_name', 150),
+        'description'      => opt_text('description', 1000),
+        'service_datetime' => $when,
+        'service_location' => opt_text('service_location', 255),
+        'status'           => one_of('status', ['متاحة', 'غير متاحة'], 'متاحة'),
+    ];
+}
+
+// ------------------------------------------------------------------
+function add_service(): void
+{
+    require_post();
+    require_user(['supervisor', 'campaign']);
+
+    $type = require_text('service_type', 80);
+    require_service_type($type);
+
+    $in = service_input();
+
+    $st = db()->prepare('SELECT 1 FROM services WHERE service_name = ?');
+    $st->execute([$in['service_name']]);
+    if ($st->fetch()) {
+        fail('يوجد خدمة بنفس الاسم. اختاري اسماً مختلفاً.', 409);
+    }
+
+    $st = db()->prepare(
+        'INSERT INTO services
+            (service_name, description, service_type, service_datetime, service_location, status)
+         VALUES (?,?,?,?,?,?)'
+    );
+    $st->execute([
+        $in['service_name'], $in['description'], $type,
+        $in['service_datetime'], $in['service_location'], $in['status'],
+    ]);
+
+    ok(['service_id' => (int) db()->lastInsertId(), 'service_name' => $in['service_name']]);
+}
+
+// ------------------------------------------------------------------
+/** يجلب الخدمة ويتأكد أنها ضمن تخصص المستخدم */
+function service_in_scope(int $id): array
+{
+    $st = db()->prepare('SELECT * FROM services WHERE service_id = ? LIMIT 1');
+    $st->execute([$id]);
+    $row = $st->fetch();
+
+    if (!$row) {
+        fail('الخدمة غير موجودة.', 404);
+    }
+    require_service_type((string) $row['service_type']);
+
+    return $row;
+}
+
+// ------------------------------------------------------------------
+function update_service(): void
+{
+    require_post();
+    require_user(['supervisor', 'campaign']);
+
+    $service = service_in_scope(require_int('service_id'));
+    $in      = service_input();
+
+    $st = db()->prepare(
+        'UPDATE services
+            SET service_name = ?, description = ?, service_datetime = ?,
+                service_location = ?, status = ?
+          WHERE service_id = ?'
+    );
+    $st->execute([
+        $in['service_name'], $in['description'], $in['service_datetime'],
+        $in['service_location'], $in['status'], $service['service_id'],
+    ]);
+
+    ok(['service_id' => (int) $service['service_id']]);
+}
+
+// ------------------------------------------------------------------
+/**
+ * إيقاف الخدمة أو تفعيلها.
+ * لا يوجد حذف: حذف الخدمة يحذف معها طلبات الحجاج المرتبطة بها،
+ * فالإيقاف يخفيها عن الحاج ويبقي سجل الطلبات كما هو.
+ */
+function set_availability(): void
+{
+    require_post();
+    require_user(['supervisor', 'campaign']);
+
+    $service = service_in_scope(require_int('service_id'));
+    $status  = one_of('status', ['متاحة', 'غير متاحة'], null);
+
+    if ($status === null) {
+        fail('حدّدي الحالة: متاحة أو غير متاحة.', 422);
+    }
+
+    $st = db()->prepare('UPDATE services SET status = ? WHERE service_id = ?');
+    $st->execute([$status, $service['service_id']]);
+
+    ok(['service_id' => (int) $service['service_id'], 'status' => $status]);
 }
