@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// خطأ قادم من الواجهة الخلفية برسالة عربية جاهزة للعرض.
@@ -35,7 +37,140 @@ class ApiException implements Exception {
 ///  أو التشغيل المحلي على XAMPP.
 /// ------------------------------------------------------------------
 class ApiService {
+  /// عنوان الخادم المستخدم حالياً.
+  /// يُضبط تلقائياً عند فتح التطبيق عبر [autoDetect]، ويمكن تغييره
+  /// يدوياً من شاشة الدخول (أيقونة الإعدادات) بدون إعادة بناء التطبيق.
   static String baseUrl = 'http://10.0.2.2/website/api';
+
+  /// العناوين التي يجرّبها التطبيق تلقائياً، بالترتيب.
+  ///   10.0.2.2  = جهاز اللاب نفسه من داخل محاكي أندرويد
+  ///   127.0.0.1 = نفس الجهاز (محاكي iOS أو تشغيل على ويندوز)
+  ///   المنفذ 8080 لأن XAMPP ينتقل إليه كثيراً حين يكون المنفذ 80 مشغولاً
+  static const List<String> candidates = [
+    'http://10.0.2.2/website/api',
+    'http://10.0.2.2:8080/website/api',
+    'http://127.0.0.1/website/api',
+    'http://127.0.0.1:8080/website/api',
+    'http://localhost/website/api',
+  ];
+
+  /// آخر عنوان نجح، محفوظ في ملف صغير حتى لا تعيدي إدخاله كل مرة.
+  static File? _memoFile;
+
+  static File? _memo() {
+    if (_memoFile != null) return _memoFile;
+    try {
+      _memoFile = File('${Directory.systemTemp.path}/rafqa_server.txt');
+    } catch (_) {
+      return null;
+    }
+    return _memoFile;
+  }
+
+  static Future<void> _remember(String url) async {
+    try {
+      await _memo()?.writeAsString(url);
+    } catch (_) {}
+  }
+
+  /// يُستدعى مرة عند فتح التطبيق.
+  static Future<String?> loadSaved() async {
+    try {
+      final f = _memo();
+      if (f != null && await f.exists()) {
+        final v = (await f.readAsString()).trim();
+        if (v.startsWith('http')) {
+          baseUrl = v;
+          return v;
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// يضبط العنوان يدوياً. يقبل الصيغ المختصرة مثل 192.168.1.5
+  static Future<void> setBaseUrl(String input) async {
+    var v = input.trim();
+    if (v.isEmpty) return;
+    if (!v.startsWith('http://') && !v.startsWith('https://')) {
+      v = 'http://$v';
+    }
+    v = v.replaceAll(RegExp(r'/+$'), '');
+    if (!v.endsWith('/api')) {
+      v = v.endsWith('/website') ? '$v/api' : '$v/website/api';
+    }
+    baseUrl = v;
+    await _remember(v);
+  }
+
+  /// يجرّب عنواناً واحداً ويعيد رسالة عربية تشرح النتيجة بدقة.
+  /// يعيد null إذا نجح الاتصال.
+  static Future<String?> probe(String url, {int seconds = 5}) async {
+    try {
+      final res = await http
+          .get(Uri.parse('$url/ping.php'), headers: {'Accept': 'application/json'})
+          .timeout(Duration(seconds: seconds));
+
+      final body = res.body.trimLeft();
+      if (body.startsWith('<')) {
+        return res.statusCode == 404
+            ? 'الخادم يعمل لكن المسار غير صحيح (404). تأكدي أن مجلد website داخل htdocs.'
+            : 'الخادم رد بصفحة HTML بدل البيانات (رمز ${res.statusCode}).';
+      }
+
+      final map = jsonDecode(body) as Map<String, dynamic>;
+      if (map['ok'] == false) {
+        return (map['error'] ?? 'رد الخادم بخطأ.').toString();
+      }
+      final data = map['data'];
+      if (data is Map && data['database'] == false) {
+        return (data['message'] ?? 'قاعدة البيانات متوقفة.').toString();
+      }
+      return null; // نجح
+    } on TimeoutException {
+      return 'الخادم لم يرد خلال $seconds ثوانٍ. غالباً جدار الحماية يحجب الاتصال.';
+    } on SocketException catch (e) {
+      final msg = e.osError?.message.toLowerCase() ?? '';
+      if (msg.contains('refused')) {
+        return 'الجهاز موجود لكن لا يوجد خادم على هذا المنفذ. شغّلي Apache من XAMPP، '
+            'وإذا كان Apache يعمل على المنفذ 8080 أضيفي 8080: إلى العنوان.';
+      }
+      if (msg.contains('unreachable') || msg.contains('not known') ||
+          msg.contains('no address')) {
+        return 'لم يُعثر على الجهاز على الشبكة. تأكدي أن الجوال واللاب على نفس الواي فاي.';
+      }
+      return 'تعذّر فتح الاتصال بالخادم (${e.osError?.message ?? 'خطأ في الشبكة'}).';
+    } on FormatException {
+      return 'رد الخادم غير مفهوم (ليس JSON).';
+    } catch (_) {
+      return 'تعذّر الوصول إلى الخادم.';
+    }
+  }
+
+  /// يبحث تلقائياً عن العنوان الصحيح بين [candidates] (والعنوان المحفوظ).
+  /// يعيد العنوان الذي نجح، أو null إذا لم ينجح أي عنوان.
+  static Future<String?> autoDetect() async {
+    final list = <String>[
+      baseUrl,
+      ...candidates.where((c) => c != baseUrl),
+    ];
+    for (final url in list) {
+      final err = await probe(url, seconds: 4);
+      if (err == null) {
+        baseUrl = url;
+        await _remember(url);
+        return url;
+      }
+    }
+    return null;
+  }
+
+  /// رسالة خطأ مفصّلة تُستخدم حين يفشل أي طلب عادي.
+  static Future<String> diagnose() async {
+    final err = await probe(baseUrl, seconds: 6);
+    if (err == null) return 'الاتصال بالخادم سليم، أعيدي المحاولة.';
+    return '$err\n\nالعنوان الحالي: $baseUrl';
+  }
 
   /// كوكي الجلسة (PHPSESSID) — نحفظه بعد تسجيل الدخول ونرسله مع كل طلب،
   /// لأن حزمة http لا تحفظ الكوكيز تلقائياً مثل المتصفح.
@@ -107,10 +242,24 @@ class ApiService {
       return _decode(res);
     } on ApiException {
       rethrow;
+    } on TimeoutException {
+      throw ApiException(
+        'الخادم لم يرد في الوقت المحدد. تأكدي أن Apache يعمل، '
+        'وأن جدار الحماية لا يحجب الاتصال.',
+      );
+    } on SocketException catch (e) {
+      final m = e.osError?.message.toLowerCase() ?? '';
+      throw ApiException(
+        m.contains('refused')
+            ? 'لا يوجد خادم على العنوان $baseUrl — شغّلي Apache من XAMPP، '
+              'أو غيّري عنوان الخادم من أيقونة الإعدادات في شاشة الدخول.'
+            : 'تعذّر الوصول إلى $baseUrl. تأكدي أن الجهاز واللاب على نفس الشبكة، '
+              'أو غيّري العنوان من أيقونة الإعدادات في شاشة الدخول.',
+      );
     } catch (_) {
       throw ApiException(
-        'تعذّر الوصول إلى الخادم. تأكدي أن Apache و MySQL يعملان '
-        'وأن الجهاز على نفس الشبكة.',
+        'تعذّر الوصول إلى الخادم ($baseUrl). افتحي إعدادات الخادم '
+        'من شاشة الدخول واضغطي «بحث تلقائي».',
       );
     }
   }
@@ -133,10 +282,24 @@ class ApiService {
       return _decode(res);
     } on ApiException {
       rethrow;
+    } on TimeoutException {
+      throw ApiException(
+        'الخادم لم يرد في الوقت المحدد. تأكدي أن Apache يعمل، '
+        'وأن جدار الحماية لا يحجب الاتصال.',
+      );
+    } on SocketException catch (e) {
+      final m = e.osError?.message.toLowerCase() ?? '';
+      throw ApiException(
+        m.contains('refused')
+            ? 'لا يوجد خادم على العنوان $baseUrl — شغّلي Apache من XAMPP، '
+              'أو غيّري عنوان الخادم من أيقونة الإعدادات في شاشة الدخول.'
+            : 'تعذّر الوصول إلى $baseUrl. تأكدي أن الجهاز واللاب على نفس الشبكة، '
+              'أو غيّري العنوان من أيقونة الإعدادات في شاشة الدخول.',
+      );
     } catch (_) {
       throw ApiException(
-        'تعذّر الوصول إلى الخادم. تأكدي أن Apache و MySQL يعملان '
-        'وأن الجهاز على نفس الشبكة.',
+        'تعذّر الوصول إلى الخادم ($baseUrl). افتحي إعدادات الخادم '
+        'من شاشة الدخول واضغطي «بحث تلقائي».',
       );
     }
   }
