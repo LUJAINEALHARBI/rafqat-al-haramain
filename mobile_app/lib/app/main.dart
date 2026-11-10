@@ -20,15 +20,142 @@ class _LoginPageState extends State<LoginPage> {
   String? _selectedSection;
   bool _hidePassword = true;
   bool _loading = false;
+  bool _serverReady = true;
 
   static const Color teal = Color(0xFF277D78);
   static const Color darkTeal = Color(0xFF245B58);
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareConnection();
+  }
+
+  /// عند فتح التطبيق: نستعيد آخر عنوان نجح، ثم نبحث تلقائياً عن الخادم.
+  /// هكذا يعمل التطبيق على المحاكي وعلى الجوال الحقيقي بدون تعديل الكود.
+  Future<void> _prepareConnection() async {
+    await ApiService.loadSaved();
+    final found = await ApiService.autoDetect();
+    if (!mounted) return;
+    setState(() => _serverReady = found != null);
+  }
 
   @override
   void dispose() {
     _idController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// نافذة إعدادات الخادم — لتغيير العنوان بدون إعادة بناء التطبيق.
+  Future<void> _openServerSettings() async {
+    final controller = TextEditingController(text: ApiService.baseUrl);
+    String status = '';
+    bool busy = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('إعدادات الخادم'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'المحاكي على نفس اللاب:  10.0.2.2\n'
+                    'جوال حقيقي على نفس الواي فاي: اكتبي IP اللاب\n'
+                    '(افتحي cmd واكتبي ipconfig)',
+                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: controller,
+                    textDirection: TextDirection.ltr,
+                    decoration: const InputDecoration(
+                      labelText: 'عنوان الخادم',
+                      hintText: '192.168.1.5',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  if (status.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6FAFA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(status, style: const TextStyle(fontSize: 13)),
+                    ),
+                  ],
+                  if (busy) ...[
+                    const SizedBox(height: 14),
+                    const LinearProgressIndicator(),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: busy
+                    ? null
+                    : () async {
+                        setLocal(() {
+                          busy = true;
+                          status = 'جارٍ البحث عن الخادم…';
+                        });
+                        final found = await ApiService.autoDetect();
+                        setLocal(() {
+                          busy = false;
+                          controller.text = ApiService.baseUrl;
+                          status = found != null
+                              ? 'تم العثور على الخادم:\n$found'
+                              : 'لم يُعثر على خادم. شغّلي Apache و MySQL من XAMPP، '
+                                'أو اكتبي عنوان اللاب يدوياً.';
+                        });
+                      },
+                child: const Text('بحث تلقائي'),
+              ),
+              TextButton(
+                onPressed: busy
+                    ? null
+                    : () async {
+                        setLocal(() {
+                          busy = true;
+                          status = 'جارٍ الاختبار…';
+                        });
+                        await ApiService.setBaseUrl(controller.text);
+                        final err = await ApiService.probe(ApiService.baseUrl);
+                        setLocal(() {
+                          busy = false;
+                          status = err ?? 'الاتصال ناجح ✓\n${ApiService.baseUrl}';
+                        });
+                      },
+                child: const Text('اختبار'),
+              ),
+              ElevatedButton(
+                onPressed: busy
+                    ? null
+                    : () async {
+                        await ApiService.setBaseUrl(controller.text);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                child: const Text('حفظ'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (mounted) {
+      final ok = await ApiService.probe(ApiService.baseUrl, seconds: 4);
+      if (mounted) setState(() => _serverReady = ok == null);
+    }
   }
 
   void _showMessage(String message) {
@@ -95,7 +222,26 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(builder: (_) => page),
       );
     } on ApiException catch (e) {
-      if (mounted) _showMessage(e.message);
+      if (!mounted) return;
+      final isNetwork = e.message.contains('تعذّر الوصول') ||
+          e.message.contains('لا يوجد خادم') ||
+          e.message.contains('لم يرد');
+      if (isNetwork) {
+        setState(() => _serverReady = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            duration: const Duration(seconds: 8),
+            action: SnackBarAction(
+              label: 'إعدادات الخادم',
+              textColor: Colors.white,
+              onPressed: _openServerSettings,
+            ),
+          ),
+        );
+      } else {
+        _showMessage(e.message);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -114,7 +260,19 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: 'إعدادات الخادم',
+                      icon: Icon(
+                        _serverReady
+                            ? Icons.settings_outlined
+                            : Icons.wifi_off_rounded,
+                        color: _serverReady ? teal : Colors.redAccent,
+                      ),
+                      onPressed: _openServerSettings,
+                    ),
+                  ),
                   Container(
                     width: 120,
                     height: 120,
