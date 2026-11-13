@@ -19,6 +19,8 @@ $result = [
         'php'      => PHP_VERSION,
         'config'   => false,
         'database' => false,
+        'server'   => '',
+        'db_name'  => '',
         'message'  => '',
     ],
 ];
@@ -37,6 +39,9 @@ $result['data']['config'] = true;
 // ولا يتوقف الفحص إذا كانت قاعدة البيانات متوقفة.
 try {
     $cfg = require $configPath;
+    // نعرض المضيف والمنفذ واسم القاعدة فقط — بلا مستخدم ولا كلمة مرور
+    $result['data']['server']  = $cfg['db_host'] . ':' . $cfg['db_port'];
+    $result['data']['db_name'] = $cfg['db_name'];
     $dsn = sprintf(
         'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
         $cfg['db_host'],
@@ -50,7 +55,10 @@ try {
     $result['data']['database'] = true;
     $result['data']['message']  = 'الخادم وقاعدة البيانات يعملان.';
 } catch (Throwable $e) {
-    $result['data']['message'] = 'الخادم يعمل، لكن تعذّر الاتصال بقاعدة البيانات. شغّلي MySQL من XAMPP وتأكدي أن قاعدة rafqa_haramain مستوردة.';
+    $result['data']['message'] = 'الخادم يعمل، لكن تعذّر الاتصال بقاعدة البيانات على '
+        . $result['data']['server']
+        . '. تأكدي أن MySQL يعمل، وأن رقم المنفذ في config.php يطابق الرقم الظاهر في لوحة XAMPP، وأن قاعدة '
+        . $result['data']['db_name'] . ' مستوردة.';
 }
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
