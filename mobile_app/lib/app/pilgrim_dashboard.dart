@@ -349,18 +349,17 @@ class PilgrimDashboard extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          width: 56,
-                          height: 56,
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
+                          width: 82,
+                          height: 54,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
                             color: Colors.white,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              fit: BoxFit.contain,
-                            ),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],

@@ -109,13 +109,21 @@ class _LoginPageState extends State<LoginPage> {
                           status = 'جارٍ البحث عن الخادم…';
                         });
                         final found = await ApiService.autoDetect();
+                        final db = found == null
+                            ? null
+                            : await ApiService.databaseStatus();
                         setLocal(() {
                           busy = false;
                           controller.text = ApiService.baseUrl;
-                          status = found != null
-                              ? 'تم العثور على الخادم:\n$found'
-                              : 'لم يُعثر على خادم. شغّلي Apache و MySQL من XAMPP، '
-                                'أو اكتبي عنوان اللاب يدوياً.';
+                          if (found == null) {
+                            status = 'لم يُعثر على خادم. تأكدي أن Apache يعمل، '
+                                'وأن مجلد website داخل htdocs، '
+                                'أو اكتبي العنوان يدوياً.';
+                          } else if (db != null) {
+                            status = 'تم العثور على الخادم:\n$found\n\n$db';
+                          } else {
+                            status = 'تم العثور على الخادم ✓\n$found';
+                          }
                         });
                       },
                 child: const Text('بحث تلقائي'),
@@ -130,9 +138,18 @@ class _LoginPageState extends State<LoginPage> {
                         });
                         await ApiService.setBaseUrl(controller.text);
                         final err = await ApiService.probe(ApiService.baseUrl);
+                        final db = err == null
+                            ? await ApiService.databaseStatus()
+                            : null;
                         setLocal(() {
                           busy = false;
-                          status = err ?? 'الاتصال ناجح ✓\n${ApiService.baseUrl}';
+                          if (err != null) {
+                            status = err;
+                          } else if (db != null) {
+                            status = 'الخادم يعمل ✓\n${ApiService.baseUrl}\n\n$db';
+                          } else {
+                            status = 'الاتصال ناجح ✓\n${ApiService.baseUrl}';
+                          }
                         });
                       },
                 child: const Text('اختبار'),
@@ -273,22 +290,24 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _openServerSettings,
                     ),
                   ),
-                  Container(
-                    width: 120,
-                    height: 120,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: teal.withOpacity(0.15),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
+                  // الشعار صورة عريضة فيها اسم الشركة تحت الرسم،
+                  // فقصّه في دائرة كان يقطع الاسم من الجانبين.
+                  Center(
+                    child: Container(
+                      width: 230,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: teal.withOpacity(0.12),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
                       child: Image.asset(
                         'assets/images/logo.png',
                         fit: BoxFit.contain,
