@@ -42,17 +42,33 @@ class ApiService {
   /// يدوياً من شاشة الدخول (أيقونة الإعدادات) بدون إعادة بناء التطبيق.
   static String baseUrl = 'http://10.0.2.2/website/api';
 
-  /// العناوين التي يجرّبها التطبيق تلقائياً، بالترتيب.
+  /// المضيفون الذين يجرّبهم التطبيق.
   ///   10.0.2.2  = جهاز اللاب نفسه من داخل محاكي أندرويد
   ///   127.0.0.1 = نفس الجهاز (محاكي iOS أو تشغيل على ويندوز)
-  ///   المنفذ 8080 لأن XAMPP ينتقل إليه كثيراً حين يكون المنفذ 80 مشغولاً
-  static const List<String> candidates = [
-    'http://10.0.2.2/website/api',
-    'http://10.0.2.2:8080/website/api',
-    'http://127.0.0.1/website/api',
-    'http://127.0.0.1:8080/website/api',
-    'http://localhost/website/api',
+  ///   المنفذ 8080 لأن XAMPP ينتقل إليه حين يكون المنفذ 80 مشغولاً
+  static const List<String> hosts = [
+    'http://10.0.2.2',
+    'http://10.0.2.2:8080',
+    'http://127.0.0.1',
+    'http://127.0.0.1:8080',
+    'http://localhost',
   ];
+
+  /// المسارات المحتملة لمجلد المشروع داخل htdocs.
+  /// نجرّبها كلها لأن اسم المجلد يختلف حسب طريقة فك الضغط.
+  static const List<String> paths = [
+    '/website/api',
+    '/api',
+    '/rafqat-al-haramain/website/api',
+    '/rafqat-al-haramain-main/website/api',
+    '/rafqa_haramain/website/api',
+    '/rafqa/website/api',
+  ];
+
+  static List<String> get candidates => [
+        for (final h in hosts)
+          for (final p in paths) '$h$p',
+      ];
 
   /// آخر عنوان نجح، محفوظ في ملف صغير حتى لا تعيدي إدخاله كل مرة.
   static File? _memoFile;
@@ -122,11 +138,9 @@ class ApiService {
       if (map['ok'] == false) {
         return (map['error'] ?? 'رد الخادم بخطأ.').toString();
       }
-      final data = map['data'];
-      if (data is Map && data['database'] == false) {
-        return (data['message'] ?? 'قاعدة البيانات متوقفة.').toString();
-      }
-      return null; // نجح
+      // الخادم موجود. حتى لو كانت قاعدة البيانات متوقفة فالعنوان صحيح،
+      // ونريد تثبيته حتى تظهر رسالة الخطأ الحقيقية بدل «تعذّر الوصول».
+      return null;
     } on TimeoutException {
       return 'الخادم لم يرد خلال $seconds ثوانٍ. غالباً جدار الحماية يحجب الاتصال.';
     } on SocketException catch (e) {
@@ -147,6 +161,24 @@ class ApiService {
     }
   }
 
+  /// يفحص حالة قاعدة البيانات على العنوان الحالي، ويعيد null إن كانت سليمة.
+  static Future<String?> databaseStatus() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/ping.php'),
+              headers: {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 8));
+      final map = jsonDecode(res.body) as Map<String, dynamic>;
+      final data = map['data'];
+      if (data is Map && data['database'] == false) {
+        return (data['message'] ?? 'قاعدة البيانات متوقفة.').toString();
+      }
+      return null;
+    } catch (_) {
+      return 'تعذّر قراءة حالة قاعدة البيانات.';
+    }
+  }
+
   /// يبحث تلقائياً عن العنوان الصحيح بين [candidates] (والعنوان المحفوظ).
   /// يعيد العنوان الذي نجح، أو null إذا لم ينجح أي عنوان.
   static Future<String?> autoDetect() async {
@@ -154,12 +186,17 @@ class ApiService {
       baseUrl,
       ...candidates.where((c) => c != baseUrl),
     ];
-    for (final url in list) {
-      final err = await probe(url, seconds: 4);
-      if (err == null) {
-        baseUrl = url;
-        await _remember(url);
-        return url;
+
+    // نفحص كل العناوين معاً لا واحداً بعد واحد، وإلا احتاج البحث دقيقة كاملة.
+    final results = await Future.wait(
+      list.map((url) async => (await probe(url, seconds: 6)) == null),
+    );
+
+    for (var i = 0; i < list.length; i++) {
+      if (results[i]) {
+        baseUrl = list[i];
+        await _remember(list[i]);
+        return list[i];
       }
     }
     return null;
@@ -201,8 +238,12 @@ class ApiService {
     // بعض الاستضافات ترد بصفحة تحقق HTML بدل JSON
     if (body.trimLeft().startsWith('<')) {
       throw ApiException(
-        'الخادم رد بصفحة HTML بدل البيانات. تأكدي من عنوان baseUrl '
-        'ومن أن الاستضافة تسمح بالاتصال من خارج المتصفح.',
+        res.statusCode == 404
+            ? 'المسار غير صحيح على الخادم (404). افتحي إعدادات الخادم '
+              'من شاشة الدخول واضغطي «بحث تلقائي».'
+            : 'الخادم رد بصفحة بدل البيانات (رمز ${res.statusCode}). '
+              'غالباً خطأ في ملف الإعدادات config.php — افتحي '
+              'ping.php من متصفح اللاب لمعرفة السبب.',
         res.statusCode,
       );
     }
