@@ -26,9 +26,25 @@ $result = [
         'database' => false,
         'server'   => '',
         'db_name'  => '',
+        'session'  => '',
         'message'  => '',
     ],
 ];
+
+// فحص الجلسات: إن لم يكن مجلد الجلسات قابلاً للكتابة فسيُسجّل المستخدم
+// الدخول بنجاح ثم تقول له الصفحة التالية «يجب تسجيل الدخول أولاً».
+$sessPath = ini_get('session.save_path');
+if ($sessPath === '' || $sessPath === false) {
+    $sessPath = sys_get_temp_dir();
+}
+$sessPath = preg_replace('/^\d+;/', '', $sessPath);
+if (!is_dir($sessPath)) {
+    $result['data']['session'] = 'مجلد الجلسات غير موجود: ' . $sessPath;
+} elseif (!is_writable($sessPath)) {
+    $result['data']['session'] = 'مجلد الجلسات غير قابل للكتابة: ' . $sessPath;
+} else {
+    $result['data']['session'] = 'سليم';
+}
 
 $configPath = __DIR__ . '/config.php';
 
@@ -81,7 +97,12 @@ try {
     ]);
     $pdo->query('SELECT 1');
     $result['data']['database'] = true;
-    $result['data']['message']  = 'الخادم وقاعدة البيانات يعملان.';
+    $result['data']['message'] = $result['data']['session'] === 'سليم'
+        ? 'الخادم وقاعدة البيانات والجلسات كلها تعمل.'
+        : 'الخادم وقاعدة البيانات يعملان، لكن هناك مشكلة في الجلسات: '
+          . $result['data']['session']
+          . ' — وهذا يجعل تسجيل الدخول ينجح ثم تظهر رسالة «يجب تسجيل الدخول أولاً». '
+          . 'أنشئي المجلد أو اضبطي session.save_path في php.ini.';
 } catch (Throwable $e) {
     $result['data']['message'] = 'الخادم يعمل، لكن تعذّر الاتصال بقاعدة البيانات على '
         . $result['data']['server']
