@@ -225,10 +225,32 @@ class ApiService {
     return h;
   }
 
+  /// يلتقط كعكة الجلسة PHPSESSID من رد الخادم.
+  /// الخادم قد يرسل أكثر من ترويسة Set-Cookie (عند تجديد رقم الجلسة
+  /// بعد تسجيل الدخول)، وحزمة http تدمجها في نص واحد، لذلك نفصلها
+  /// ونأخذ آخر قيمة غير فارغة لـ PHPSESSID تحديداً.
   static void _rememberCookie(http.Response res) {
-    final raw = res.headers['set-cookie'];
-    if (raw != null && raw.isNotEmpty) {
-      _sessionCookie = raw.split(';').first;
+    final parts = <String>[];
+    try {
+      parts.addAll(res.headersSplitValues['set-cookie'] ?? const []);
+    } catch (_) {}
+    if (parts.isEmpty) {
+      final raw = res.headers['set-cookie'];
+      if (raw != null && raw.isNotEmpty) {
+        // نفصل عند الفاصلة التي تسبق اسم كعكة جديدة فقط
+        parts.addAll(raw.split(RegExp(r',(?=\s*[A-Za-z0-9_\-]+=)')));
+      }
+    }
+
+    for (final part in parts) {
+      final pair = part.split(';').first.trim();
+      final eq = pair.indexOf('=');
+      if (eq <= 0) continue;
+      final name = pair.substring(0, eq).trim();
+      final value = pair.substring(eq + 1).trim();
+      if (name != 'PHPSESSID') continue;
+      if (value.isEmpty || value == 'deleted') continue;
+      _sessionCookie = '$name=$value';
     }
   }
 
@@ -256,10 +278,15 @@ class ApiService {
     }
 
     if (map['ok'] == false) {
-      throw ApiException(
-        (map['error'] ?? 'حدث خطأ غير متوقع.').toString(),
-        res.statusCode,
-      );
+      var msg = (map['error'] ?? 'حدث خطأ غير متوقع.').toString();
+      // 401 بعد تسجيل دخول ناجح = الجلسة ضاعت على الخادم
+      if (res.statusCode == 401) {
+        msg += _sessionCookie == null
+            ? '\n\nالتطبيق لم يستلم كعكة الجلسة من الخادم.'
+            : '\n\nالجلسة ضاعت على الخادم. افتحي ping.php من متصفح اللاب '
+              'وانظري حقل session — غالباً مجلد الجلسات غير قابل للكتابة.';
+      }
+      throw ApiException(msg, res.statusCode);
     }
     return map['data'];
   }
