@@ -333,7 +333,17 @@ class _LoginPageState extends State<LoginPage> {
                       color: teal,
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 6),
+                  // رقم الإصدار — لمعرفة أن الجهاز يشغّل آخر نسخة من الملفات
+                  const Text(
+                    'الإصدار 2.0',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black38,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                   Card(
                     color: Colors.white,
                     elevation: 2,
