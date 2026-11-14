@@ -9,6 +9,11 @@
  *   - الخادم يعمل لكن قاعدة البيانات متوقفة (رد فيه database=false)
  */
 
+// نمنع طباعة تنبيهات PHP كـ HTML، لأنها تفسد ردّ JSON
+// وتجعل التطبيق يرى صفحة بدل البيانات.
+@ini_set('display_errors', '0');
+error_reporting(0);
+
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -35,10 +40,33 @@ if (!file_exists($configPath)) {
 
 $result['data']['config'] = true;
 
+// نتأكد أن الملف يُرجع مصفوفة فيها المفاتيح المطلوبة،
+// لأن أكثر خطأ شائع هو نسخ الملف وتعديله بطريقة تكسر بنيته.
+$cfg = @include $configPath;
+
+if (!is_array($cfg)) {
+    $result['data']['message'] = 'ملف config.php موجود لكنه لا يُرجع إعدادات صحيحة. '
+        . 'لازم يبدأ بـ <?php ثم return [ ... ]; — انسخي config.example.php من جديد وعدّلي القيم فقط.';
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$missing = [];
+foreach (['db_host', 'db_port', 'db_name', 'db_user'] as $key) {
+    if (!isset($cfg[$key]) || $cfg[$key] === '' || $cfg[$key] === 'CHANGE_ME') {
+        $missing[] = $key;
+    }
+}
+if ($missing) {
+    $result['data']['message'] = 'ملف config.php ناقص أو غير معبّأ: ' . implode('، ', $missing)
+        . '. افتحيه وعبّي هذه القيم.';
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // نفتح الاتصال هنا مباشرة بدل db() حتى نتحكم في رسالة الخطأ
 // ولا يتوقف الفحص إذا كانت قاعدة البيانات متوقفة.
 try {
-    $cfg = require $configPath;
     // نعرض المضيف والمنفذ واسم القاعدة فقط — بلا مستخدم ولا كلمة مرور
     $result['data']['server']  = $cfg['db_host'] . ':' . $cfg['db_port'];
     $result['data']['db_name'] = $cfg['db_name'];
